@@ -25,6 +25,14 @@ import FinanceManagement from "../pages/Dashboard/Finance/FinanceManagement";
 
 import AllPackages from "../pages/Dashboard/Package/AllPackages";
 import AddPackages from "../pages/Dashboard/Package/AddPackages";
+import UserLayout from "../layouts/UserLayout";
+import QrLandingPage from "../pages/Home/QrLanding/QrLandingPage";
+import MyVehiclePage from "../pages/User/UserVehicle/MyVehiclePage";
+import QrScanner from "../pages/Dashboard/QR/QrScanner";
+import AddVehiclePage from "../pages/Dashboard/Vehicle/AddVehiclePage";
+import AssignVehiclePage from "../pages/Dashboard/Vehicle/AssignVehiclePage";
+import ScanAssignPage from "../pages/Dashboard/Vehicle/ScanAssignPage";
+import UserAddVehiclePage from "../pages/User/UserVehicle/UserAddVehiclePage";
 
 const router = createBrowserRouter([
   {
@@ -35,6 +43,10 @@ const router = createBrowserRouter([
       {
         index: true,
         Component: Home,
+      },
+      {
+        path: 'qr-landing',
+        Component:QrLandingPage,
       },
 
 
@@ -68,6 +80,27 @@ const router = createBrowserRouter([
         Component: ResetPassword,
       },
     ]
+  },
+  {
+    path: "/user",
+    element: <PrivetRoute>
+      <UserLayout></UserLayout>
+    </PrivetRoute>,
+    errorElement: <Error404 />,
+    children: [
+      {
+      path: 'my-vehiclePage',
+      Component: MyVehiclePage,
+      },
+      {
+        path: 'user-add-vehicle',
+        Component: UserAddVehiclePage,
+      }
+      // Add user-specific routes here
+    ] 
+
+
+
   },
   {
 
@@ -142,6 +175,24 @@ const router = createBrowserRouter([
       {
         path: 'generate-qr',
         Component: GenerateQR,
+      },
+      {
+        path: 'qr-scanner',
+        Component: QrScanner,
+      },
+
+      //Vehicle
+      {
+        path: 'add-vehicle',
+        Component: AddVehiclePage,
+      },
+      {
+        path: 'assign-vehicle',
+        Component: AssignVehiclePage,
+      },
+      {
+        path: 'scan-assign-vehicle',
+        Component: ScanAssignPage,
       }
 
     ]
