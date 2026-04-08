@@ -18,7 +18,6 @@ import {
     XCircle,
     Clock,
 } from "lucide-react";
-import instituteLogo from "../assets/banner/banner1.png";
 import useAxios from "../hooks/useAxiosSecure";
 import Swal from "sweetalert2";
 import { useEffect, useState } from "react";

@@ -1,96 +1,141 @@
 import React from "react";
+import { Users, TrendingUp, Heart } from "lucide-react";
 
 const Reviews = () => {
-    
+  const stats = [
+    {
+      icon: Users,
+      value: "950,000+",
+      label: "Active Tags",
+      color: "from-yellow-500 to-yellow-400",
+    },
+    {
+      icon: TrendingUp,
+      value: "4x",
+      label: "Revenue Growth",
+      color: "from-amber-600 to-amber-400",
+    },
+    {
+      icon: Heart,
+      value: "98.7%",
+      label: "Customer Satisfaction",
+      color: "from-orange-600 to-orange-400",
+    },
+  ];
 
-    return (
-        <div className="bg-gray-50 py-16 px-4">
+  const testimonials = [
+    {
+      id: 1,
+      text: "Good idea and execution. This product has completely changed how we manage vehicle information.",
+      author: "Rajesh Kumar",
+      source: "Google Review",
+      avatar: "👨‍💼",
+    },
+    {
+      id: 2,
+      text: "A must have for all vehicles. Highly recommended!",
+      author: "Priya Singh",
+      source: "Amazon Customer",
+      avatar: "👩‍💼",
+    },
+    {
+      id: 3,
+      text: "I love it! Now I don’t have to leave my number with strangers.",
+      author: "Amit Patel",
+      source: "Amazon Customer",
+      avatar: "👨‍🔧",
+    },
+    {
+      id: 4,
+      text: "Excellent service and support. Very responsive team.",
+      author: "Neha Sharma",
+      source: "Google Review",
+      avatar: "👩‍🎓",
+    },
+  ];
 
-           <section class="bg-base-100 py-16 px-6">
-  <div class="max-w-7xl mx-auto">
+  return (
+    <div className="w-full bg-gradient-to-b from-slate-50 via-white to-slate-50">
+      {/* HERO SECTION */}
+      <section className="bg-gradient-to-r from-yellow-400 to-amber-500 py-16 px-4">
+        <div className="max-w-6xl mx-auto text-center">
+          <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-4">
+            Trusted by Thousands
+          </h1>
+          <p className="text-gray-800 text-lg">
+            See what our customers say about ProFast QR Tag System
+          </p>
+        </div>
+      </section>
 
-    {/* <!-- Top Content --> */}
-    <div class="grid md:grid-cols-2 gap-10 items-center mb-12">
-      
-      {/* <!-- Left Text --> */}
-      <div>
-        <h2 class="text-3xl md:text-4xl font-bold leading-snug">
-          We Make Tech,<br /> for Privacy.
-        </h2>
-        <p class="text-gray-500 mt-3">
-          We are customer centric team.
-        </p>
-      </div>
+      <div className="max-w-7xl mx-auto px-4 py-16">
+        {/* MISSION + STATS */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20">
+          {/* LEFT TEXT */}
+          <div>
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+              We Make Tech{" "}
+              <span className="bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent">
+                for Privacy
+              </span>
+            </h2>
 
-      {/* <!-- Stats --> */}
-      <div class="grid grid-cols-3 gap-6 text-center">
-        
-        <div>
-          <div class="text-primary text-2xl mb-2">🎯</div>
-          <h3 class="text-2xl font-bold">950,000+</h3>
-          <p class="text-sm text-gray-500">Active tags</p>
+            <p className="text-slate-600 mb-6">
+              We are a customer-centric team dedicated to providing secure,
+              innovative solutions for vehicle owners, students, and businesses.
+            </p>
+
+            <div className="flex gap-4">
+              <button className="px-6 py-3 bg-yellow-400 text-gray-900 rounded-lg hover:bg-yellow-500 transition font-semibold">
+                Get Started
+              </button>
+              <button className="px-6 py-3 border border-yellow-400 text-gray-900 rounded-lg hover:bg-yellow-50 transition font-semibold">
+                Learn More
+              </button>
+            </div>
+          </div>
+
+          {/* STATS */}
+          <div className="grid grid-cols-3 gap-4">
+            {stats.map((stat, idx) => {
+              const Icon = stat.icon;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white shadow-lg rounded-2xl p-6 text-center"
+                >
+                  <div
+                    className={`w-12 h-12 mx-auto mb-3 rounded-lg flex items-center justify-center bg-gradient-to-r ${stat.color}`}
+                  >
+                    <Icon className="text-white w-6 h-6" />
+                  </div>
+                  <h3 className="text-2xl font-bold">{stat.value}</h3>
+                  <p className="text-sm text-slate-500">{stat.label}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        <div>
-          <div class="text-secondary text-2xl mb-2">📈</div>
-          <h3 class="text-2xl font-bold">4x</h3>
-          <p class="text-sm text-gray-500">Revenue Growth</p>
+        {/* TESTIMONIALS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {testimonials.map((t) => (
+            <div
+              key={t.id}
+              className="bg-white shadow-md rounded-xl p-6 hover:shadow-lg transition"
+            >
+              <div className="text-yellow-400 mb-2">★★★★★</div>
+              <p className="text-sm text-slate-600 mb-4">"{t.text}"</p>
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <span>{t.avatar}</span>
+                <span>{t.source}</span>
+              </div>
+            </div>
+          ))}
         </div>
-
-        <div>
-          <div class="text-accent text-2xl mb-2">⭐</div>
-          <h3 class="text-2xl font-bold">98.7%</h3>
-          <p class="text-sm text-gray-500">Customer Satisfaction</p>
-        </div>
-
       </div>
     </div>
-
-    {/* <!-- Testimonials --> */}
-    <div class="grid md:grid-cols-4 gap-6">
-
-      {/* <!-- Card 1 --> */}
-      <div class="card bg-base-200 shadow-sm p-6">
-        <div class="text-warning mb-2">★★★★★</div>
-        <p class="text-sm text-gray-600 mb-4">
-          Good idea and execution..need to add option for calling also using virtual number system.
-        </p>
-        <span class="text-sm font-medium">Google Review</span>
-      </div>
-
-      {/* <!-- Card 2 --> */}
-      <div class="card bg-base-200 shadow-sm p-6">
-        <div class="text-warning mb-2">★★★★★</div>
-        <p class="text-sm text-gray-600 mb-4">
-          A must have for all vehicles. More and more people should start using this.
-        </p>
-        <span class="text-sm font-medium">Amazon Customer</span>
-      </div>
-
-      {/* <!-- Card 3 --> */}
-      <div class="card bg-base-200 shadow-sm p-6">
-        <div class="text-warning mb-2">★★★★★</div>
-        <p class="text-sm text-gray-600 mb-4">
-          I love it. it's a wonderful product now u don’t have to leave your number.
-        </p>
-        <span class="text-sm font-medium">Amazon Customer</span>
-      </div>
-
-      {/* <!-- Card 4 --> */}
-      <div class="card bg-base-200 shadow-sm p-6">
-        <div class="text-warning mb-2">★★★★★</div>
-        <p class="text-sm text-gray-600 mb-4">
-          Good idea and execution..need to add option for calling also using virtual number system.
-        </p>
-        <span class="text-sm font-medium">Google Review</span>
-      </div>
-
-    </div>
-
-  </div>
-</section>
-        </div>
-    );
+  );
 };
 
 export default Reviews;
