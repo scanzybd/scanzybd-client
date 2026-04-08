@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   GraduationCap,
   Users,
@@ -7,13 +6,9 @@ import {
 } from "lucide-react";
 
 const DashboardHome = () => {
-  const [user, setUser] = useState(null);
-
   // 👇 TEMP: localStorage user (later API / context use করবে)
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    setUser(storedUser || { role: "guest", name: "Guest" });
-  }, []);
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const user = storedUser || { role: "guest", name: "Guest" };
 
   // ✅ TEMP role access (future e change korte parba)
   const allowedRoles = ["admin", "user", "provider", "guest"];

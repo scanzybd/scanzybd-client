@@ -45,7 +45,7 @@ const QrScanner = ({ onResult }) => {
     return () => {
       qrCodeScanner.stop().catch(() => {});
     };
-  }, [cameraId]);
+  }, [cameraId, onResult]);
 
   return <div id="reader" className="w-full" />;
 };

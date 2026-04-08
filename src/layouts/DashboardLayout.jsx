@@ -18,9 +18,11 @@ import {
     XCircle,
     Clock,
 } from "lucide-react";
+import instituteLogo from "../assets/banner/banner.png";
 import useAxios from "../hooks/useAxiosSecure";
+import useAuth from "../hooks/useAuth";
 import Swal from "sweetalert2";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 
 
@@ -28,18 +30,8 @@ const DashboardLayout = () => {
     const location = useLocation();
     const Axios = useAxios();
     const navigate = useNavigate();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [userName, setUserName] = useState("");
-    const [userLname, setUserLname] = useState("");
-    const [userRole, setUserRole] = useState("");
-    const [userBranch, setUserBranch] = useState("");
+    const { user, userRole, logOut } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-
-    const getAuthHeaders = () => {
-        return {
-            "Content-Type": "application/json",
-        };
-    };
 
     // const fetchUserInfo = async () => {
     //     try {
@@ -81,22 +73,18 @@ const DashboardLayout = () => {
             });
 
             if (result.isConfirmed) {
-                const response = await Axios.post("/logout");
-                if (response.data.success) {
-                    Swal.fire({
-                        title: "লগআউট সফল!",
-                        text: "সফলভাবে লগআউট হয়েছে।",
-                        icon: "success",
-                        timer: 1500,
-                        showConfirmButton: false,
-                    });
-                    setTimeout(() => {
-                        setIsAuthenticated(false);
-                        navigate("/");
-                    }, 1500);
-                }
+                await logOut();
+                Swal.fire({
+                    title: "লগআউট সফল!",
+                    text: "সফলভাবে লগআউট হয়েছে।",
+                    icon: "success",
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+                navigate("/");
             }
-        } catch {
+        } catch (error) {
+            console.error("Logout error:", error);
             Swal.fire({
                 title: "লগআউট ব্যর্থ",
                 text: "লগআউট করতে সমস্যা হয়েছে।",
@@ -313,12 +301,12 @@ const DashboardLayout = () => {
                         <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
                             <div className="text-right">
                                 <p className="text-sm font-semibold text-gray-800">
-                                    {userName} {userLname}
+                                    {user?.displayName || user?.email || 'User'}
                                 </p>
-                                <p className="text-xs text-gray-600">{userRole}</p>
+                                <p className="text-xs text-gray-600">{userRole || 'user'}</p>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg">
-                                {userName?.charAt(0)}
+                                {user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
                             </div>
                         </div>
                         <Link

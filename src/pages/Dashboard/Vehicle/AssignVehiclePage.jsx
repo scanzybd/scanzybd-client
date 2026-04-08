@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const mockVehicles = [
@@ -9,8 +9,6 @@ const mockVehicles = [
 
 const AssignVehiclePage = () => {
   const [search, setSearch] = useState("");
-  const [filtered, setFiltered] = useState([]);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -19,20 +17,14 @@ const AssignVehiclePage = () => {
   const queryParams = new URLSearchParams(location.search);
   const qrVehicleId = queryParams.get("vehicleId");
 
-  useEffect(() => {
-    if (search === "") {
-      setFiltered(mockVehicles);
-    } else {
-      const result = mockVehicles.filter((v) =>
+  // Compute filtered vehicles based on search
+  const filtered = search === ""
+    ? mockVehicles
+    : mockVehicles.filter((v) =>
         v.name.toLowerCase().includes(search.toLowerCase())
       );
-      setFiltered(result);
-    }
-  }, [search]);
 
   const handleAssign = (vehicle) => {
-    setSelectedVehicle(vehicle);
-
     // 🔥 here you will call backend API
     setTimeout(() => {
       alert(`Vehicle Assigned: ${vehicle.name}`);

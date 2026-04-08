@@ -73,7 +73,7 @@ const OfferShowcase = () => {
     const [billingCycle, setBillingCycle] = useState("monthly");
     const axios = useAxios();
 
-    const { data: packages = [], isLoading, isError } = useQuery({
+    const { data: packages = [] } = useQuery({
         queryKey: ["homePackages"],
         queryFn: async () => {
             const response = await axios.get("/api/package");

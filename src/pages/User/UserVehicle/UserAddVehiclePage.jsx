@@ -43,7 +43,7 @@ const UserAddVehiclePage = () => {
     };
 
     getUser();
-  }, [firebaseUser?.email]);
+  }, [firebaseUser?.email, axiosSecure]);
 
   const role = mongoUser?.role || "user";
 

@@ -33,6 +33,8 @@ import AddVehiclePage from "../pages/Dashboard/Vehicle/AddVehiclePage";
 import AssignVehiclePage from "../pages/Dashboard/Vehicle/AssignVehiclePage";
 import ScanAssignPage from "../pages/Dashboard/Vehicle/ScanAssignPage";
 import UserAddVehiclePage from "../pages/User/UserVehicle/UserAddVehiclePage";
+import Checkout from "../pages/Dashboard/Order/Checkout";
+import MyCart from "../pages/User/Cart/MyCart";
 
 const router = createBrowserRouter([
   {
@@ -95,6 +97,14 @@ const router = createBrowserRouter([
       {
         path: 'user-add-vehicle',
         Component: UserAddVehiclePage,
+      },
+      {
+        path: 'my-cart',
+        Component: MyCart,
+      },
+      {
+        path: 'checkout',
+        Component: Checkout,
       }
       // Add user-specific routes here
     ] 
@@ -105,7 +115,7 @@ const router = createBrowserRouter([
   {
 
     path: '/dashboard',
-    element: <PrivetRoute>
+    element: <PrivetRoute allowedRoles={['admin', 'provider']}>
       <DashboardLayout></DashboardLayout>
     </PrivetRoute>,
     errorElement: <Error404 />,

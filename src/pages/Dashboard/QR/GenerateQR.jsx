@@ -9,8 +9,6 @@ const QRGenerator = () => {
   const [qrList, setQrList] = useState([]);
   const cardRefs = useRef({});
 
-  const baseUrl = "https://yourdomain.com/qr";
-
   // 🚀 GENERATE QR (DB SAVE)
   const generateQR = async () => {
     const count = Number(document.getElementById("count").value);

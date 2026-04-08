@@ -58,6 +58,7 @@ const AllOrders = () => {
                     Swal.fire("Failed!", "Parcel could not be deleted.", "error");
                 }
             } catch (error) {
+                console.error("Delete error:", error);
                 Swal.fire("Error", "Something went wrong while deleting.", "error");
             }
             refetch()

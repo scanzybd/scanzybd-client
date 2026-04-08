@@ -8,6 +8,17 @@ const ScanAssignPage = () => {
   const scannerRef = useRef(null);
   const navigate = useNavigate();
 
+  const handleStop = async (scanner) => {
+    try {
+      if (scanner) {
+        await scanner.stop();
+        scanner.clear();
+      }
+    } catch {
+      console.log("stop ignored");
+    }
+  };
+
   useEffect(() => {
     if (!scanning) return;
 
@@ -37,18 +48,7 @@ const ScanAssignPage = () => {
     return () => {
       handleStop(scannerRef.current);
     };
-  }, [scanning]);
-
-  const handleStop = async (scanner) => {
-    try {
-      if (scanner) {
-        await scanner.stop();
-        scanner.clear();
-      }
-    } catch (err) {
-      console.log("stop ignored");
-    }
-  };
+  }, [scanning, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">

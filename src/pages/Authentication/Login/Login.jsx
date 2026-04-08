@@ -17,8 +17,7 @@ const Login = () => {
     const { signInUser } = useAuth(); // 🔥 Firebase login
     const api = useAxios(); // 🔥 backend call
 
-    const from = location.state?.from?.pathname || "/";
-
+const from = location.state?.from?.pathname || "/checkout";
 
 const onSubmit = async (data) => {
         try {
@@ -35,6 +34,21 @@ const onSubmit = async (data) => {
 
             // ✅ 4. Save backend JWT
             localStorage.setItem("token", res.data.token);
+
+            const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+if (cart.length > 0) {
+    await fetch("http://localhost:5000/api/cart/sync", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${res.data.token}`,
+        },
+        body: JSON.stringify({ cart }),
+    });
+
+    localStorage.removeItem("cart");
+}
 
             // ✅ 5. Redirect
             navigate(from, { replace: true });

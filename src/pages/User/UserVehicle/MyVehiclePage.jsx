@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 
@@ -27,9 +27,8 @@ const MyVehiclePage = () => {
 
 const role = mongoUser?.role;
 
-
   // ---------------- LOAD VEHICLES ----------------
-  const loadVehicles = async () => {
+  const loadVehicles = useCallback(async () => {
     try {
       const res = await axiosSecure.get(
         `/api/vehicle/my?email=${firebaseUser?.email}`
@@ -38,13 +37,13 @@ const role = mongoUser?.role;
     } catch (err) {
       console.log(err);
     }
-  };
+  }, [firebaseUser]);
 
   useEffect(() => {
     if (firebaseUser?.email) {
       loadVehicles();
     }
-  }, [firebaseUser?.email]);
+  }, [firebaseUser, loadVehicles]);
 
   // ---------------- UPDATE (LOCAL ONLY) ----------------
  const handleUpdate = async () => {
