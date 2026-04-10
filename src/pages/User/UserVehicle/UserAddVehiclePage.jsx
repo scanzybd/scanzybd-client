@@ -15,6 +15,7 @@ const UserAddVehiclePage = () => {
     vehicleName: "",
     model: "",
     plate: "",
+    ownerPhone: ""
   });
 
   const [driver, setDriver] = useState({
@@ -60,7 +61,7 @@ const UserAddVehiclePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.vehicleName || !form.model || !form.plate) {
+    if (!form.vehicleName || !form.model || !form.plate || !form.ownerPhone) {
       alert("⚠️ Fill all fields");
       return;
     }
@@ -77,7 +78,7 @@ const UserAddVehiclePage = () => {
 
       alert("✅ Vehicle Added Successfully");
 
-      setForm({ vehicleName: "", model: "", plate: "" });
+      setForm({ vehicleName: "", model: "", plate: "" ,ownerPhone:""});
       setDriver({ name: "", phone: "" });
       setShowDriverForm(false);
       setScannedQR(null);
@@ -145,6 +146,13 @@ const UserAddVehiclePage = () => {
             value={form.plate}
             onChange={handleChange}
             placeholder="Plate"
+            className="w-full p-3 border rounded"
+          />
+          <input
+            name="ownerPhone"
+            value={form.ownerPhone}
+            onChange={handleChange}
+            placeholder="Owner Number"
             className="w-full p-3 border rounded"
           />
 

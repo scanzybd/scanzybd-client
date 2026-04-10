@@ -109,6 +109,35 @@ const DashboardLayout = () => {
             ],
         },
         {
+            category: "Vehicle Management",
+            items: [
+                {
+                    path: "/dashboard/all-vehicles",
+                    icon: GraduationCap,
+                    label: "All Vehicles",
+                    color: "green",
+                },
+                {
+                    path: "/dashboard/add-vehicle",
+                    icon: UserPlus,
+                    label: "Add Vehicle",
+                    color: "teal",
+                },
+                {
+                  path: "/dashboard/assign-vehicle",
+                  icon: Users,
+                  label: "Assign Vehicle",
+                  color: "red",  
+                },
+                {
+                    path: "/dashboard/scan-assign-vehicle",
+                    icon: Clock,
+                    label: "Scan & Assign",
+                    color: "yellow",
+                }
+            ],
+        },
+        {
             category: "Product Management",
             items: [
                 {

@@ -35,6 +35,10 @@ import ScanAssignPage from "../pages/Dashboard/Vehicle/ScanAssignPage";
 import UserAddVehiclePage from "../pages/User/UserVehicle/UserAddVehiclePage";
 import Checkout from "../pages/Dashboard/Order/Checkout";
 import MyCart from "../pages/User/Cart/MyCart";
+import UserProfile from "../pages/User/Profile/UserProfile";
+import UserSettings from "../pages/User/Settings/UserSettings";
+import UserOrders from "../pages/User/UserOrders/UserOrders";
+import AllVehiclePage from "../pages/Dashboard/Vehicle/AllVehiclePage";
 
 const router = createBrowserRouter([
   {
@@ -105,7 +109,20 @@ const router = createBrowserRouter([
       {
         path: 'checkout',
         Component: Checkout,
-      }
+      },
+      {
+        path: 'user-profile',
+        Component: UserProfile,
+      },
+      {
+        path: 'user-settings',
+        Component: UserSettings,
+      },
+      {
+        path: 'user-orders',
+        Component: UserOrders,
+      },
+
       // Add user-specific routes here
     ] 
 
@@ -192,6 +209,11 @@ const router = createBrowserRouter([
       },
 
       //Vehicle
+      
+      {
+        path: 'all-vehicles',
+        Component: AllVehiclePage,
+      },
       {
         path: 'add-vehicle',
         Component: AddVehiclePage,

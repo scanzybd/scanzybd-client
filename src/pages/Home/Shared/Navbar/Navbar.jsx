@@ -161,12 +161,19 @@ const Navbar = () => {
 
               <hr className="my-2" />
 
+            
               <li>
-                <Link to="/user/profile">My Profile</Link>
+                <Link to="/user/user-profile">Profile</Link>
+              </li>
+              <li>
+                <Link to="/user/user-orders">Orders</Link>
+              </li>
+              <li>
+                <Link to="/user/my-vehiclePage">Vehicles</Link>
               </li>
 
               <li>
-                <Link to="/user/settings">Settings</Link>
+                <Link to="/user/user-settings">Settings</Link>
               </li>
 
               <hr className="my-2" />
