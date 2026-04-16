@@ -160,6 +160,7 @@ const AllVehiclePage = () => {
               <div className="flex flex-col items-center min-w-[110px]">
                 {qr?.qrCode ? (
                   <>
+                  
                     <img
                       src={qr.qrCode}
                       alt="QR"

@@ -39,6 +39,7 @@ import UserProfile from "../pages/User/Profile/UserProfile";
 import UserSettings from "../pages/User/Settings/UserSettings";
 import UserOrders from "../pages/User/UserOrders/UserOrders";
 import AllVehiclePage from "../pages/Dashboard/Vehicle/AllVehiclePage";
+import AssignVehiclebyId from "../pages/Dashboard/Vehicle/AssignVehiclebyId";
 
 const router = createBrowserRouter([
   {
@@ -51,9 +52,10 @@ const router = createBrowserRouter([
         Component: Home,
       },
       {
-        path: 'qr-landing',
+        path: 'qr-landing/:code',
         Component:QrLandingPage,
       },
+      
 
 
 
@@ -221,6 +223,10 @@ const router = createBrowserRouter([
       {
         path: 'assign-vehicle',
         Component: AssignVehiclePage,
+      },
+      {
+        path: 'assign-vehicle/:code',
+        Component: AssignVehiclebyId,
       },
       {
         path: 'scan-assign-vehicle',

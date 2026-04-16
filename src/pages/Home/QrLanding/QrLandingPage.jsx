@@ -1,18 +1,52 @@
-import React from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const QrLandingPage = () => {
   const { code } = useParams();
+  const navigate = useNavigate();
+  const axiosSecure = useAxiosSecure();
 
-  const data = {
-    ownerPhone: "8801XXXXXXXXX",
-    driverPhone: "8801YYYYYYYYY",
-    driverEnabled: true,
-  };
+  const [vehicle, setVehicle] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadQR = async () => {
+      try {
+        const res = await axiosSecure.get(`/api/qr/code/${code}`);
+
+        const { qr, vehicle } = res.data;
+
+        // ❌ NOT ASSIGNED → redirect
+        if (!qr?.isAssigned || qr.status !== "assigned") {
+          navigate("/dashboard/assign-vehicle");
+          return;
+        }
+
+        // ✅ ASSIGNED → show data
+        setVehicle(vehicle);
+
+      } catch (err) {
+        console.log(err);
+        navigate(`/dashboard/assign-vehicle/${code}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadQR();
+  }, [code, axiosSecure, navigate]);
+
+  if (loading) {
+    return <p className="text-center mt-10">Loading...</p>;
+  }
+
+  if (!vehicle) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-
       <div className="w-full max-w-md space-y-5">
 
         {/* HEADER */}
@@ -25,75 +59,35 @@ const QrLandingPage = () => {
           </p>
         </div>
 
-        {/* 🟡 OWNER CARD (highlighted) */}
+        {/* OWNER */}
         <div className="bg-white rounded-2xl p-5 shadow-md border-l-4 border-yellow-400">
+          <h2 className="text-sm font-semibold mb-4">Owner Contact</h2>
 
-          <h2 className="text-sm font-semibold text-gray-800 mb-4">
-            Owner Contact
-          </h2>
-
-          <div className="space-y-3">
-
-            <a
-              href={`tel:${data.ownerPhone}`}
-              className="block text-center py-3 rounded-xl bg-yellow-400 text-black font-semibold shadow hover:scale-[1.02] transition"
-            >
-              📞 Call Owner
-            </a>
-
-            <a
-              href={`sms:${data.ownerPhone}`}
-              className="block text-center py-3 rounded-xl bg-gray-900 text-white font-medium hover:scale-[1.02] transition"
-            >
-              💬 Message Owner
-            </a>
-
-          </div>
+          <a
+            href={`tel:${vehicle.ownerPhone}`}
+            className="block text-center py-3 rounded-xl bg-yellow-400 font-semibold"
+          >
+            📞 Call Owner
+          </a>
         </div>
 
-        {/* DRIVER CARD */}
-        <div
-          className={`bg-white rounded-2xl p-5 shadow-md border ${
-            !data.driverEnabled ? "opacity-60" : "border-gray-200"
-          }`}
-        >
+        {/* DRIVER */}
+        {vehicle.driver ? (
+          <div className="bg-white rounded-2xl p-5 shadow-md">
+            <h2 className="text-sm font-semibold mb-4">Driver Contact</h2>
 
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-sm font-semibold text-gray-800">
-              Driver Contact
-            </h2>
-
-            {!data.driverEnabled && (
-              <span className="text-xs bg-red-100 text-red-500 px-2 py-1 rounded-full">
-                Disabled
-              </span>
-            )}
+            <a
+              href={`tel:${vehicle.driver.phone}`}
+              className="block text-center py-3 rounded-xl bg-blue-500 text-white"
+            >
+              📞 Call Driver
+            </a>
           </div>
-
-          {data.driverEnabled ? (
-            <div className="space-y-3">
-
-              <a
-                href={`tel:${data.driverPhone}`}
-                className="block text-center py-3 rounded-xl bg-blue-500 text-white font-semibold shadow hover:scale-[1.02] transition"
-              >
-                📞 Call Driver
-              </a>
-
-              <a
-                href={`sms:${data.driverPhone}`}
-                className="block text-center py-3 rounded-xl bg-green-500 text-white font-semibold shadow hover:scale-[1.02] transition"
-              >
-                💬 Message Driver
-              </a>
-
-            </div>
-          ) : (
-            <p className="text-sm text-gray-400 text-center">
-              Driver contact is disabled by owner
-            </p>
-          )}
-        </div>
+        ) : (
+          <p className="text-center text-gray-400">
+            No driver assigned
+          </p>
+        )}
 
       </div>
     </div>

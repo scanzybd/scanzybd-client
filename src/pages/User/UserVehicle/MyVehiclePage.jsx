@@ -154,25 +154,28 @@ const MyVehiclePage = () => {
                 </div>
 
                 {/* RIGHT SIDE - QR IMAGE */}
-                <div className="flex flex-col items-center min-w-[110px]">
-                  {qr?.qrCode ? (
-                    <>
-                      <img
-                        src={qr.qrCode}   // ✅ REAL QR FROM DB
-                        alt="QR"
-                        className="w-[90px] h-[90px] rounded"
-                      />
-
-                      <p className="text-[10px] text-gray-400 mt-1">
-                        {qr.code}
-                      </p>
-                    </>
-                  ) : (
-                    <div className="text-xs text-gray-400">
-                      No QR
-                    </div>
-                  )}
-                </div>
+              <div className="flex flex-col items-center min-w-[110px]">
+  {qr?.qrCode ? (
+    <>
+      <img
+        src={qr.qrCode}
+        alt="QR"
+        className="w-[90px] h-[90px] rounded"
+      />
+      <p className="text-[10px] text-gray-400 mt-1">
+        {qr.code}
+      </p>
+    </>
+  ) : v.qrData ? (
+    <img
+      src={`https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${v.qrData}`}
+      alt="QR"
+      className="w-[90px] h-[90px] rounded"
+    />
+  ) : (
+    <p className="text-xs text-gray-400">No QR</p>
+  )}
+</div>
 
                 {/* ACTIONS */}
                 <div className="flex flex-col gap-1">
