@@ -1,6 +1,8 @@
 import { createBrowserRouter } from "react-router";
 import RootLayout from "../layouts/RootLayout";
 import Home from "../pages/Home/Home/Home";
+import About from "../pages/Home/About/About";
+
 import AuthLayout from "../layouts/AuthLayout";
 import Login from "../pages/Authentication/Login/Login";
 import Register from "../pages/Authentication/Register/Register";
@@ -8,7 +10,7 @@ import ForgotPassword from '../pages/Authentication/ForgotPassword/ForgotPasswor
 import EnterCode from '../pages/Authentication/ForgotPassword/EnterCode';
 import ResetPassword from "../pages/Authentication/ForgotPassword/ResetPassword";
 import Error404 from "../pages/ErrorSection/Error404";
-import PrivetRoute from "../routes/PrivetRoute";
+import PrivateRoute from "../routes/PrivetRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
 import DashboardHome from "../pages/Dashboard/DashboardHome/DashboardHome";
 import AllOrders from "../pages/Dashboard/Order/AllOrders";
@@ -40,6 +42,11 @@ import UserSettings from "../pages/User/Settings/UserSettings";
 import UserOrders from "../pages/User/UserOrders/UserOrders";
 import AllVehiclePage from "../pages/Dashboard/Vehicle/AllVehiclePage";
 import AssignVehiclebyId from "../pages/Dashboard/Vehicle/AssignVehiclebyId";
+import PaymentReject from "../pages/Dashboard/Order/PaymentStatus/PaymentReject";
+import PaymentSuccess from "../pages/Dashboard/Order/PaymentStatus/PaymentSuccess";
+import ProductShowcase from "../pages/Home/ProductShowcase/ProductShowcase";
+import ContactPage from "../pages/Home/Contact/ContactPage";
+import Payment from "../pages/User/Payment/Payment";
 
 const router = createBrowserRouter([
   {
@@ -52,12 +59,24 @@ const router = createBrowserRouter([
         Component: Home,
       },
       {
+        path: 'about',
+        Component: About,
+
+      },
+      {
+        path: 'contact',
+        Component: ContactPage,
+      },
+      {
+        path: 'Products',
+        Component: ProductShowcase,
+
+      },
+      {
         path: 'qr-landing/:code',
         Component:QrLandingPage,
       },
-      
-
-
+    
 
     ]
   },
@@ -87,15 +106,35 @@ const router = createBrowserRouter([
         path: 'forgotPassword/resetPassword',
         Component: ResetPassword,
       },
+       {
+  path: "payment/failed",
+  element: (
+    <PrivateRoute>
+      <PaymentReject />
+    </PrivateRoute>
+  ),
+},
+{
+  path: "payment/success",
+  element: (
+    <PrivateRoute>
+      <PaymentSuccess />
+    </PrivateRoute>
+  ),
+},
     ]
   },
   {
     path: "/user",
-    element: <PrivetRoute>
+    element: <PrivateRoute>
       <UserLayout></UserLayout>
-    </PrivetRoute>,
+    </PrivateRoute>,
     errorElement: <Error404 />,
     children: [
+      {
+      path: 'payment',
+      Component: Payment,
+      },
       {
       path: 'my-vehiclePage',
       Component: MyVehiclePage,
@@ -124,6 +163,7 @@ const router = createBrowserRouter([
         path: 'user-orders',
         Component: UserOrders,
       },
+     
 
       // Add user-specific routes here
     ] 
@@ -134,9 +174,9 @@ const router = createBrowserRouter([
   {
 
     path: '/dashboard',
-    element: <PrivetRoute allowedRoles={['admin', 'provider']}>
+    element: <PrivateRoute allowedRoles={['admin', 'provider']}>
       <DashboardLayout></DashboardLayout>
-    </PrivetRoute>,
+    </PrivateRoute>,
     errorElement: <Error404 />,
     children: [
       {

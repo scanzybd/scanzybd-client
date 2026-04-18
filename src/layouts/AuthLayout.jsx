@@ -1,27 +1,14 @@
 import React from 'react';
 import { Link, Outlet } from 'react-router';
 import ProFastLogo from '../pages/Home/Shared/Logo/ProFastLogo';
+import ScrollToTop from "../components/ScrollToTop";
+
 
 const AuthLayout = () => {
     return (
         <div>
-            {/* Logo */}
-            <div >
-                <Link to="/">
-                    <ProFastLogo />
-                </Link>
-            </div>
-
-            {/* Grid layout */}
-            <div >
-
-                {/* LEFT SIDE */}
-                <div className="flex">
-                    <Outlet />
-                </div>
-
-              
-            </div>
+            <ScrollToTop />
+           <Outlet />
         </div>
 
     );

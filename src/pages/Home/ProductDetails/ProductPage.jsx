@@ -1,59 +1,69 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ProductDetails from "./ProductDetails";
-import product01 from "../../../assets/product/product01.png";
-import useCart from "../../../hooks/useCart"; // ✅ FIXED
-import { useNavigate } from "react-router-dom";
+import useCart from "../../../hooks/useCart.jsx";
+import { useNavigate, useParams } from "react-router-dom";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const ProductPage = () => {
-  const { cartItems, addToCart } = useCart(); // ✅ MAIN FIX
+  const { addToCart, cartItems } = useCart();
+  const axiosSecure = useAxiosSecure();
   const navigate = useNavigate();
+  const { id } = useParams();
 
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
 
-  const product = {
-    id: 1,
-    name: "QR Vehicle Tag Premium",
-    price: 499,
-    originalPrice: 699,
-    image: product01,
-    description:
-      "This is a smart QR tag system for vehicle owners. Scan and connect instantly without sharing phone number.",
-    features: [
-      "NFC & QR enabled dual technology",
-      "Weatherproof and durable design",
-      "Real-time vehicle tracking",
-      "Instant contact sharing",
-      "Lifetime access to cloud storage",
-      "24/7 customer support",
-    ],
-    specifications: {
-      material: "Aircraft-grade aluminum",
-      dimensions: "8.5cm x 5.4cm",
-      weight: "15g",
-      battery: "Passive (no battery needed)",
-      waterproof: "IP67 rated",
-    },
-    rating: 4.8,
-    reviews: 342,
-    inStock: true,
-  };
+  // 🔥 FETCH PRODUCT FROM DB
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const res = await axiosSecure.get(`/api/products/69e1ee0443c1fd1b6dd7a417`);
 
-  // ➕ ADD TO CART (CLEAN)
+        setProduct(res.data.data);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  // ➕ ADD TO CART
   const handleAddToCart = () => {
+    if (!product) return;
+
     addToCart(product);
 
     setNotification({
       type: "success",
-      message: `${product.name} added to cart!`,
+      message: `${product.title} added to cart!`,
     });
 
     setTimeout(() => setNotification(null), 2000);
   };
 
-  // 🛒 CHECKOUT NAVIGATION
   const handleViewCart = () => {
     navigate("/cart");
   };
+
+  if (loading) {
+    return (
+      <div className="p-10 text-center">
+        Loading product...
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="p-10 text-center text-red-500">
+        Product not found
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-gradient-to-b from-slate-50 to-white">
@@ -61,13 +71,7 @@ const ProductPage = () => {
       {/* 🔔 Notification */}
       {notification && (
         <div className="fixed top-4 right-4 z-50">
-          <div
-            className={`px-6 py-3 rounded-lg shadow-lg text-white font-medium ${
-              notification.type === "success"
-                ? "bg-emerald-500"
-                : "bg-red-500"
-            }`}
-          >
+          <div className="px-6 py-3 rounded-lg shadow-lg text-white bg-emerald-500">
             {notification.message}
           </div>
         </div>
@@ -94,7 +98,7 @@ const ProductPage = () => {
 
             <button
               onClick={handleViewCart}
-              className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 font-semibold rounded-lg hover:from-yellow-500 hover:to-amber-600 transition transform hover:scale-105"
+              className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 font-semibold rounded-lg hover:scale-105 transition"
             >
               View Cart
             </button>

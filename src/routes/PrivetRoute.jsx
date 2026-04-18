@@ -3,7 +3,7 @@ import useAuth from '../hooks/useAuth';
 import { Navigate } from 'react-router';
 import { useLocation } from 'react-router';
 
-const PrivetRoute = ({ children, allowedRoles = [] }) => {
+const PrivateRoute = ({ children, allowedRoles = [] }) => {
     const { user, userRole, loading } = useAuth();
     const location = useLocation(); // current path
 
@@ -23,4 +23,4 @@ const PrivetRoute = ({ children, allowedRoles = [] }) => {
     return children;
 };
 
-export default PrivetRoute;
+export default PrivateRoute;

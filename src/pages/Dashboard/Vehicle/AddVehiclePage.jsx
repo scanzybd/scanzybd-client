@@ -13,6 +13,7 @@ const AddVehiclePage = () => {
     vehicleName: "",
     model: "",
     plate: "",
+    ownerPhone: "", // ✅ FIXED
   });
 
   const [driver, setDriver] = useState({
@@ -27,7 +28,7 @@ const AddVehiclePage = () => {
 
   const scannerRef = useRef(null);
 
-  // ---------------- GET USER (ROLE) ----------------
+  // ---------------- GET USER ----------------
   useEffect(() => {
     const getUser = async () => {
       if (!firebaseUser?.email) return;
@@ -54,11 +55,11 @@ const AddVehiclePage = () => {
     setDriver({ ...driver, [e.target.name]: e.target.value });
   };
 
-  // ---------------- ADD VEHICLE ----------------
+  // ---------------- SUBMIT ----------------
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.vehicleName || !form.model || !form.plate) {
+    if (!form.vehicleName || !form.model || !form.plate || !form.ownerPhone) {
       alert("⚠️ Fill all fields");
       return;
     }
@@ -71,14 +72,24 @@ const AddVehiclePage = () => {
         qrData: scannedQR || null,
       };
 
+      console.log("🚀 PAYLOAD:", payload);
+
       await axiosSecure.post("/api/vehicle/add", payload);
 
       alert("✅ Vehicle Added Successfully");
 
-      setForm({ vehicleName: "", model: "", plate: "" });
+      // reset
+      setForm({
+        vehicleName: "",
+        model: "",
+        plate: "",
+        ownerPhone: "",
+      });
+
       setDriver({ name: "", phone: "" });
       setShowDriverForm(false);
       setScannedQR(null);
+
     } catch (err) {
       console.log(err);
       alert("❌ Failed to add vehicle");
@@ -101,7 +112,10 @@ const AddVehiclePage = () => {
         (text) => {
           scanner.stop();
           setScanning(false);
-          setScannedQR(text);
+
+          // 🔥 FIX: extract only QR code
+          const code = text.split("/").pop();
+          setScannedQR(code);
         }
       );
     });
@@ -122,6 +136,7 @@ const AddVehiclePage = () => {
 
         <form onSubmit={handleSubmit} className="bg-white p-4 rounded space-y-3">
 
+          {/* VEHICLE */}
           <input
             name="vehicleName"
             value={form.vehicleName}
@@ -143,6 +158,15 @@ const AddVehiclePage = () => {
             value={form.plate}
             onChange={handleChange}
             placeholder="Plate"
+            className="w-full p-3 border rounded"
+          />
+
+          {/* ✅ OWNER PHONE FIX */}
+          <input
+            name="ownerPhone"
+            value={form.ownerPhone}
+            onChange={handleChange}
+            placeholder="Owner Phone"
             className="w-full p-3 border rounded"
           />
 
@@ -169,7 +193,7 @@ const AddVehiclePage = () => {
                 name="phone"
                 value={driver.phone}
                 onChange={handleDriverChange}
-                placeholder="Phone"
+                placeholder="Driver Phone"
                 className="w-full p-2 border"
               />
             </div>
@@ -191,7 +215,7 @@ const AddVehiclePage = () => {
               )}
 
               {scannedQR && (
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-blue-600 mt-1">
                   QR: {scannedQR}
                 </p>
               )}
@@ -202,6 +226,7 @@ const AddVehiclePage = () => {
           <button className="w-full bg-green-600 text-white py-3 rounded">
             Save Vehicle
           </button>
+
         </form>
 
       </div>

@@ -2,30 +2,55 @@ import React, { createContext, useEffect, useState } from "react";
 
 const CartContext = createContext();
 
+const CART_KEY = "cart";
+const EXPIRY_KEY = "cart_expiry";
+
+// 48 hours in milliseconds
+const EXPIRY_TIME = 48 * 60 * 60 * 1000;
+
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
 
-  // load from localStorage
+  // 🔥 LOAD CART WITH EXPIRY CHECK
   useEffect(() => {
-    const storedCart = localStorage.getItem("cart");
-    if (storedCart) {
-      setCartItems(JSON.parse(storedCart));
+    const storedCart = localStorage.getItem(CART_KEY);
+    const expiry = localStorage.getItem(EXPIRY_KEY);
+
+    const now = new Date().getTime();
+
+    if (storedCart && expiry) {
+      if (now > Number(expiry)) {
+        // ❌ expired → clear
+        localStorage.removeItem(CART_KEY);
+        localStorage.removeItem(EXPIRY_KEY);
+        setCartItems([]);
+      } else {
+        setCartItems(JSON.parse(storedCart));
+      }
     }
   }, []);
 
-  // save to localStorage
+  // 🔥 SAVE CART WITH 48H EXPIRY RESET
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
+    if (cartItems.length > 0) {
+      localStorage.setItem(CART_KEY, JSON.stringify(cartItems));
+      localStorage.setItem(
+        EXPIRY_KEY,
+        (new Date().getTime() + EXPIRY_TIME).toString()
+      );
+    }
   }, [cartItems]);
 
-  // ➕ ADD ITEM
+  // ➕ ADD
   const addToCart = (item) => {
     setCartItems((prev) => {
-      const exists = prev.find((i) => i.id === item.id);
+      const exists = prev.find((i) => i._id === item._id);
 
       if (exists) {
         return prev.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          i._id === item._id
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
         );
       }
 
@@ -33,17 +58,23 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  // ➖ REMOVE ITEM
-  const removeFromCart = (id) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  // ➕ INCREASE
+  const increaseQty = (id) => {
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item._id === id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      )
+    );
   };
 
-  // 🔻 DECREASE quantity
+  // ➖ DECREASE
   const decreaseQty = (id) => {
     setCartItems((prev) =>
       prev
         .map((item) =>
-          item.id === id
+          item._id === id
             ? { ...item, quantity: item.quantity - 1 }
             : item
         )
@@ -51,9 +82,18 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  // 🧹 CLEAR CART
+  // ❌ REMOVE
+  const removeFromCart = (id) => {
+    setCartItems((prev) =>
+      prev.filter((item) => item._id !== id)
+    );
+  };
+
+  // 🧹 CLEAR
   const clearCart = () => {
     setCartItems([]);
+    localStorage.removeItem(CART_KEY);
+    localStorage.removeItem(EXPIRY_KEY);
   };
 
   return (
@@ -61,8 +101,9 @@ export const CartProvider = ({ children }) => {
       value={{
         cartItems,
         addToCart,
-        removeFromCart,
+        increaseQty,
         decreaseQty,
+        removeFromCart,
         clearCart,
       }}
     >

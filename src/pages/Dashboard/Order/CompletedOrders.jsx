@@ -1,11 +1,19 @@
-import React from 'react';
+import { useQuery } from "@tanstack/react-query";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import OrderTable from "../../../components/OrderTable";
 
 const CompletedOrders = () => {
-    return (
-        <div>
-            <h1>Completed Orders</h1>
-        </div>
-    );
+  const axiosSecure = useAxiosSecure();
+
+  const { data: orders = [] } = useQuery({
+    queryKey: ["completed-orders"],
+    queryFn: async () => {
+      const res = await axiosSecure.get("/api/order/completed");
+      return res.data;
+    },
+  });
+
+  return <OrderTable title="Completed Orders" orders={orders} />;
 };
 
 export default CompletedOrders;

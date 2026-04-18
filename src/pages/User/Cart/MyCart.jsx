@@ -1,20 +1,36 @@
-import React from "react";
-import useCart from "../../../hooks/useCart";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import useCart from "../../../hooks/useCart";
 
 const MyCart = () => {
-  const { cartItems, removeFromCart, increaseQty, decreaseQty, clearCart } = useCart();
+  const {
+    cartItems,
+    removeFromCart,
+    increaseQty,
+    decreaseQty,
+    clearCart,
+  } = useCart();
+
   const navigate = useNavigate();
 
-  // 💰 Total price calculate
-  const totalPrice = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
+  // 💰 Total price (optimized)
+  const totalPrice = useMemo(() => {
+    return cartItems.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
+  }, [cartItems]);
+
+  // 📦 Total items (quantity based)
+  const totalItems = useMemo(() => {
+    return cartItems.reduce(
+      (acc, item) => acc + item.quantity,
+      0
+    );
+  }, [cartItems]);
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-
+    <div className="max-w-5xl mx-auto p-6 min-h-screen flex flex-col">
       {/* Header */}
       <h1 className="text-3xl font-bold mb-6">🛒 My Cart</h1>
 
@@ -24,7 +40,7 @@ const MyCart = () => {
           <p className="text-gray-500 text-lg">Your cart is empty</p>
 
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/shop")}
             className="mt-4 px-6 py-3 bg-yellow-400 rounded-lg font-semibold"
           >
             Go Shopping
@@ -36,19 +52,21 @@ const MyCart = () => {
           <div className="space-y-4">
             {cartItems.map((item) => (
               <div
-                key={item.id}
+                key={item._id || item.id || item.productId}
                 className="flex items-center justify-between p-4 border rounded-lg shadow-sm bg-white"
               >
                 {/* Product Info */}
                 <div className="flex items-center gap-4">
                   <img
                     src={item.image}
-                    alt={item.name}
+                    alt={item.title || item.name}
                     className="w-16 h-16 object-cover rounded"
                   />
 
                   <div>
-                    <h2 className="font-semibold">{item.name}</h2>
+                    <h2 className="font-semibold">
+                      {item.title || item.name}
+                    </h2>
                     <p className="text-gray-500">৳ {item.price}</p>
                   </div>
                 </div>
@@ -56,7 +74,9 @@ const MyCart = () => {
                 {/* Quantity Control */}
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => decreaseQty(item.id)}
+                    onClick={() =>
+                      item.quantity > 1 && decreaseQty(item._id)
+                    }
                     className="px-3 py-1 bg-gray-200 rounded"
                   >
                     -
@@ -65,7 +85,7 @@ const MyCart = () => {
                   <span>{item.quantity}</span>
 
                   <button
-                    onClick={() => increaseQty(item.id)}
+                    onClick={() => increaseQty(item._id)}
                     className="px-3 py-1 bg-gray-200 rounded"
                   >
                     +
@@ -79,7 +99,7 @@ const MyCart = () => {
 
                 {/* Remove */}
                 <button
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => removeFromCart(item._id)}
                   className="text-red-500 font-semibold"
                 >
                   Remove
@@ -90,9 +110,11 @@ const MyCart = () => {
 
           {/* Bottom Summary */}
           <div className="mt-8 p-6 border rounded-lg bg-yellow-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-
             <div>
-              <p className="text-gray-600">Total Items: {cartItems.length}</p>
+              <p className="text-gray-600">
+                Total Items: {totalItems}
+              </p>
+
               <p className="text-2xl font-bold text-amber-600">
                 Total: ৳ {totalPrice}
               </p>
@@ -113,7 +135,6 @@ const MyCart = () => {
                 Checkout
               </button>
             </div>
-
           </div>
         </>
       )}

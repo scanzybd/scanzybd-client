@@ -4,7 +4,7 @@ import { HashLink } from 'react-router-hash-link';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 import useAuth from '../../../../hooks/useAuth';
-import useCart from '../../../../hooks/useCart'; // ✅ FIXED IMPORT
+import useCart from '../../../../hooks/useCart';
 
 const Navbar = () => {
   const location = useLocation();
@@ -36,7 +36,7 @@ const Navbar = () => {
       <li>
         <HashLink
           smooth
-          to="/#services"
+          to="Products"
           className={`px-3 py-2 rounded-xl transition-colors duration-200 text-gray-900 hover:bg-yellow-200 ${
             location.hash === '#services' ? 'bg-white shadow-sm' : ''
           }`}
@@ -47,7 +47,7 @@ const Navbar = () => {
 
       <li>
         <HashLink
-          to="/aboutUs"
+          to="/about"
           className={`px-3 py-2 rounded-xl transition-colors duration-200 text-gray-900 hover:bg-yellow-200 ${
             location.pathname === '/aboutUs' ? 'bg-white shadow-sm' : ''
           }`}
@@ -170,6 +170,9 @@ const Navbar = () => {
               </li>
               <li>
                 <Link to="/user/my-vehiclePage">Vehicles</Link>
+              </li>
+              <li>
+                <Link to="/user/payment">Payments</Link>
               </li>
 
               <li>

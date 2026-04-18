@@ -1,83 +1,39 @@
 import React, { useState } from "react";
-import {
-  ShoppingCart,
-  Trash2,
-  Heart,
-  Star,
-  Filter,
-  Search,
-} from "lucide-react";
-
-import product01 from "../../../assets/product/product01.png";
-import product02 from "../../../assets/product/product02.png";
-
-import useCart from "../../../hooks/useCart"; // ✅ FIXED
+import { ShoppingCart, Trash2, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+
+import productFallback from "../../../assets/product/product01.png";
+
+import useCart from "../../../hooks/useCart";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const ProductShowcase = () => {
-  const [wishlist, setWishlist] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPrice, setFilterPrice] = useState("all");
   const [notification, setNotification] = useState(null);
 
-  const { cartItems, addToCart, removeFromCart } = useCart(); // ✅ MAIN FIX
   const navigate = useNavigate();
+  const axiosSecure = useAxiosSecure();
+  const { cartItems, addToCart, removeFromCart } = useCart();
 
-  const products = [
-    {
-      id: 1,
-      name: "QR Sticker Premium",
-      price: 199,
-      originalPrice: 299,
-      image: product01,
-      category: "Sticker",
-      rating: 4.5,
-      reviews: 128,
-      inStock: true,
-      badge: "Popular",
+  // ✅ FETCH PRODUCTS FROM DB
+  const {
+    data: products = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const res = await axiosSecure.get("/api/products");
+      return res.data;
     },
-    {
-      id: 2,
-      name: "Vehicle QR Tag Plate",
-      price: 499,
-      originalPrice: 699,
-      image: product02,
-      category: "Tag",
-      rating: 4.8,
-      reviews: 342,
-      inStock: true,
-      badge: "Best Seller",
-    },
-    {
-      id: 3,
-      name: "Digital Service Card",
-      price: 299,
-      originalPrice: 399,
-      image: product01,
-      category: "Card",
-      rating: 4.3,
-      reviews: 95,
-      inStock: true,
-      badge: "New",
-    },
-    {
-      id: 4,
-      name: "Pet ID Tag QR",
-      price: 149,
-      originalPrice: 249,
-      image: product02,
-      category: "Pet",
-      rating: 4.6,
-      reviews: 201,
-      inStock: true,
-      badge: "",
-    },
-  ];
+  });
 
   // 🔎 FILTER
   const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name
-      .toLowerCase()
+    const matchesSearch = product.title
+      ?.toLowerCase()
       .includes(searchTerm.toLowerCase());
 
     const matchesPrice =
@@ -91,31 +47,22 @@ const ProductShowcase = () => {
     return matchesSearch && matchesPrice;
   });
 
+  // 🔔 NOTIFICATION
+  const showNotification = (type, message) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
   // ➕ ADD TO CART
   const handleAddToCart = (product) => {
     addToCart(product);
-    showNotification("success", `${product.name} added to cart!`);
+    showNotification("success", `${product.title} added to cart!`);
   };
 
   // ❌ REMOVE FROM CART
   const handleRemove = (id) => {
     removeFromCart(id);
-    showNotification("success", "Item removed from cart!");
-  };
-
-  // ❤️ WISHLIST
-  const toggleWishlist = (id) => {
-    setWishlist((prev) =>
-      prev.includes(id)
-        ? prev.filter((item) => item !== id)
-        : [...prev, id]
-    );
-  };
-
-  // 🔔 NOTIFICATION
-  const showNotification = (type, message) => {
-    setNotification({ type, message });
-    setTimeout(() => setNotification(null), 3000);
+    showNotification("success", "Item removed!");
   };
 
   // 💳 CHECKOUT
@@ -135,7 +82,21 @@ const ProductShowcase = () => {
     0
   );
 
-  const discountPrice = totalPrice > 0 ? Math.round(totalPrice * 0.1) : 0;
+  const discount = totalPrice > 0 ? Math.round(totalPrice * 0.1) : 0;
+
+  // ⏳ LOADING
+  if (isLoading) {
+    return <p className="text-center py-10">Loading products...</p>;
+  }
+
+  // ❌ ERROR
+  if (isError) {
+    return (
+      <p className="text-center text-red-500 py-10">
+        Failed to load products
+      </p>
+    );
+  }
 
   return (
     <div className="w-full bg-gradient-to-b from-slate-50 via-white to-slate-50">
@@ -144,9 +105,9 @@ const ProductShowcase = () => {
       {notification && (
         <div className="fixed top-4 right-4 z-50">
           <div
-            className={`px-6 py-3 rounded-lg shadow-lg text-white font-medium ${
+            className={`px-6 py-3 rounded-lg shadow-lg text-white ${
               notification.type === "success"
-                ? "bg-emerald-500"
+                ? "bg-green-500"
                 : "bg-red-500"
             }`}
           >
@@ -156,7 +117,7 @@ const ProductShowcase = () => {
       )}
 
       {/* HEADER */}
-      <div className="bg-gradient-to-r from-yellow-400 to-amber-500 py-12 px-4 text-center">
+      <div className="bg-gradient-to-r from-yellow-400 to-amber-500 py-12 text-center">
         <h1 className="text-4xl font-bold text-white">
           Featured Products
         </h1>
@@ -165,7 +126,6 @@ const ProductShowcase = () => {
         </p>
       </div>
 
-      {/* MAIN */}
       <div className="max-w-7xl mx-auto px-4 py-12 grid lg:grid-cols-3 gap-8">
 
         {/* PRODUCTS */}
@@ -195,19 +155,35 @@ const ProductShowcase = () => {
             </select>
           </div>
 
-          {/* PRODUCT LIST */}
+          {/* PRODUCT GRID */}
           <div className="grid sm:grid-cols-2 gap-6">
             {filteredProducts.map((product) => (
               <div
-                key={product.id}
+                key={product._id}
                 className="bg-white p-4 rounded-xl shadow"
               >
-                <img src={product.image} className="h-40 w-full object-cover" />
+                <img
+                  src={product.image || productFallback}
+                  alt={product.title}
+                  className="h-40 w-full object-cover"
+                />
 
-                <h3 className="font-bold mt-2">{product.name}</h3>
+                <h3 className="font-bold mt-2">{product.title}</h3>
 
-                <p className="text-yellow-600 font-bold">
+                <p className="text-sm text-gray-500 line-clamp-2">
+                  {product.description}
+                </p>
+
+                <p className="text-yellow-600 font-bold mt-1">
                   ৳ {product.price}
+                </p>
+
+                <p className="text-sm text-gray-600">
+                  ⭐ {product.rating} ({product.reviews})
+                </p>
+
+                <p className="text-xs text-gray-400">
+                  {product.type}
                 </p>
 
                 <button
@@ -225,7 +201,7 @@ const ProductShowcase = () => {
         {/* CART */}
         <div className="bg-white p-5 rounded-xl shadow h-fit sticky top-20">
 
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between mb-4">
             <h2 className="font-bold text-xl">Cart</h2>
             <span className="bg-yellow-400 px-3 py-1 rounded-full">
               {cartItems.length}
@@ -238,15 +214,15 @@ const ProductShowcase = () => {
             <>
               {cartItems.map((item) => (
                 <div
-                  key={item.id}
-                  className="flex justify-between items-center mb-2"
+                  key={item._id}
+                  className="flex justify-between mb-2"
                 >
                   <div>
-                    <p className="font-medium">{item.name}</p>
+                    <p>{item.title}</p>
                     <p className="text-yellow-600">৳ {item.price}</p>
                   </div>
 
-                  <button onClick={() => handleRemove(item.id)}>
+                  <button onClick={() => handleRemove(item._id)}>
                     <Trash2 className="text-red-500 w-4 h-4" />
                   </button>
                 </div>
@@ -254,7 +230,7 @@ const ProductShowcase = () => {
 
               <hr className="my-3" />
 
-              <p>Total: ৳ {totalPrice - discountPrice}</p>
+              <p>Total: ৳ {totalPrice - discount}</p>
 
               <button
                 onClick={handleCheckout}
