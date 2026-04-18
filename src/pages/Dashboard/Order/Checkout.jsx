@@ -24,8 +24,11 @@ const Checkout = () => {
       (sum, item) =>
         sum + Number(item.price) * Number(item.quantity || 1),
       0
+      
     );
+    
   }, [cart]);
+  
 
   const handlePayment = async () => {
     if (loading) return;
