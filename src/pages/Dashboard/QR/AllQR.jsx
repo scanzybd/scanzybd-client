@@ -1,93 +1,433 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import {
+  QrCode,
+  Filter,
+  RotateCcw,
+  BarChart3,
+  Bike,
+  Car,
+  ScanLine,
+  Link2,
+  CheckCircle2,
+  CircleDashed,
+  CalendarDays,
+} from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import SmartLoader from "../../../components/SmartLoader";
+
+function daysInMonth(yearStr, monthStr) {
+  const y = yearStr ? parseInt(yearStr, 10) : new Date().getFullYear();
+  const m = monthStr ? parseInt(monthStr, 10) : 1;
+  if (monthStr === "" || Number.isNaN(m)) return 31;
+  return new Date(y, m, 0).getDate();
+}
+
+function formatCreatedAt(iso, lng) {
+  if (!iso) return "—";
+  try {
+    const loc = lng === "bn" ? "bn-BD" : "en-US";
+    return new Date(iso).toLocaleString(loc, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "—";
+  }
+}
 
 const AllQR = () => {
-    const axiosSecure = useAxiosSecure();
+  const { t, i18n } = useTranslation();
+  const axiosSecure = useAxiosSecure();
 
-    const [qrCodes, setQrCodes] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const yearOptions = useMemo(() => {
+    const y = new Date().getFullYear();
+    const out = [{ value: "", label: t("common.allYears") }];
+    for (let i = y + 1; i >= y - 8; i--) {
+      out.push({ value: String(i), label: String(i) });
+    }
+    return out;
+  }, [t]);
 
-    useEffect(() => {
-        const fetchQR = async () => {
-            try {
-                const res = await axiosSecure.get("/api/qr/allQR");
+  const [filterYear, setFilterYear] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
+  const [filterDay, setFilterDay] = useState("");
+  const [filterQrType, setFilterQrType] = useState("");
 
-                // ✅ backend returns array directly
-                setQrCodes(res.data);
+  const maxDay = daysInMonth(filterYear || String(new Date().getFullYear()), filterMonth);
 
-            } catch (error) {
-                console.error("Error fetching QR codes:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+  useEffect(() => {
+    if (!filterMonth || !filterDay) return;
+    const d = parseInt(filterDay, 10);
+    if (d > maxDay) setFilterDay(String(maxDay));
+  }, [filterMonth, filterYear, maxDay, filterDay]);
 
-        fetchQR();
-    }, [axiosSecure]);
+  const queryParams = useMemo(() => {
+    const p = new URLSearchParams();
+    if (filterYear) p.set("year", filterYear);
+    if (filterMonth) p.set("month", filterMonth);
+    if (filterDay && filterMonth) p.set("day", filterDay);
+    if (filterQrType) p.set("qrType", filterQrType);
+    return p.toString();
+  }, [filterYear, filterMonth, filterDay, filterQrType]);
 
-    if (loading) return <p>Loading QR Codes...</p>;
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
+    queryKey: ["dashboard-all-qr", filterYear, filterMonth, filterDay, filterQrType],
+    queryFn: async () => {
+      const q = queryParams ? `?${queryParams}` : "";
+      const res = await axiosSecure.get(`/api/qr/allQR${q}`);
+      return res.data;
+    },
+  });
 
-    return (
-        <div style={{ padding: "20px" }}>
-            <h1>All QR Codes {qrCodes.length}</h1>
+  const qrCodes = Array.isArray(data?.data) ? data.data : [];
+  const analytics = data?.analytics ?? {
+    total: 0,
+    assigned: 0,
+    unassigned: 0,
+    totalScans: 0,
+    byType: {},
+  };
 
-            {qrCodes.length === 0 ? (
-                <p>No QR codes found</p>
-            ) : (
-                <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: "20px"
-                }}>
-                    {qrCodes.map((qr) => (
-                        <div
-                            key={qr._id}
-                            style={{
-                                border: "1px solid #ddd",
-                                borderRadius: "10px",
-                                padding: "15px",
-                                textAlign: "center",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                display: "flex",
-                                flexDirection: "column"
-                            }}
-                        >
-                            <img
-                                src={qr.qrCode}
-                                alt="QR Code"
-                                style={{
-                                    width: "140px",
-                                    height: "140px",
-                                    marginBottom: "10px"
-                                }}
-                            />
+  const resetFilters = () => {
+    setFilterYear("");
+    setFilterMonth("");
+    setFilterDay("");
+    setFilterQrType("");
+  };
 
-                            <p><strong>{qr.code}</strong></p>
+  const dayOptions = useMemo(() => {
+    const opts = [{ value: "", label: t("common.allDays") }];
+    if (!filterMonth) return opts;
+    const n = maxDay;
+    for (let d = 1; d <= n; d++) {
+      opts.push({ value: String(d), label: String(d) });
+    }
+    return opts;
+  }, [filterMonth, maxDay, t]);
 
-                            <p style={{
-                                color: qr.status === "assigned" ? "green" : "orange",
-                                fontWeight: "bold"
-                            }}>
-                                {qr.status}
-                            </p>
+  const statCards = useMemo(
+    () => [
+      {
+        id: "total",
+        title: t("dashboard.qr.all.stats.totalQr"),
+        value: analytics.total,
+        sub: t("dashboard.qr.all.stats.totalQrSub"),
+        icon: QrCode,
+        className: "border-blue-200 bg-blue-50/80 text-blue-800",
+        iconBg: "bg-blue-600 text-white",
+      },
+      {
+        id: "assigned",
+        title: t("dashboard.qr.all.stats.assigned"),
+        value: analytics.assigned,
+        sub: t("dashboard.qr.all.stats.assignedSub"),
+        icon: CheckCircle2,
+        className: "border-emerald-200 bg-emerald-50/80 text-emerald-900",
+        iconBg: "bg-emerald-600 text-white",
+      },
+      {
+        id: "unassigned",
+        title: t("dashboard.qr.all.stats.unassigned"),
+        value: analytics.unassigned,
+        sub: t("dashboard.qr.all.stats.unassignedSub"),
+        icon: CircleDashed,
+        className: "border-amber-200 bg-amber-50/80 text-amber-900",
+        iconBg: "bg-amber-500 text-white",
+      },
+      {
+        id: "scans",
+        title: t("dashboard.qr.all.stats.totalScans"),
+        value: analytics.totalScans,
+        sub: t("dashboard.qr.all.stats.totalScansSub"),
+        icon: ScanLine,
+        className: "border-violet-200 bg-violet-50/80 text-violet-900",
+        iconBg: "bg-violet-600 text-white",
+      },
+      {
+        id: "bike",
+        title: t("dashboard.qr.all.stats.bikeTags"),
+        value: analytics.byType?.bike ?? 0,
+        sub: t("dashboard.qr.all.stats.bikeTagsSub"),
+        icon: Bike,
+        className: "border-teal-200 bg-teal-50/80 text-teal-900",
+        iconBg: "bg-teal-600 text-white",
+      },
+      {
+        id: "car",
+        title: t("dashboard.qr.all.stats.carTags"),
+        value: analytics.byType?.car ?? 0,
+        sub: t("dashboard.qr.all.stats.carTagsSub"),
+        icon: Car,
+        className: "border-slate-300 bg-slate-100/90 text-slate-900",
+        iconBg: "bg-slate-800 text-white",
+      },
+    ],
+    [t, analytics]
+  );
 
-                            <p>Scans: {qr.scanCount}</p>
+  if (isLoading && !data) {
+    return <SmartLoader fullPage label={t("dashboard.qr.all.loading")} />;
+  }
 
-                            <a
-                                href={qr.qrLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{ fontSize: "12px" }}
-                            >
-                                Open QR Link
-                            </a>
-                        </div>
-                    ))}
-                </div>
+  return (
+    <div className="min-h-[calc(100vh-6rem)] space-y-6">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 p-6 shadow-sm sm:p-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/25">
+              <QrCode className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                {t("dashboard.qr.all.title")}
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                {t("dashboard.qr.all.subtitle")}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-xs text-slate-500">
+            <BarChart3 className="h-4 w-4 text-indigo-600" />
+            <span>{t("dashboard.qr.all.liveFilter")}</span>
+            {isFetching && (
+              <span className="loading loading-spinner loading-xs text-indigo-600" />
             )}
+          </div>
         </div>
-    );
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <Filter className="h-4 w-4 text-slate-400" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            {t("dashboard.qr.all.filterHeading")}
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
+          <label className="form-control w-full min-w-[160px] max-w-xs">
+            <span className="label-text mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+              <Bike className="h-3.5 w-3.5" />
+              {t("dashboard.qr.all.typeLabel")}
+            </span>
+            <select
+              className="select select-bordered w-full rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-500"
+              value={filterQrType}
+              onChange={(e) => setFilterQrType(e.target.value)}
+            >
+              <option value="">{t("dashboard.qr.all.allTypes")}</option>
+              <option value="bike">{t("dashboard.qr.all.bike")}</option>
+              <option value="car">{t("dashboard.qr.all.car")}</option>
+            </select>
+          </label>
+
+          <label className="form-control w-full min-w-[140px] max-w-xs">
+            <span className="label-text mb-1 text-xs font-medium text-slate-500">
+              {t("dashboard.qr.all.year")}
+            </span>
+            <select
+              className="select select-bordered w-full rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-500"
+              value={filterYear}
+              onChange={(e) => {
+                setFilterYear(e.target.value);
+                setFilterDay("");
+              }}
+            >
+              {yearOptions.map((o) => (
+                <option key={o.value || "all"} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="form-control w-full min-w-[160px] max-w-xs">
+            <span className="label-text mb-1 text-xs font-medium text-slate-500">
+              {t("dashboard.qr.all.month")}
+            </span>
+            <select
+              className="select select-bordered w-full rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-500"
+              value={filterMonth}
+              onChange={(e) => {
+                setFilterMonth(e.target.value);
+                setFilterDay("");
+              }}
+            >
+              <option value="">{t("common.allMonths")}</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                <option key={m} value={String(m)}>
+                  {t(`common.months.${m}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="form-control w-full min-w-[120px] max-w-xs">
+            <span className="label-text mb-1 text-xs font-medium text-slate-500">
+              {t("dashboard.qr.all.day")}
+            </span>
+            <select
+              className="select select-bordered w-full rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-500 disabled:opacity-50"
+              value={filterDay}
+              disabled={!filterMonth}
+              onChange={(e) => setFilterDay(e.target.value)}
+            >
+              {dayOptions.map((o) => (
+                <option key={o.value || "all-d"} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button
+            type="button"
+            className="btn btn-outline gap-2 rounded-xl border-slate-200"
+            onClick={resetFilters}
+          >
+            <RotateCcw className="h-4 w-4" />
+            {t("dashboard.qr.all.reset")}
+          </button>
+        </div>
+
+        <p className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <CalendarDays className="h-3.5 w-3.5" />
+          {t("dashboard.qr.all.filterHint")}
+        </p>
+      </div>
+
+      <div>
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-400">
+          <BarChart3 className="h-4 w-4" />
+          {t("dashboard.qr.all.analytics")}
+        </h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+          {statCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div
+                key={card.id}
+                className={`rounded-2xl border p-4 shadow-sm ${card.className}`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-medium opacity-90">{card.title}</p>
+                    <p className="mt-1 text-2xl font-bold tabular-nums">{card.value}</p>
+                    <p className="mt-1 text-[11px] opacity-75">{card.sub}</p>
+                  </div>
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.iconBg}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {isError && (
+        <div
+          role="alert"
+          className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
+        >
+          {error?.message || t("dashboard.qr.all.loadError")}
+          <button
+            type="button"
+            className="btn btn-sm ml-3 rounded-lg"
+            onClick={() => refetch()}
+          >
+            {t("common.retry")}
+          </button>
+        </div>
+      )}
+
+      {qrCodes.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 py-16 text-center">
+          <QrCode className="mx-auto h-10 w-10 text-slate-300" />
+          <p className="mt-3 text-sm font-medium text-slate-600">
+            {t("dashboard.qr.all.noResults")}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {qrCodes.map((qr) => {
+            const isAssigned = qr.status === "assigned" || qr.isAssigned;
+            const type = qr.qrType || "bike";
+            return (
+              <article
+                key={qr._id}
+                className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-indigo-200 hover:shadow-md"
+              >
+                <div className="relative bg-gradient-to-b from-slate-50 to-white px-4 pt-4">
+                  <div className="mx-auto flex h-[148px] w-[148px] items-center justify-center rounded-2xl bg-white p-2 shadow-inner ring-1 ring-slate-100">
+                    <img
+                      src={qr.qrCode}
+                      alt=""
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                  <div className="absolute right-3 top-3 flex gap-1">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                        type === "car"
+                          ? "bg-slate-800 text-white"
+                          : "bg-emerald-600 text-white"
+                      }`}
+                    >
+                      {type === "car" ? "Car" : "Bike"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-1 flex-col gap-2 p-4">
+                  <p className="break-all font-mono text-sm font-semibold text-slate-900">
+                    {qr.code}
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span
+                      className={`rounded-full px-2.5 py-1 font-semibold ${
+                        isAssigned
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {isAssigned ? "assigned" : qr.status || "unassigned"}
+                    </span>
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">
+                      {t("dashboard.qr.all.scan")}: {qr.scanCount ?? 0}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-500">
+                    {t("dashboard.qr.all.created")}:{" "}
+                    {formatCreatedAt(qr.createdAt, i18n.language)}
+                  </p>
+
+                  <a
+                    href={qr.qrLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-sm mt-auto gap-2 rounded-xl border border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
+                  >
+                    <Link2 className="h-3.5 w-3.5" />
+                    {t("dashboard.qr.all.openLink")}
+                  </a>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default AllQR;

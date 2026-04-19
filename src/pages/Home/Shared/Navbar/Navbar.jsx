@@ -5,12 +5,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 import useAuth from '../../../../hooks/useAuth';
 import useCart from '../../../../hooks/useCart';
+import LanguageSwitcher from '../../../../components/LanguageSwitcher';
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { logOut, user } = useAuth();
+  const { logOut, user, userRole, loading } = useAuth();
   const { cartItems } = useCart(); // ✅ cart context
 
 
@@ -36,9 +37,9 @@ const Navbar = () => {
       <li>
         <HashLink
           smooth
-          to="Products"
+          to="/Products"
           className={`px-3 py-2 rounded-xl transition-colors duration-200 text-gray-900 hover:bg-yellow-200 ${
-            location.hash === '#services' ? 'bg-white shadow-sm' : ''
+            location.pathname === '/Products' ? 'bg-white shadow-sm' : ''
           }`}
         >
           Products
@@ -49,7 +50,7 @@ const Navbar = () => {
         <HashLink
           to="/about"
           className={`px-3 py-2 rounded-xl transition-colors duration-200 text-gray-900 hover:bg-yellow-200 ${
-            location.pathname === '/aboutUs' ? 'bg-white shadow-sm' : ''
+            location.pathname === '/about' ? 'bg-white shadow-sm' : ''
           }`}
         >
           About Us
@@ -67,7 +68,7 @@ const Navbar = () => {
         </HashLink>
       </li>
 
-      {user && (
+      {user && (userRole === "admin" || userRole === "provider") && (
         <li>
           <Link
             to="/dashboard"
@@ -83,115 +84,136 @@ const Navbar = () => {
   );
 
   return (
-    <div className="navbar sticky top-0 z-50 bg-yellow-300/95 backdrop-blur-sm border-b border-yellow-200 shadow-lg shadow-yellow-500/20">
-
-      {/* LEFT */}
-      <div className="navbar-start">
-        <div className="dropdown">
-          <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
-            ☰
-          </div>
-
-          <ul
-            tabIndex={0}
-            className="menu menu-sm dropdown-content bg-base-100 rounded-box mt-3 w-52 p-2 shadow"
-          >
-            {navItems}
-          </ul>
-        </div>
-
-        <Link to="/" className="btn btn-ghost text-xl">
-          <ProFastLogo />
-        </Link>
-      </div>
-
-      {/* CENTER */}
-      <div className="navbar-center hidden lg:flex">
-        <ul className="menu menu-horizontal px-1 gap-1">
-          {navItems}
-        </ul>
-      </div>
-
-      {/* RIGHT */}
-      <div className="navbar-end gap-3">
-
-        {/* ✅ CART ICON WITH BADGE */}
-        <Link to="/user/my-cart" className="btn btn-ghost btn-circle relative">
-          <ShoppingCart className="w-5 h-5 text-yellow-800" />
-
-          {cartItems?.length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-              {cartItems.length}
-            </span>
-          )}
-        </Link>
-
-        {/* AUTH BUTTONS */}
-        {!user && (
-          <>
-            <Link
-              to="/login"
-              className="btn rounded-xl bg-yellow-500 text-gray-900 hover:bg-yellow-600 px-5"
-            >
-              Sign In
-            </Link>
-
-            <Link
-              to="/register"
-              className="btn rounded-xl bg-yellow-500 text-gray-900 hover:bg-yellow-600 px-5"
-            >
-              Sign Up
-            </Link>
-          </>
-        )}
-
-        {/* PROFILE DROPDOWN */}
-        {user && (
-          <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-              <div className="w-10 rounded-full bg-yellow-500 flex items-center justify-center font-bold">
-                {user?.displayName?.charAt(0).toUpperCase() || 'U'}
+    <header className="sticky top-0 z-50 border-b border-yellow-200 bg-yellow-300/95 backdrop-blur-sm shadow-lg shadow-yellow-500/20">
+      <div className="app-container">
+        <div className="navbar min-h-16 px-0">
+          {/* LEFT */}
+          <div className="navbar-start gap-1">
+            <div className="dropdown">
+              <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
+                ☰
               </div>
+
+              <ul
+                tabIndex={0}
+                className="menu menu-sm dropdown-content bg-base-100 rounded-box mt-3 w-64 max-w-[80vw] p-2 shadow"
+              >
+                {navItems}
+              </ul>
             </div>
 
-            <ul className="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow">
-              <li className="px-3 py-2 text-sm font-semibold">
-                {user?.displayName || user?.email}
-              </li>
+            <Link to="/" className="btn btn-ghost px-2 text-lg sm:text-xl">
+              <ProFastLogo />
+            </Link>
+          </div>
 
-              <hr className="my-2" />
-
-            
-              <li>
-                <Link to="/user/user-profile">Profile</Link>
-              </li>
-              <li>
-                <Link to="/user/user-orders">Orders</Link>
-              </li>
-              <li>
-                <Link to="/user/my-vehiclePage">Vehicles</Link>
-              </li>
-              <li>
-                <Link to="/user/payment">Payments</Link>
-              </li>
-
-              <li>
-                <Link to="/user/user-settings">Settings</Link>
-              </li>
-
-              <hr className="my-2" />
-
-              <li>
-                <button onClick={handleLogOut} className="text-red-500">
-                  Logout
-                </button>
-              </li>
+          {/* CENTER */}
+          <div className="navbar-center hidden lg:flex">
+            <ul className="menu menu-horizontal px-1 gap-1">
+              {navItems}
             </ul>
           </div>
-        )}
 
+          {/* RIGHT */}
+          <div className="navbar-end gap-1 sm:gap-2 lg:gap-3">
+            {/* <LanguageSwitcher /> */}
+            <Link to="/user/my-cart" className="btn btn-ghost btn-circle relative">
+              <ShoppingCart className="h-5 w-5 text-yellow-800" />
+
+              {cartItems?.length > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                  {cartItems.length}
+                </span>
+              )}
+            </Link>
+
+            {!user && !loading && (
+              <>
+                <Link
+                  to="/login"
+                  className="btn rounded-xl bg-yellow-500 px-3 text-gray-900 hover:bg-yellow-600 sm:px-5"
+                >
+                  Sign In
+                </Link>
+
+                <Link
+                  to="/register"
+                  className="btn hidden rounded-xl bg-yellow-500 px-5 text-gray-900 hover:bg-yellow-600 sm:inline-flex"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+
+            {loading && (
+              <span className="loading loading-spinner loading-sm text-yellow-700" />
+            )}
+
+            {user && !loading && (
+              <Link
+                to={userRole === "admin" || userRole === "provider" ? "/dashboard" : "/user/user-profile"}
+                className="btn hidden rounded-xl bg-white/80 px-4 text-slate-800 hover:bg-white md:inline-flex"
+              >
+                {userRole === "admin" || userRole === "provider" ? "Dashboard" : "My Account"}
+              </Link>
+            )}
+
+            {user && !loading && (
+              <div className="dropdown dropdown-end">
+                <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
+                  <div className="flex w-10 items-center justify-center rounded-full bg-yellow-500 font-bold">
+                    {user?.displayName?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                </div>
+
+                <ul className="dropdown-content menu bg-base-100 rounded-box z-[60] mt-2 w-52 p-2 shadow">
+                  <li className="px-3 py-2 text-sm font-semibold">
+                    {user?.displayName || user?.email}
+                  </li>
+                  <li className="px-3 pb-2 text-xs text-slate-500">
+                    Role: {userRole || "user"}
+                  </li>
+
+                  <hr className="my-2" />
+
+                  {(userRole === "admin" || userRole === "provider") && (
+                    <li>
+                      <Link to="/dashboard">Dashboard</Link>
+                    </li>
+                  )}
+                  <li>
+                    <Link to="/user/user-profile">Profile</Link>
+                  </li>
+                  <li>
+                    <Link to="/user/user-orders">Orders</Link>
+                  </li>
+                  <li>
+                    <Link to="/user/my-purchases">Product validity</Link>
+                  </li>
+                  <li>
+                    <Link to="/user/my-vehiclePage">Vehicles</Link>
+                  </li>
+                  <li>
+                    <Link to="/user/payment">Payments</Link>
+                  </li>
+                  <li>
+                    <Link to="/user/user-settings">Settings</Link>
+                  </li>
+
+                  <hr className="my-2" />
+
+                  <li>
+                    <button onClick={handleLogOut} className="text-red-500">
+                      Logout
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </header>
   );
 };
 

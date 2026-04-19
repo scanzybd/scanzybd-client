@@ -1,88 +1,105 @@
-import React, { useRef } from "react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
+import { useTranslation, Trans } from "react-i18next";
+import Swal from "sweetalert2";
+import { Mail } from "lucide-react";
+import useAuth from "../../../hooks/useAuth";
 
 const EnterCode = () => {
-    const { handleSubmit, control, setValue, getValues } = useForm({
-        defaultValues: { code: Array(6).fill("") },
-    });
+  const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { sendUserPasswordResetEmail } = useAuth();
+  const email = location.state?.email || "";
+  const [resending, setResending] = useState(false);
 
-    const inputsRef = useRef([]);
+  const handleResend = async () => {
+    if (!email) {
+      await Swal.fire({
+        icon: "info",
+        title: t("auth.enterCode.noEmailTitle"),
+        text: t("auth.enterCode.noEmailText"),
+      });
+      navigate("/forgotPassword", { replace: true });
+      return;
+    }
+    setResending(true);
+    try {
+      await sendUserPasswordResetEmail(email);
+      await Swal.fire({
+        icon: "success",
+        title: t("auth.enterCode.resentTitle"),
+        text: t("auth.enterCode.resentText"),
+      });
+    } catch (err) {
+      await Swal.fire({
+        icon: "error",
+        title: t("auth.enterCode.failedTitle"),
+        text: err?.message || t("auth.enterCode.failedSend"),
+      });
+    } finally {
+      setResending(false);
+    }
+  };
 
-    // Keep your existing functions intact
-    const handleChange = (value, index) => {
-        if (/^\d$/.test(value) || value === "") {
-            setValue(`code.${index}`, value);
-            if (value && index < inputsRef.current.length - 1) {
-                inputsRef.current[index + 1].focus();
-            }
-        }
-    };
-
-    const handleKeyDown = (e, index) => {
-        if (e.key === "Backspace" && !getValues(`code.${index}`) && index > 0) {
-            inputsRef.current[index - 1].focus();
-        }
-    };
-
-    const handlePaste = (e) => {
-        const pasteData = e.clipboardData.getData("text").slice(0, 6);
-        pasteData.split("").forEach((char, i) => {
-            if (inputsRef.current[i] && /^\d$/.test(char)) {
-                setValue(`code.${i}`, char);
-            }
-        });
-        const nextIndex = Math.min(pasteData.length, 5);
-        inputsRef.current[nextIndex].focus();
-    };
-
-    const onSubmit = (data) => {
-        console.log("Entered Code:", data.code.join(""));
-        // 👉 Call your verification API here
-    };
-
-    return (
-        <div className="flex w-full h-screen items-center justify-center bg-yellow-300  px-4">
-            <div className="card max-w-sm w-full shadow-2xl bg-base-100">
-                <div className="px-6 pt-6">
-                    <h1 className="text-3xl mb-2">Enter Code</h1>
-                    <p className="text-gray-600 text-sm">
-                        Enter 6 digit code that we sent to your email address
-                    </p>
-                </div>
-
-                <form className="card-body" onSubmit={handleSubmit(onSubmit)}>
-                    {/* Code Inputs Row */}
-                    <div className="grid grid-cols-6 gap-2 mb-4" onPaste={handlePaste}>
-                        {Array(6)
-                            .fill(0)
-                            .map((_, index) => (
-                                <Controller
-                                    key={index}
-                                    name={`code.${index}`}
-                                    control={control}
-                                    render={({ field }) => (
-                                        <input
-                                            {...field}
-                                            type="text"
-                                            maxLength="1"
-                                            className="input text-center"
-                                            ref={(el) => (inputsRef.current[index] = el)}
-                                            onChange={(e) => handleChange(e.target.value, index)}
-                                            onKeyDown={(e) => handleKeyDown(e, index)}
-                                        />
-                                    )}
-                                />
-                            ))}
-                    </div>
-
-                    {/* Verify Button */}
-                    <button type="submit" className="btn  w-full">
-                        Verify Code
-                    </button>
-                </form>
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-yellow-300 px-4">
+      <div className="card w-full max-w-sm bg-base-100 shadow-2xl">
+        <div className="px-6 pt-6">
+          <div className="mb-3 flex justify-center">
+            <div className="rounded-full bg-amber-100 p-4">
+              <Mail className="h-10 w-10 text-amber-700" />
             </div>
+          </div>
+          <h1 className="mb-2 text-center text-3xl font-bold">
+            {t("auth.enterCode.heading")}
+          </h1>
+          <p className="text-center text-sm text-gray-600">
+            <Trans
+              i18nKey="auth.enterCode.body"
+              components={{ strong: <strong /> }}
+            />
+          </p>
+          {email && (
+            <p className="mt-3 break-all text-center text-sm font-medium text-indigo-800">
+              {email}
+            </p>
+          )}
         </div>
-    );
+
+        <div className="card-body space-y-3">
+          <p className="text-xs text-gray-500">{t("auth.enterCode.note")}</p>
+
+          <button
+            type="button"
+            className="btn btn-block border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200"
+            onClick={handleResend}
+            disabled={resending}
+          >
+            {resending ? (
+              <span className="loading loading-spinner loading-sm" />
+            ) : (
+              t("auth.enterCode.resend")
+            )}
+          </button>
+
+          <Link
+            to="/login"
+            className="btn btn-block btn-ghost border border-base-300"
+          >
+            {t("auth.enterCode.backLogin")}
+          </Link>
+
+          <Link
+            to="/forgotPassword"
+            className="btn btn-link btn-sm text-center text-gray-600 no-underline"
+          >
+            {t("auth.enterCode.otherEmail")}
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default EnterCode;

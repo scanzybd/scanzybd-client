@@ -1,14 +1,17 @@
 import React from 'react';
-import { Link, Outlet } from 'react-router';
-import ProFastLogo from '../pages/Home/Shared/Logo/ProFastLogo';
+import { Outlet } from 'react-router';
 import ScrollToTop from "../components/ScrollToTop";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 
 const AuthLayout = () => {
     return (
-        <div>
+        <div className="relative min-h-screen">
             <ScrollToTop />
-           <Outlet />
+            <div className="absolute right-3 top-3 z-50 sm:right-4 sm:top-4">
+                <LanguageSwitcher />
+            </div>
+            <Outlet />
         </div>
 
     );

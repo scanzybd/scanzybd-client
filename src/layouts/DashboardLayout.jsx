@@ -1,4 +1,5 @@
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
     Home,
     LogOut,
@@ -23,14 +24,17 @@ import useAxios from "../hooks/useAxiosSecure";
 import useAuth from "../hooks/useAuth";
 import Swal from "sweetalert2";
 import { useState } from "react";
+import SmartLoader from "../components/SmartLoader";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 
 
 const DashboardLayout = () => {
+    const { t } = useTranslation();
     const location = useLocation();
     const Axios = useAxios();
     const navigate = useNavigate();
-    const { user, userRole, logOut } = useAuth();
+    const { user, userRole, logOut, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     // const fetchUserInfo = async () => {
@@ -62,21 +66,21 @@ const DashboardLayout = () => {
     const handleLogout = async () => {
         try {
             const result = await Swal.fire({
-                title: "আপনি কি নিশ্চিত?",
-                text: "অ্যাডমিন প্যানেল থেকে লগআউট করতে চান?",
+                title: t("dashboard.logout.confirmTitle"),
+                text: t("dashboard.logout.confirmText"),
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonColor: "#d33",
                 cancelButtonColor: "#3085d6",
-                confirmButtonText: "হ্যাঁ, লগআউট",
-                cancelButtonText: "বাতিল",
+                confirmButtonText: t("dashboard.logout.yes"),
+                cancelButtonText: t("dashboard.logout.cancel"),
             });
 
             if (result.isConfirmed) {
                 await logOut();
                 Swal.fire({
-                    title: "লগআউট সফল!",
-                    text: "সফলভাবে লগআউট হয়েছে।",
+                    title: t("dashboard.logout.successTitle"),
+                    text: t("dashboard.logout.successText"),
                     icon: "success",
                     timer: 1500,
                     showConfirmButton: false,
@@ -86,10 +90,10 @@ const DashboardLayout = () => {
         } catch (error) {
             console.error("Logout error:", error);
             Swal.fire({
-                title: "লগআউট ব্যর্থ",
-                text: "লগআউট করতে সমস্যা হয়েছে।",
+                title: t("dashboard.logout.failTitle"),
+                text: t("dashboard.logout.failText"),
                 icon: "error",
-                confirmButtonText: "ঠিক আছে",
+                confirmButtonText: t("dashboard.logout.ok"),
             });
         }
     };
@@ -295,16 +299,20 @@ const DashboardLayout = () => {
 
     // console.log("User Data in Dashboard:", userData);
 
+    if (loading || !userRole) {
+        return <SmartLoader fullPage label="Checking your role..." />;
+    }
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="min-h-screen bg-slate-50">
             {/* Top Navbar */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg border-b border-gray-200">
-                <div className="flex items-center justify-between px-4 h-20">
+            <div className="fixed left-0 right-0 top-0 z-50 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+                <div className="flex h-16 items-center justify-between px-3 sm:h-18 sm:px-4 lg:px-6">
                     {/* Left: Logo & Menu Toggle */}
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                            className="rounded-lg p-2 transition-colors hover:bg-slate-100 lg:hidden"
                         >
                             {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
                         </button>
@@ -312,7 +320,7 @@ const DashboardLayout = () => {
                             to="/dashboard"
                             className="flex items-center gap-3 hover:opacity-90 transition-opacity"
                         >
-                            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 p-1 shadow-lg">
+                            <div className="h-10 w-10 rounded-full bg-blue-600 p-1 shadow sm:h-12 sm:w-12">
                                 <img
                                     src={instituteLogo}
                                     className="w-full h-full rounded-full bg-white p-1"
@@ -320,53 +328,54 @@ const DashboardLayout = () => {
                                 />
                             </div>
                             <div className="hidden md:block">
-                                <h1 className="text-xl font-bold text-gray-800">NYSDTI</h1>
+                                <h1 className="text-lg font-bold text-slate-800 sm:text-xl">NYSDTI</h1>
                             </div>
                         </Link>
                     </div>
 
                     {/* Right: User Info & Actions */}
-                    <div className="flex items-center gap-3">
-                        <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <LanguageSwitcher className="hidden sm:flex" />
+                        <div className="hidden items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 md:flex">
                             <div className="text-right">
-                                <p className="text-sm font-semibold text-gray-800">
+                                <p className="text-sm font-semibold text-slate-800">
                                     {user?.displayName || user?.email || 'User'}
                                 </p>
-                                <p className="text-xs text-gray-600">{userRole || 'user'}</p>
+                                <p className="text-xs text-slate-600">{userRole || 'user'}</p>
                             </div>
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white shadow">
                                 {user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
                             </div>
                         </div>
                         <Link
                             to="/"
-                            className="btn btn-sm bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-none hover:shadow-lg gap-2"
+                            className="btn btn-sm gap-2 border-none bg-blue-600 text-white hover:bg-blue-700"
                         >
                             <Home size={16} />
-                            <span className="hidden sm:inline">হোম</span>
+                            <span className="hidden sm:inline">{t("dashboard.logout.home")}</span>
                         </Link>
                         <button
                             onClick={handleLogout}
-                            className="btn btn-sm bg-gradient-to-r from-red-500 to-red-600 text-white border-none hover:shadow-lg gap-2"
+                            className="btn btn-sm gap-2 border-none bg-rose-600 text-white hover:bg-rose-700"
                         >
                             <LogOut size={16} />
-                            <span className="hidden sm:inline">লগআউট</span>
+                            <span className="hidden sm:inline">{t("dashboard.logout.logout")}</span>
                         </button>
                     </div>
                 </div>
             </div>
 
             {/* Sidebar & Main Content Wrapper */}
-            <div className="flex pt-20">
+            <div className="flex pt-16 sm:pt-18">
                 {/* Sidebar */}
                 <aside
-                    className={`fixed top-20 left-0 bottom-0 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-40 overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                    className={`fixed bottom-0 left-0 top-16 z-40 w-72 transform overflow-y-auto border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out sm:top-18 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
                         } lg:translate-x-0`}
                 >
-                    <div className="p-6">
+                    <div className="p-5">
                         {menuItems.map((section, idx) => (
                             <div key={idx} className="mb-6">
-                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-3">
+                                <h3 className="mb-3 px-3 text-xs font-bold uppercase tracking-wider text-slate-400">
                                     {section.category}
                                 </h3>
                                 <ul className="space-y-1">
@@ -393,8 +402,8 @@ const DashboardLayout = () => {
                     </div>
 
                     {/* Sidebar Footer */}
-                    <div className=" bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-gray-50 to-transparent">
-                        <div className="text-center text-xs text-gray-600">
+                    <div className="bottom-0 left-0 right-0 border-t border-slate-200 p-4">
+                        <div className="text-center text-xs text-slate-600">
                             <p className="font-semibold">© 2026 NYSDTI</p>
                             <p>National Youth Skill Development Training Institute</p>
                         </div>
@@ -404,14 +413,14 @@ const DashboardLayout = () => {
                 {/* Overlay for mobile */}
                 {sidebarOpen && (
                     <div
-                        className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+                        className="fixed inset-0 z-30 bg-black/40 lg:hidden"
                         onClick={() => setSidebarOpen(false)}
                     ></div>
                 )}
 
                 {/* Main Content */}
-                <main className="flex-1 lg:ml-72 p-6">
-                    <div className="max-w-8xl mx-auto">
+                <main className="flex-1 p-3 sm:p-4 lg:ml-72 lg:p-6">
+                    <div className="mx-auto w-full max-w-[1400px]">
                         <Outlet />
                     </div>
                 </main>
