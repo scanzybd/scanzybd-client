@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import RootLayout from "../layouts/RootLayout";
 import Home from "../pages/Home/Home/Home";
 import About from "../pages/Home/About/About";
@@ -46,8 +46,13 @@ import AssignVehiclebyId from "../pages/Dashboard/Vehicle/AssignVehiclebyId";
 import PaymentReject from "../pages/Dashboard/Order/PaymentStatus/PaymentReject";
 import PaymentSuccess from "../pages/Dashboard/Order/PaymentStatus/PaymentSuccess";
 import ProductShowcase from "../pages/Home/ProductShowcase/ProductShowcase";
+import ProductPage from "../pages/Home/ProductDetails/ProductPage";
 import ContactPage from "../pages/Home/Contact/ContactPage";
 import Payment from "../pages/User/Payment/Payment";
+import AdminRoute from "../routes/AdminRoute";
+import UserManagementPage from "../pages/Dashboard/Users/UserManagementPage";
+import AddUserPage from "../pages/Dashboard/Users/AddUserPage";
+import AddProviderPage from "../pages/Dashboard/Users/AddProviderPage";
 
 const router = createBrowserRouter([
   {
@@ -67,6 +72,14 @@ const router = createBrowserRouter([
       {
         path: 'contact',
         Component: ContactPage,
+      },
+      {
+        path: 'product',
+        Component: ProductPage,
+      },
+      {
+        path: 'Products/:id',
+        element: <Navigate to="/product" replace />,
       },
       {
         path: 'Products',
@@ -196,9 +209,13 @@ const router = createBrowserRouter([
         Component: AllProducts,
 
       },
-      { 
-        path: 'add-product',
-        Component: AddProducts,
+      {
+        path: "add-product",
+        element: (
+          <AdminRoute>
+            <AddProducts />
+          </AdminRoute>
+        ),
       },
 
       //packages
@@ -207,8 +224,12 @@ const router = createBrowserRouter([
         Component: AllPackages,
       },
       {
-        path: 'add-package',
-        Component: AddPackages,
+        path: "add-package",
+        element: (
+          <AdminRoute>
+            <AddPackages />
+          </AdminRoute>
+        ),
       },
 
       //orders
@@ -276,7 +297,32 @@ const router = createBrowserRouter([
       {
         path: 'scan-assign-vehicle',
         Component: ScanAssignPage,
-      }
+      },
+
+      {
+        path: 'user-management',
+        element: (
+          <AdminRoute>
+            <UserManagementPage />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: 'add-user',
+        element: (
+          <AdminRoute>
+            <AddUserPage />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: 'add-provider',
+        element: (
+          <AdminRoute>
+            <AddProviderPage />
+          </AdminRoute>
+        ),
+      },
 
     ]
 

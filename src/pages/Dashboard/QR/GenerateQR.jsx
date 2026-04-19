@@ -4,6 +4,11 @@ import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 import { Bike, Car, Download, FileDown, Loader2, QrCode } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import {
+  companyNameSlug,
+  COMPANY_ORG_TITLE,
+  COMPANY_PRINT_ORG_LINE,
+} from "../../../config/company";
 
 /** Visual layout only — labels come from i18n (`dashboard.qr.generate.types.*`). */
 const QR_TYPE_LAYOUT = {
@@ -65,7 +70,7 @@ function PrintCardBike({ item }) {
 
       <div className="flex flex-1 flex-col items-center justify-center gap-2 bg-gradient-to-b from-stone-50 to-white px-4 py-3">
         <p className="text-center text-[11px] font-semibold text-stone-600">
-          National Youth Skill Development Training Institute
+          {COMPANY_PRINT_ORG_LINE}
         </p>
         <div className="rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
           <img
@@ -83,7 +88,7 @@ function PrintCardBike({ item }) {
 
       <div className="shrink-0 bg-emerald-950 px-2 py-2.5 text-center">
         <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-emerald-100/90">
-          Scan to verify · NYSDTI
+          Scan to verify · {COMPANY_ORG_TITLE}
         </p>
       </div>
     </div>
@@ -108,7 +113,7 @@ function PrintCardCar({ item }) {
             </p>
             <p className="text-xl font-black tracking-tight">CAR</p>
             <p className="mt-0.5 text-[10px] text-blue-100/90">
-              National Youth Skill Development Training Institute
+              {COMPANY_PRINT_ORG_LINE}
             </p>
           </div>
         </div>
@@ -214,7 +219,7 @@ const QRGenerator = () => {
       const item = qrList[index];
       const code = item?.code || index;
       const type = item?.qrType || selectedType;
-      pdf.save(`NYSDTI-QR-${type}-${code}.pdf`);
+      pdf.save(`${companyNameSlug()}-QR-${type}-${code}.pdf`);
     } catch (e) {
       console.error(e);
       setError(t("dashboard.qr.generate.errPdf"));
@@ -237,7 +242,7 @@ const QRGenerator = () => {
       }
 
       const stamp = new Date().toISOString().slice(0, 10);
-      pdf.save(`NYSDTI-QR-batch-${stamp}.pdf`);
+      pdf.save(`${companyNameSlug()}-QR-batch-${stamp}.pdf`);
     } catch (e) {
       console.error(e);
       setError(t("dashboard.qr.generate.errPdf"));

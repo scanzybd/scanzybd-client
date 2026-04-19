@@ -1,5 +1,10 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, ArrowRight, Download } from 'lucide-react';
+import {
+  BRAND_FULL,
+  COMPANY_LEGAL_NAME,
+  COMPANY_FOOTER_TAGLINE,
+} from '../../../../config/company';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -47,7 +52,7 @@ const Footer = () => {
                     Join 950K+ Users Today
                   </h2>
                   <p className="text-lg text-gray-800 mb-2">
-                    Start managing your vehicle information securely with ProFast QR Tag System
+                    Start managing your vehicle information securely with {BRAND_FULL}
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 md:justify-end">
@@ -177,8 +182,10 @@ const Footer = () => {
           {/* Bottom Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             <div className="text-sm text-slate-400 text-center md:text-left">
-              <p>© {currentYear} ProFast QR Tag System. All rights reserved.</p>
-              <p className="mt-2">ProFast Pvt. Ltd. | Secure Vehicle Information Management</p>
+              <p>© {currentYear} {BRAND_FULL}. All rights reserved.</p>
+              <p className="mt-2">
+                {COMPANY_LEGAL_NAME} | {COMPANY_FOOTER_TAGLINE}
+              </p>
             </div>
 
             {/* Download Buttons */}

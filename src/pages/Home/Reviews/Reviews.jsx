@@ -1,5 +1,6 @@
 import React from "react";
 import { Users, TrendingUp, Heart } from "lucide-react";
+import { BRAND_FULL } from "../../../config/company";
 
 const Reviews = () => {
   const stats = [
@@ -63,7 +64,7 @@ const Reviews = () => {
             Trusted by Thousands
           </h1>
           <p className="text-gray-800 text-lg">
-            See what our customers say about ProFast QR Tag System
+            See what our customers say about {BRAND_FULL}
           </p>
         </div>
       </section>

@@ -1,5 +1,6 @@
 import React from "react";
 import { Shield, Smartphone, Zap, Settings, Target, Users, TrendingUp, Award } from "lucide-react";
+import { BRAND_FULL, PRODUCT_NAME } from "../../../config/company";
 
 const About = () => {
     const features = [
@@ -68,7 +69,7 @@ const About = () => {
                         </h1>
 
                         <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-                            QR Tag System is a modern, innovative platform designed to revolutionize how vehicle owners, students, and service providers connect and interact securely.
+                            {BRAND_FULL} is a modern, innovative platform designed to revolutionize how vehicle owners, students, and service providers connect and interact securely.
                         </p>
                     </div>
 
@@ -88,11 +89,11 @@ const About = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 mb-20 sm:mb-24">
                         <div className="space-y-6">
                             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
-                                What is QR Tag System?
+                                What is {PRODUCT_NAME}?
                             </h2>
                             <div className="space-y-4">
                                 <p className="text-lg text-slate-600 leading-relaxed">
-                                    QR Tag System is a modern web-based solution designed to connect vehicle owners and service providers instantly using QR codes. Each user or vehicle gets a unique QR tag that can be scanned to access contact details or service information quickly and securely.
+                                    {BRAND_FULL} is a modern web-based solution designed to connect vehicle owners and service providers instantly using QR codes. Each user or vehicle gets a unique QR tag that can be scanned to access contact details or service information quickly and securely.
                                 </p>
                                 <p className="text-lg text-slate-600 leading-relaxed">
                                     Our platform eliminates the need to share personal phone numbers directly. Instead, users can scan a QR code and initiate a call or view profile information in a safe and controlled way.
@@ -177,7 +178,7 @@ const About = () => {
                         Ready to Get Started?
                     </h2>
                     <p className="text-lg text-gray-800 mb-8 max-w-2xl mx-auto">
-                        Join thousands of users who are already using QR Tag System to connect and manage securely.
+                        Join thousands of users who are already using {BRAND_FULL} to connect and manage securely.
                     </p>
                     <button className="inline-flex items-center gap-2 px-8 py-4 bg-white text-amber-600 font-semibold rounded-lg hover:bg-yellow-50 transition transform hover:scale-105 shadow-lg">
                         Start Your Journey Today

@@ -5,7 +5,23 @@ const ProductDetails = ({ product, onAddToCart }) => {
     const [quantity, setQuantity] = useState(1);
     const [isFavorite, setIsFavorite] = useState(false);
 
-    const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+    const displayName = product.title || product.name || "Product";
+    const features = Array.isArray(product.features) ? product.features : [];
+    const specifications =
+        product.specifications && typeof product.specifications === "object"
+            ? product.specifications
+            : {};
+    const specEntries = Object.entries(specifications).filter(
+        ([, value]) => value != null && String(value).trim() !== ""
+    );
+
+    const originalPrice = Number(product.originalPrice) || 0;
+    const price = Number(product.price) || 0;
+    const discountPct =
+        originalPrice > 0 && originalPrice > price
+            ? Math.round(((originalPrice - price) / originalPrice) * 100)
+            : 0;
+    const saveAmount = Math.max(0, originalPrice - price);
 
     const handleAddToCart = () => {
         for (let i = 0; i < quantity; i++) {
@@ -23,7 +39,7 @@ const ProductDetails = ({ product, onAddToCart }) => {
                     <span>/</span>
                     <span className="hover:text-blue-600 cursor-pointer">Products</span>
                     <span>/</span>
-                    <span className="text-blue-600 font-medium">{product.name}</span>
+                    <span className="text-blue-600 font-medium">{displayName}</span>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 mb-16">
@@ -32,12 +48,12 @@ const ProductDetails = ({ product, onAddToCart }) => {
                         <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg">
                             <img
                                 src={product.image}
-                                alt={product.name}
+                                alt={displayName}
                                 className="w-full h-80 sm:h-96 object-cover"
                             />
-                            {discount > 0 && (
+                            {discountPct > 0 && (
                                 <div className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-2 rounded-full font-bold shadow-lg">
-                                    -{discount}%
+                                    -{discountPct}%
                                 </div>
                             )}
                             {product.inStock && (
@@ -54,7 +70,7 @@ const ProductDetails = ({ product, onAddToCart }) => {
                         {/* Title and Rating */}
                         <div className="mb-6">
                             <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
-                                {product.name}
+                                {displayName}
                             </h1>
                             <div className="flex items-center gap-2">
                                 <div className="flex items-center gap-1">
@@ -81,15 +97,17 @@ const ProductDetails = ({ product, onAddToCart }) => {
                                 <span className="text-3xl sm:text-4xl font-bold text-slate-900">
                                     ৳ {product.price}
                                 </span>
-                                {product.originalPrice > product.price && (
+                                {originalPrice > price && (
                                     <span className="text-lg text-slate-400 line-through">
-                                        ৳ {product.originalPrice}
+                                        ৳ {originalPrice}
                                     </span>
                                 )}
                             </div>
-                            <p className="text-sm text-slate-600 mt-2">
-                                Save ৳ {product.originalPrice - product.price}
-                            </p>
+                            {saveAmount > 0 && (
+                                <p className="text-sm text-slate-600 mt-2">
+                                    Save ৳ {saveAmount}
+                                </p>
+                            )}
                         </div>
 
                         {/* Description */}
@@ -103,7 +121,7 @@ const ProductDetails = ({ product, onAddToCart }) => {
                                 Key Features
                             </h3>
                             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {product.features.slice(0, 4).map((feature, idx) => (
+                                {features.slice(0, 4).map((feature, idx) => (
                                     <li key={idx} className="flex items-start gap-3">
                                         <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                                         <span className="text-slate-700">{feature}</span>
@@ -199,14 +217,20 @@ const ProductDetails = ({ product, onAddToCart }) => {
                         Specifications
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
-                        {Object.entries(product.specifications).map(([key, value]) => (
-                            <div key={key} className="p-4 bg-slate-50 rounded-lg">
-                                <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-2">
-                                    {key}
-                                </p>
-                                <p className="text-lg font-bold text-slate-900">{value}</p>
-                            </div>
-                        ))}
+                        {specEntries.length === 0 ? (
+                            <p className="text-slate-600 sm:col-span-2 md:col-span-5">
+                                No specifications listed.
+                            </p>
+                        ) : (
+                            specEntries.map(([key, value]) => (
+                                <div key={key} className="p-4 bg-slate-50 rounded-lg">
+                                    <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                                        {key}
+                                    </p>
+                                    <p className="text-lg font-bold text-slate-900">{value}</p>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 
@@ -216,7 +240,7 @@ const ProductDetails = ({ product, onAddToCart }) => {
                         Complete Feature Set
                     </h2>
                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {product.features.map((feature, idx) => (
+                        {features.map((feature, idx) => (
                             <li key={idx} className="flex items-center gap-3">
                                 <Check className="w-5 h-5 text-emerald-500 flex-shrink-0" />
                                 <span className="text-slate-700 font-medium">{feature}</span>

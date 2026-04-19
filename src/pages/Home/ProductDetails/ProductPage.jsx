@@ -1,36 +1,41 @@
 import React, { useEffect, useState } from "react";
 import ProductDetails from "./ProductDetails";
 import useCart from "../../../hooks/useCart.jsx";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
+import { FEATURED_PRODUCT_ID } from "../../../config/featuredProduct";
 
 const ProductPage = () => {
   const { addToCart, cartItems } = useCart();
   const axiosSecure = useAxiosSecure();
   const navigate = useNavigate();
-  const { id } = useParams();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
 
-  // 🔥 FETCH PRODUCT FROM DB
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const res = await axiosSecure.get(`/api/products/69e1ee0443c1fd1b6dd7a417`);
+    let cancelled = false;
 
-        setProduct(res.data.data);
+    const fetchProduct = async () => {
+      setLoading(true);
+      try {
+        const res = await axiosSecure.get(`/api/products/${FEATURED_PRODUCT_ID}`);
+        if (!cancelled) setProduct(res.data.data ?? null);
       } catch (error) {
         console.log(error);
+        if (!cancelled) setProduct(null);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchProduct();
-  }, [id]);
+    return () => {
+      cancelled = true;
+    };
+  }, [axiosSecure]);
 
   // ➕ ADD TO CART
   const handleAddToCart = () => {
@@ -47,7 +52,7 @@ const ProductPage = () => {
   };
 
   const handleViewCart = () => {
-    navigate("/cart");
+    navigate("/user/my-cart");
   };
 
   if (loading) {
@@ -56,8 +61,14 @@ const ProductPage = () => {
 
   if (!product) {
     return (
-      <div className="p-10 text-center text-red-500">
-        Product not found
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 px-4 text-center">
+        <p className="text-lg font-medium text-slate-800">Spotlight product could not be loaded.</p>
+        <p className="max-w-md text-sm text-slate-600">
+          Check that this id exists in the database, then try again.
+        </p>
+        <Link to="/Products" className="btn btn-primary rounded-xl">
+          Back to store
+        </Link>
       </div>
     );
   }

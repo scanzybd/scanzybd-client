@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
+import { Car, Hash, Phone, QrCode, UserPlus, ScanLine } from "lucide-react";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
@@ -15,7 +16,7 @@ const AddVehiclePage = () => {
     vehicleName: "",
     model: "",
     plate: "",
-    ownerPhone: "", // ✅ FIXED
+    ownerPhone: "",
   });
 
   const [driver, setDriver] = useState({
@@ -30,7 +31,6 @@ const AddVehiclePage = () => {
 
   const scannerRef = useRef(null);
 
-  // ---------------- GET USER ----------------
   useEffect(() => {
     const getUser = async () => {
       if (!firebaseUser?.email) {
@@ -53,7 +53,6 @@ const AddVehiclePage = () => {
 
   const role = mongoUser?.role || "user";
 
-  // ---------------- INPUT ----------------
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -62,12 +61,11 @@ const AddVehiclePage = () => {
     setDriver({ ...driver, [e.target.name]: e.target.value });
   };
 
-  // ---------------- SUBMIT ----------------
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!form.vehicleName || !form.model || !form.plate || !form.ownerPhone) {
-      alert("⚠️ Fill all fields");
+      alert("Fill all required fields.");
       return;
     }
 
@@ -79,13 +77,10 @@ const AddVehiclePage = () => {
         qrData: scannedQR || null,
       };
 
-      console.log("🚀 PAYLOAD:", payload);
-
       await axiosSecure.post("/api/vehicle/add", payload);
 
-      alert("✅ Vehicle Added Successfully");
+      alert("Vehicle added successfully.");
 
-      // reset
       setForm({
         vehicleName: "",
         model: "",
@@ -96,18 +91,16 @@ const AddVehiclePage = () => {
       setDriver({ name: "", phone: "" });
       setShowDriverForm(false);
       setScannedQR(null);
-
     } catch (err) {
       console.log(err);
-      alert("❌ Failed to add vehicle");
+      alert("Failed to add vehicle.");
     }
   };
 
-  // ---------------- QR SCANNER ----------------
   useEffect(() => {
     if (!scanning) return;
 
-    const scanner = new Html5Qrcode("reader");
+    const scanner = new Html5Qrcode("add-vehicle-reader");
     scannerRef.current = scanner;
 
     Html5Qrcode.getCameras().then((devices) => {
@@ -115,12 +108,10 @@ const AddVehiclePage = () => {
 
       scanner.start(
         devices[0].id,
-        { fps: 10, qrbox: 250 },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
         (text) => {
           scanner.stop();
           setScanning(false);
-
-          // 🔥 FIX: extract only QR code
           const code = text.split("/").pop();
           setScannedQR(code);
         }
@@ -132,115 +123,154 @@ const AddVehiclePage = () => {
     };
   }, [scanning]);
 
-  // ---------------- UI ----------------
   if (roleLoading) {
-    return <SmartLoader fullPage label="Checking role permissions..." />;
+    return <SmartLoader fullPage label="Checking permissions..." />;
   }
 
+  const canScanQR = role === "admin" || role === "provider";
+
   return (
-    <div className="min-h-screen flex justify-center bg-gray-100 p-5">
-      <div className="w-full max-w-md space-y-4">
-
-        <h1 className="text-center font-bold text-xl">
-          Add Vehicle
+    <div className="mx-auto max-w-lg">
+      <div className="mb-8 border-b border-slate-200/90 pb-6">
+        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700">
+          <Car className="h-3.5 w-3.5" />
+          Fleet
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+          Add vehicle
         </h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Register a vehicle and optionally link a driver or QR tag.
+        </p>
+      </div>
 
-        <form onSubmit={handleSubmit} className="bg-white p-4 rounded space-y-3">
-
-          {/* VEHICLE */}
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm"
+      >
+        <div>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Vehicle name
+          </label>
           <input
             name="vehicleName"
             value={form.vehicleName}
             onChange={handleChange}
-            placeholder="Vehicle Name"
-            className="w-full p-3 border rounded"
+            placeholder="e.g. Toyota Axio"
+            className="input input-bordered w-full rounded-xl border-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            required
           />
+        </div>
 
+        <div>
+          <label className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <Hash className="h-3 w-3" /> Model
+          </label>
           <input
             name="model"
             value={form.model}
             onChange={handleChange}
-            placeholder="Model"
-            className="w-full p-3 border rounded"
+            placeholder="Model year / variant"
+            className="input input-bordered w-full rounded-xl border-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            required
           />
+        </div>
 
+        <div>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Plate number
+          </label>
           <input
             name="plate"
             value={form.plate}
             onChange={handleChange}
-            placeholder="Plate"
-            className="w-full p-3 border rounded"
+            placeholder="Registration plate"
+            className="input input-bordered w-full rounded-xl border-slate-200 font-mono focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            required
           />
+        </div>
 
-          {/* ✅ OWNER PHONE FIX */}
+        <div>
+          <label className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <Phone className="h-3 w-3" /> Owner phone
+          </label>
           <input
             name="ownerPhone"
             value={form.ownerPhone}
             onChange={handleChange}
-            placeholder="Owner Phone"
-            className="w-full p-3 border rounded"
+            placeholder="01XXXXXXXXX"
+            className="input input-bordered w-full rounded-xl border-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            required
           />
+        </div>
 
-          {/* DRIVER */}
-          <button
-            type="button"
-            onClick={() => setShowDriverForm(!showDriverForm)}
-            className="w-full bg-gray-700 text-white py-2 rounded"
-          >
-            {showDriverForm ? "Remove Driver" : "Add Driver"}
-          </button>
+        <button
+          type="button"
+          onClick={() => setShowDriverForm(!showDriverForm)}
+          className={`btn btn-block gap-2 rounded-xl border ${
+            showDriverForm
+              ? "border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100"
+              : "border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100"
+          }`}
+        >
+          <UserPlus className="h-4 w-4" />
+          {showDriverForm ? "Remove driver" : "Add driver (optional)"}
+        </button>
 
-          {showDriverForm && (
-            <div className="space-y-2">
-              <input
-                name="name"
-                value={driver.name}
-                onChange={handleDriverChange}
-                placeholder="Driver Name"
-                className="w-full p-2 border"
-              />
+        {showDriverForm && (
+          <div className="space-y-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-4">
+            <input
+              name="name"
+              value={driver.name}
+              onChange={handleDriverChange}
+              placeholder="Driver name"
+              className="input input-bordered w-full rounded-xl border-slate-200 bg-white"
+            />
+            <input
+              name="phone"
+              value={driver.phone}
+              onChange={handleDriverChange}
+              placeholder="Driver phone"
+              className="input input-bordered w-full rounded-xl border-slate-200 bg-white"
+            />
+          </div>
+        )}
 
-              <input
-                name="phone"
-                value={driver.phone}
-                onChange={handleDriverChange}
-                placeholder="Driver Phone"
-                className="w-full p-2 border"
-              />
+        {canScanQR && (
+          <div className="rounded-xl border border-dashed border-emerald-200/80 bg-emerald-50/40 p-4">
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-900">
+              <QrCode className="h-4 w-4" />
+              Link QR code
             </div>
-          )}
+            {!scanning ? (
+              <button
+                type="button"
+                onClick={() => setScanning(true)}
+                className="btn btn-block gap-2 rounded-xl border-0 bg-amber-400 font-semibold text-slate-900 hover:bg-amber-500"
+              >
+                <ScanLine className="h-4 w-4" />
+                Scan QR
+              </button>
+            ) : (
+              <div className="overflow-hidden rounded-xl bg-black">
+                <div id="add-vehicle-reader" className="min-h-[240px]" />
+              </div>
+            )}
+            {scannedQR && (
+              <p className="mt-2 break-all text-xs font-mono text-emerald-800">
+                Captured: {scannedQR}
+              </p>
+            )}
+          </div>
+        )}
 
-          {/* QR */}
-          {(role === "admin" || role === "provider") && (
-            <div>
-              {!scanning ? (
-                <button
-                  type="button"
-                  onClick={() => setScanning(true)}
-                  className="w-full bg-yellow-400 py-2 rounded"
-                >
-                  Scan QR
-                </button>
-              ) : (
-                <div id="reader"></div>
-              )}
-
-              {scannedQR && (
-                <p className="text-xs text-blue-600 mt-1">
-                  QR: {scannedQR}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* SUBMIT */}
-          <button className="w-full bg-green-600 text-white py-3 rounded">
-            Save Vehicle
-          </button>
-
-        </form>
-
-      </div>
+        <button
+          type="submit"
+          className="btn btn-block gap-2 rounded-xl border-0 bg-emerald-500 text-base font-semibold text-white hover:bg-emerald-600"
+        >
+          Save vehicle
+        </button>
+      </form>
     </div>
   );
 };

@@ -11,9 +11,33 @@ const productTypes = [
   "Starter Pack",
 ];
 
+/** Same encoding rules as server — direct to ImgBB if server upload fails */
+async function uploadToImgbbDirect(dataUrl, apiKey) {
+  let base64 = String(dataUrl).trim();
+  if (base64.includes("base64,")) {
+    base64 = base64.split("base64,")[1];
+  }
+  base64 = base64.replace(/\s/g, "");
+  const body = `key=${encodeURIComponent(apiKey)}&image=${encodeURIComponent(base64)}`;
+  const r = await fetch("https://api.imgbb.com/1/upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  const j = await r.json();
+  if (!j.success || !j.data?.url) {
+    const em = j?.error?.message || j?.status_txt || "ImgBB rejected the upload";
+    throw new Error(typeof em === "string" ? em : JSON.stringify(em));
+  }
+  return j.data.url;
+}
+
 const AddProducts = () => {
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
+
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -74,6 +98,75 @@ const AddProducts = () => {
     });
   };
 
+  const handleImageFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) {
+      setUploadError("Please choose an image file.");
+      return;
+    }
+
+    setUploadError(null);
+    setUploadingImage(true);
+
+    let dataUrl;
+    try {
+      dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("Could not read file"));
+        reader.readAsDataURL(file);
+      });
+
+      try {
+        const res = await axiosSecure.post("/api/upload/imgbb", {
+          image: dataUrl,
+        });
+
+        const url = res.data?.url;
+        if (!url) {
+          throw new Error(res.data?.message || "No URL returned");
+        }
+
+        setForm((prev) => ({ ...prev, image: url }));
+      } catch (serverErr) {
+        const viteKey = import.meta.env.VITE_image_host_key?.trim();
+        if (viteKey && dataUrl) {
+          try {
+            const url = await uploadToImgbbDirect(dataUrl, viteKey);
+            setForm((prev) => ({ ...prev, image: url }));
+            setUploadError(null);
+            return;
+          } catch (directErr) {
+            console.error("Direct ImgBB:", directErr);
+          }
+        }
+        throw serverErr;
+      }
+    } catch (err) {
+      console.error(err);
+      const status = err.response?.status;
+      const data = err.response?.data;
+      let msg =
+        data?.message ||
+        (typeof data?.error === "string" ? data.error : null) ||
+        err.message;
+
+      if (status === 401) {
+        msg = "Not logged in or session expired — sign in again and retry.";
+      } else if (status === 404 && String(data?.message || "").includes("User")) {
+        msg =
+          "Your Firebase user is not in the database — ask an admin to add your account.";
+      } else if (status === 502 || status === 500) {
+        msg = msg || "Server or ImgBB error — check IMGBB_API_KEY in server .env and restart.";
+      }
+
+      setUploadError(msg || "Upload failed — check ImgBB key on server (.env IMGBB_API_KEY)");
+    } finally {
+      setUploadingImage(false);
+      e.target.value = "";
+    }
+  };
+
   // ======================
   // SUBMIT
   // ======================
@@ -102,6 +195,7 @@ const AddProducts = () => {
 
       console.log(res.data);
       alert("Product Added Successfully 🔥");
+      setUploadError(null);
 
       // reset
       setForm({
@@ -171,12 +265,34 @@ const AddProducts = () => {
             className="w-full p-3 border rounded mb-3"
           />
 
-          {/* IMAGE */}
+          {/* IMAGE — ImgBB via server */}
+          <div className="mb-3 rounded-lg border border-dashed border-gray-300 bg-gray-50/80 p-3">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Product image
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageFile}
+              disabled={uploadingImage}
+              className="w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-white hover:file:bg-blue-700"
+            />
+            {uploadingImage && (
+              <p className="mt-2 text-sm text-blue-600">Uploading to ImgBB…</p>
+            )}
+            {uploadError && (
+              <p className="mt-2 text-sm text-red-600">{uploadError}</p>
+            )}
+            <p className="mt-2 text-xs text-gray-500">
+              File is sent to your server, uploaded to ImgBB, then the returned URL is saved with
+              the product.
+            </p>
+          </div>
           <input
             name="image"
             value={form.image}
             onChange={handleChange}
-            placeholder="Image URL"
+            placeholder="Image URL (set automatically after upload, or paste manually)"
             className="w-full p-3 border rounded mb-3"
           />
 

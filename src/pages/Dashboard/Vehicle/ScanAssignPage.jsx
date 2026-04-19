@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { useNavigate } from "react-router-dom";
-
+import { ScanLine, Camera } from "lucide-react";
 
 const ScanAssignPage = () => {
   const [scanning, setScanning] = useState(false);
@@ -23,7 +23,7 @@ const ScanAssignPage = () => {
   useEffect(() => {
     if (!scanning) return;
 
-    const scanner = new Html5Qrcode("reader");
+    const scanner = new Html5Qrcode("scan-assign-reader");
     scannerRef.current = scanner;
 
     Html5Qrcode.getCameras().then((devices) => {
@@ -34,13 +34,10 @@ const ScanAssignPage = () => {
       scanner
         .start(
           cameraId,
-          { fps: 10, qrbox: 250 },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
           (decodedText) => {
             handleStop(scanner);
-
-            // 🔥 IMPORTANT: NAVIGATE HERE
-            navigate(decodedText); 
-            // example QR: "/vehicle/V123" or full URL
+            navigate(decodedText);
           }
         )
         .catch((err) => console.log(err));
@@ -52,32 +49,37 @@ const ScanAssignPage = () => {
   }, [scanning, navigate]);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
-
-      <div className="w-full max-w-md space-y-5">
-
-        {/* HEADER */}
-        <h1 className="text-center text-xl font-bold">
-          Scan QR Code
+    <div className="mx-auto max-w-lg">
+      <div className="mb-8 border-b border-slate-200/90 pb-6">
+        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700">
+          <Camera className="h-3.5 w-3.5" />
+          Scanner
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+          Scan QR code
         </h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Point the camera at a code. You will be redirected to the decoded link.
+        </p>
+      </div>
 
-        {/* BUTTON */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm">
         {!scanning && (
           <button
+            type="button"
             onClick={() => setScanning(true)}
-            className="w-full py-4 bg-yellow-400 font-bold rounded-2xl"
+            className="btn btn-block gap-2 rounded-xl border-0 bg-emerald-500 py-6 text-lg font-semibold text-white hover:bg-emerald-600"
           >
-            📷 Start Scan
+            <ScanLine className="h-6 w-6" />
+            Start camera
           </button>
         )}
 
-        {/* CAMERA */}
         {scanning && (
-          <div className="bg-black rounded-2xl overflow-hidden">
-            <div id="reader" />
+          <div className="overflow-hidden rounded-xl bg-black">
+            <div id="scan-assign-reader" className="min-h-[260px]" />
           </div>
         )}
-
       </div>
     </div>
   );

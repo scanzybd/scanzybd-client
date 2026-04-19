@@ -4,6 +4,7 @@ import axios from "axios";
 import { Link,  } from "react-router-dom";
 import SocialLogin from "../SocialLogin/SocialLogin";
 import useAuth from "../../../hooks/useAuth";
+import { COMPANY_NAME } from "../../../config/company";
 
 const Register = () => {
     const {
@@ -60,7 +61,7 @@ const Register = () => {
                 {/* Header */}
                 <div className="px-6 pt-6">
                     <h1 className="text-3xl mb-1">Create Account</h1>
-                    <p className="text-gray-600">Register with ProFast</p>
+                    <p className="text-gray-600">Register with {COMPANY_NAME}</p>
                 </div>
 
                 <div className="card-body">

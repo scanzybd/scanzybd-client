@@ -171,7 +171,12 @@ const Navbar = () => {
                     {user?.displayName || user?.email}
                   </li>
                   <li className="px-3 pb-2 text-xs text-slate-500">
-                    Role: {userRole || "user"}
+                    Role:{" "}
+                    {loading
+                      ? "…"
+                      : userRole != null && userRole !== ""
+                        ? userRole
+                        : "—"}
                   </li>
 
                   <hr className="my-2" />

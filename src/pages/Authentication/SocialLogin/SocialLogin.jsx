@@ -1,6 +1,7 @@
 import React from "react";
 import useAuth from "../../../hooks/useAuth";
 import useAxios from "../../../hooks/useAxios";
+import { setAppJwt } from "../../../utils/appJwtStorage";
 import { useNavigate } from "react-router";
 
 const SocialLogin = () => {
@@ -23,8 +24,12 @@ const SocialLogin = () => {
                 token: idToken,
             });
 
-            // 4️⃣ Save JWT token
-            localStorage.setItem("token", res.data.token);
+            // 4️⃣ Save backend JWT (24h) + expiry
+            if (res.data?.expiresAt != null) {
+                setAppJwt(res.data.token, res.data.expiresAt);
+            } else {
+                localStorage.setItem("token", res.data.token);
+            }
 
             // 5️⃣ Redirect
             navigate("/");

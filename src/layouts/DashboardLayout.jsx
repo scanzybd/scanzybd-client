@@ -15,53 +15,31 @@ import {
     BookMarked,
     ClipboardList,
     Menu,
-    X,
     XCircle,
     Clock,
+    Search,
+    Building2,
+    CheckCircle2,
 } from "lucide-react";
 import instituteLogo from "../assets/banner/banner.png";
-import useAxios from "../hooks/useAxiosSecure";
 import useAuth from "../hooks/useAuth";
 import Swal from "sweetalert2";
 import { useState } from "react";
 import SmartLoader from "../components/SmartLoader";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import { COMPANY_NAME, COMPANY_TAGLINE } from "../config/company";
 
+const ACCENT = "emerald";
 
+const navLinkBase =
+    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150";
 
 const DashboardLayout = () => {
     const { t } = useTranslation();
     const location = useLocation();
-    const Axios = useAxios();
     const navigate = useNavigate();
     const { user, userRole, logOut, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-
-    // const fetchUserInfo = async () => {
-    //     try {
-    //         const response = await fetch(`/dashboard/verify-token`, {
-    //             method: "GET",
-    //             headers: getAuthHeaders(),
-    //             credentials: "include",
-    //         });
-
-    //         if (response.ok) {
-    //             const data = await response.json();
-    //             if (data.authenticated && data.user) {
-    //                 setUserLname(data.user.lastName);
-    //                 setUserName(data.user.firstName);
-    //                 setUserRole(data.user.role);
-    //                 setUserBranch(data.user.branch);
-    //             }
-    //         }
-    //     } catch (error) {
-    //         console.error("Error fetching user info:", error);
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     fetchUserInfo();
-    // }, []);
 
     const handleLogout = async () => {
         try {
@@ -100,326 +78,250 @@ const DashboardLayout = () => {
 
     const isActive = (path) => location.pathname === path;
 
-    const menuItems = [
+    const allMenuSections = [
         {
-            category: "Dashboard",
+            category: "Main menu",
             items: [
                 {
                     path: "/dashboard",
                     icon: LayoutDashboard,
                     label: "Analytics",
-                    color: "blue",
                 },
             ],
         },
         {
-            category: "Vehicle Management",
+            category: "Vehicle",
             items: [
-                {
-                    path: "/dashboard/all-vehicles",
-                    icon: GraduationCap,
-                    label: "All Vehicles",
-                    color: "green",
-                },
-                {
-                    path: "/dashboard/add-vehicle",
-                    icon: UserPlus,
-                    label: "Add Vehicle",
-                    color: "teal",
-                },
-                {
-                  path: "/dashboard/assign-vehicle",
-                  icon: Users,
-                  label: "Assign Vehicle",
-                  color: "red",  
-                },
-                {
-                    path: "/dashboard/scan-assign-vehicle",
-                    icon: Clock,
-                    label: "Scan & Assign",
-                    color: "yellow",
-                }
+                { path: "/dashboard/all-vehicles", icon: GraduationCap, label: "All Vehicles" },
+                { path: "/dashboard/add-vehicle", icon: UserPlus, label: "Add Vehicle" },
+                { path: "/dashboard/assign-vehicle", icon: Users, label: "Assign Vehicle" },
+                { path: "/dashboard/scan-assign-vehicle", icon: Clock, label: "Scan & Assign" },
             ],
         },
         {
-            category: "Product Management",
+            category: "Products",
             items: [
-                {
-                    path: "/dashboard/all-products",
-                    icon: BookOpen,
-                    label: "Product List",
-                    color: "purple",
-                },
-                {
-                    path: "/dashboard/add-product",
-                    icon: BookMarked,
-                    label: "Add Product",
-                    color: "indigo",
-                },
+                { path: "/dashboard/all-products", icon: BookOpen, label: "Product List" },
+                { path: "/dashboard/add-product", icon: BookMarked, label: "Add Product" },
             ],
         },
         {
-            category: "Package Management",
+            category: "Packages",
             items: [
-                {
-                    path: "/dashboard/all-packages",
-                    icon: BookOpen,
-                    label: "Package List",
-                    color: "purple",
-                },
-                {
-                    path: "/dashboard/add-package",
-                    icon: BookMarked,
-                    label: "Add Package",
-                    color: "indigo",
-                },
+                { path: "/dashboard/all-packages", icon: BookOpen, label: "Package List" },
+                { path: "/dashboard/add-package", icon: BookMarked, label: "Add Package" },
             ],
         },
         {
-            category: "Order Management",
+            category: "Orders",
             items: [
-                {
-                    path: "/dashboard/all-orders",
-                    icon: GraduationCap,
-                    label: "Order List  ",
-                    color: "green",
-                },
-                {
-                    path: "/dashboard/completed-orders",
-                    icon: UserPlus,
-                    label: "Completed Orders",
-                    color: "teal",
-                },
-                {
-                    path: "/dashboard/pending-orders",
-                    icon: Clock,
-                    label: "Pending Orders",
-                    color: "yellow",
-
-                },
-                {
-                    path: "/dashboard/cancelled-orders",
-                    icon: XCircle,
-                    label: "Cancelled Orders",
-                    color: "red",   
-                },
-                {
-                    path: "/dashboard/order-reports",
-                    icon: ClipboardList,
-                    label: "Order Reports",
-                    color: "gray",  
-                },
-                
+                { path: "/dashboard/all-orders", icon: GraduationCap, label: "Order List" },
+                { path: "/dashboard/completed-orders", icon: UserPlus, label: "Completed" },
+                { path: "/dashboard/pending-orders", icon: Clock, label: "Pending" },
+                { path: "/dashboard/cancelled-orders", icon: XCircle, label: "Cancelled" },
+                { path: "/dashboard/order-reports", icon: ClipboardList, label: "Reports" },
             ],
         },
         {
-            category: "Finance Management",
+            category: "Finance",
             items: [
-                {
-                    path: "/dashboard/finance-management",
-                    icon: Settings,
-                    label: "Finance Management",
-                    color: "gray",
-                },
-            ],
-
-        },
-        {
-            category: "QR Management",
-            items: [
-                {
-                    path: "/dashboard/all-qr",
-                    icon: Award,
-                    label: "All QR Codes",
-                    color: "orange",
-                },
-                {
-                    path: "/dashboard/generate-qr",
-                    icon: FileText,
-                    label: "Generate QR Code",
-                    color: "amber",
-                },
+                { path: "/dashboard/finance-management", icon: Settings, label: "Finance" },
             ],
         },
         {
-            category: "User Management",
+            category: "QR",
             items: [
-                {
-                    path: "/dashboard/user-management",
-                    icon: UserCog,
-                    label: "User Management",
-                    color: "red",
-                },
-                {
-                    path: "/dashboard/add-user",
-                    icon: UserPlus,
-                    label: "Add User",
-                    color: "green",
-                },
-                
+                { path: "/dashboard/all-qr", icon: Award, label: "All QR Codes" },
+                { path: "/dashboard/generate-qr", icon: FileText, label: "Generate QR" },
+            ],
+        },
+        {
+            category: "Users",
+            items: [
+                { path: "/dashboard/user-management", icon: UserCog, label: "User management" },
+                { path: "/dashboard/add-user", icon: UserPlus, label: "Add user" },
+                { path: "/dashboard/add-provider", icon: Building2, label: "Add provider" },
             ],
         },
     ];
 
-    const getColorClasses = (color, isActive) => {
-        const colors = {
-            blue: isActive
-                ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/50"
-                : "text-blue-600 hover:bg-blue-50",
-            purple: isActive
-                ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/50"
-                : "text-purple-600 hover:bg-purple-50",
-            indigo: isActive
-                ? "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/50"
-                : "text-indigo-600 hover:bg-indigo-50",
-            green: isActive
-                ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/50"
-                : "text-green-600 hover:bg-green-50",
-            teal: isActive
-                ? "bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-500/50"
-                : "text-teal-600 hover:bg-teal-50",
-            yellow: isActive
-                ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/50"
-                : "text-yellow-600 hover:bg-yellow-50",
-            orange: isActive
-                ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/50"
-                : "text-orange-600 hover:bg-orange-50",
-            amber: isActive
-                ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/50"
-                : "text-amber-600 hover:bg-amber-50",
-            red: isActive
-                ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/50"
-                : "text-red-600 hover:bg-red-50",
-            gray: isActive
-                ? "bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-lg shadow-gray-500/50"
-                : "text-gray-600 hover:bg-gray-50",
-        };
-        return colors[color] || colors.blue;
-    };
+    /** Provider: limited sidebar — vehicle ops, catalog read-only, completed orders only */
+    const providerMenuSections = [
+        {
+            category: "Main menu",
+            items: [
+                {
+                    path: "/dashboard",
+                    icon: LayoutDashboard,
+                    label: "Analytics",
+                },
+            ],
+        },
+        {
+            category: "Vehicle",
+            items: [
+                { path: "/dashboard/all-vehicles", icon: GraduationCap, label: "All Vehicles" },
+                { path: "/dashboard/add-vehicle", icon: UserPlus, label: "Add Vehicle" },
+                { path: "/dashboard/assign-vehicle", icon: Users, label: "Assign Vehicle" },
+                { path: "/dashboard/scan-assign-vehicle", icon: Clock, label: "Scan & Assign" },
+            ],
+        },
+        {
+            category: "Products",
+            items: [{ path: "/dashboard/all-products", icon: BookOpen, label: "Product List" }],
+        },
+        {
+            category: "Packages",
+            items: [{ path: "/dashboard/all-packages", icon: BookOpen, label: "Package List" }],
+        },
+        {
+            category: "Orders",
+            items: [
+                {
+                    path: "/dashboard/completed-orders",
+                    icon: CheckCircle2,
+                    label: "Completed",
+                },
+            ],
+        },
+    ];
 
-    // console.log("User Data in Dashboard:", userData);
+    const menuItems =
+        userRole === "admin"
+            ? allMenuSections.filter(
+                  (section) => section.category !== "Users" || userRole === "admin"
+              )
+            : providerMenuSections;
 
-    if (loading || !userRole) {
+    const linkClass = (path) =>
+        `${navLinkBase} ${
+            isActive(path)
+                ? "border-l-[3px] border-emerald-500 bg-emerald-500/15 text-white"
+                : "border-l-[3px] border-transparent text-slate-400 hover:bg-white/[0.06] hover:text-slate-200"
+        }`;
+
+    if (loading) {
         return <SmartLoader fullPage label="Checking your role..." />;
     }
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            {/* Top Navbar */}
-            <div className="fixed left-0 right-0 top-0 z-50 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
-                <div className="flex h-16 items-center justify-between px-3 sm:h-18 sm:px-4 lg:px-6">
-                    {/* Left: Logo & Menu Toggle */}
-                    <div className="flex items-center gap-4">
+        <div className="min-h-screen bg-slate-100">
+            {/* Mobile sidebar overlay */}
+            {sidebarOpen && (
+                <button
+                    type="button"
+                    className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+                    aria-label="Close menu"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar — dark */}
+            <aside
+                className={`fixed bottom-0 left-0 top-0 z-50 flex w-[min(100vw-3rem,18rem)] flex-col border-r border-white/[0.06] bg-[#141719] transition-transform duration-300 lg:w-72 ${
+                    sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+                }`}
+            >
+                <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 p-0.5 shadow-lg shadow-emerald-900/40">
+                        <img
+                            src={instituteLogo}
+                            className="h-full w-full rounded-[10px] bg-white object-cover"
+                            alt=""
+                        />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold tracking-tight text-white">Dashboard</p>
+                        <p className="text-[10px] uppercase tracking-widest text-slate-500">
+                            {COMPANY_TAGLINE}
+                        </p>
+                    </div>
+                </div>
+
+                <nav className="flex-1 overflow-y-auto px-2 py-4">
+                    {menuItems.map((section, idx) => (
+                        <div key={idx} className="mb-6">
+                            <h3 className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                                {section.category}
+                            </h3>
+                            <ul className="space-y-0.5">
+                                {section.items.map((item) => {
+                                    const Icon = item.icon;
+                                    return (
+                                        <li key={item.path}>
+                                            <Link
+                                                to={item.path}
+                                                onClick={() => setSidebarOpen(false)}
+                                                className={linkClass(item.path)}
+                                            >
+                                                <Icon size={18} className="shrink-0 opacity-90" />
+                                                <span className="truncate">{item.label}</span>
+                                            </Link>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                    ))}
+                </nav>
+
+                <div className="border-t border-white/[0.06] p-4 text-center text-[10px] leading-relaxed text-slate-500">
+                    <p className="font-medium text-slate-400">
+                        © {new Date().getFullYear()}
+                    </p>
+                    <p className="mt-0.5">{COMPANY_NAME}</p>
+                </div>
+            </aside>
+
+            {/* Main column */}
+            <div className="min-h-screen lg:pl-72">
+                {/* Top bar */}
+                <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-slate-200/90 bg-white/95 px-3 shadow-sm backdrop-blur-md sm:px-5">
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
                         <button
-                            onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className="rounded-lg p-2 transition-colors hover:bg-slate-100 lg:hidden"
+                            type="button"
+                            onClick={() => setSidebarOpen(true)}
+                            className="btn btn-ghost btn-square text-slate-600 lg:hidden"
+                            aria-label="Open menu"
                         >
-                            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+                            <Menu className="h-6 w-6" />
                         </button>
-                        <Link
-                            to="/dashboard"
-                            className="flex items-center gap-3 hover:opacity-90 transition-opacity"
-                        >
-                            <div className="h-10 w-10 rounded-full bg-blue-600 p-1 shadow sm:h-12 sm:w-12">
-                                <img
-                                    src={instituteLogo}
-                                    className="w-full h-full rounded-full bg-white p-1"
-                                    alt="NYSDTI Logo"
-                                />
-                            </div>
-                            <div className="hidden md:block">
-                                <h1 className="text-lg font-bold text-slate-800 sm:text-xl">NYSDTI</h1>
-                            </div>
-                        </Link>
+                        <div className="relative hidden min-w-0 flex-1 max-w-md md:block">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="search"
+                                placeholder="Search dashboard..."
+                                className="input input-sm w-full rounded-xl border-slate-200 bg-slate-50 pl-9 pr-3 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30"
+                                readOnly
+                                title="Quick search (coming soon)"
+                            />
+                        </div>
                     </div>
 
-                    {/* Right: User Info & Actions */}
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                         <LanguageSwitcher className="hidden sm:flex" />
-                        <div className="hidden items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 md:flex">
-                            <div className="text-right">
-                                <p className="text-sm font-semibold text-slate-800">
-                                    {user?.displayName || user?.email || 'User'}
-                                </p>
-                                <p className="text-xs text-slate-600">{userRole || 'user'}</p>
-                            </div>
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white shadow">
-                                {user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
-                            </div>
-                        </div>
                         <Link
                             to="/"
-                            className="btn btn-sm gap-2 border-none bg-blue-600 text-white hover:bg-blue-700"
+                            className="btn btn-sm gap-1.5 border-0 bg-emerald-500 text-white hover:bg-emerald-600"
                         >
                             <Home size={16} />
                             <span className="hidden sm:inline">{t("dashboard.logout.home")}</span>
                         </Link>
+                        <div className="hidden h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-sm font-bold text-white shadow-md sm:flex">
+                            {user?.displayName?.charAt(0) || user?.email?.charAt(0) || "U"}
+                        </div>
                         <button
+                            type="button"
                             onClick={handleLogout}
-                            className="btn btn-sm gap-2 border-none bg-rose-600 text-white hover:bg-rose-700"
+                            className="btn btn-sm gap-1 border-slate-200 bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-700"
                         >
                             <LogOut size={16} />
                             <span className="hidden sm:inline">{t("dashboard.logout.logout")}</span>
                         </button>
                     </div>
-                </div>
-            </div>
+                </header>
 
-            {/* Sidebar & Main Content Wrapper */}
-            <div className="flex pt-16 sm:pt-18">
-                {/* Sidebar */}
-                <aside
-                    className={`fixed bottom-0 left-0 top-16 z-40 w-72 transform overflow-y-auto border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out sm:top-18 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-                        } lg:translate-x-0`}
-                >
-                    <div className="p-5">
-                        {menuItems.map((section, idx) => (
-                            <div key={idx} className="mb-6">
-                                <h3 className="mb-3 px-3 text-xs font-bold uppercase tracking-wider text-slate-400">
-                                    {section.category}
-                                </h3>
-                                <ul className="space-y-1">
-                                    {section.items.map((item) => {
-                                        const Icon = item.icon;
-                                        const active = isActive(item.path);
-                                        return (
-                                            <li key={item.path}>
-                                                <Link
-                                                    to={item.path}
-                                                    onClick={() => setSidebarOpen(false)}
-                                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium ${active ? "scale-105" : ""
-                                                        } ${getColorClasses(item.color, active)}`}
-                                                >
-                                                    <Icon size={20} />
-                                                    <span>{item.label}</span>
-                                                </Link>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Sidebar Footer */}
-                    <div className="bottom-0 left-0 right-0 border-t border-slate-200 p-4">
-                        <div className="text-center text-xs text-slate-600">
-                            <p className="font-semibold">© 2026 NYSDTI</p>
-                            <p>National Youth Skill Development Training Institute</p>
-                        </div>
-                    </div>
-                </aside>
-
-                {/* Overlay for mobile */}
-                {sidebarOpen && (
-                    <div
-                        className="fixed inset-0 z-30 bg-black/40 lg:hidden"
-                        onClick={() => setSidebarOpen(false)}
-                    ></div>
-                )}
-
-                {/* Main Content */}
-                <main className="flex-1 p-3 sm:p-4 lg:ml-72 lg:p-6">
+                <main className="p-4 sm:p-6">
                     <div className="mx-auto w-full max-w-[1400px]">
                         <Outlet />
                     </div>

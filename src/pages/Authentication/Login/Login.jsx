@@ -4,6 +4,8 @@ import { Link, useNavigate, useLocation } from "react-router";
 import SocialLogin from "../SocialLogin/SocialLogin";
 import useAuth from "../../../hooks/useAuth";
 import useAxios from "../../../hooks/useAxios";
+import { setAppJwt } from "../../../utils/appJwtStorage";
+import { PRODUCT_NAME } from "../../../config/company";
 
 const Login = () => {
     const {
@@ -32,8 +34,12 @@ const onSubmit = async (data) => {
                 token: idToken,
             });
 
-            // ✅ 4. Save backend JWT
-            localStorage.setItem("token", res.data.token);
+            // ✅ 4. Save backend JWT (24h) + expiry
+            if (res.data?.expiresAt != null) {
+                setAppJwt(res.data.token, res.data.expiresAt);
+            } else {
+                localStorage.setItem("token", res.data.token);
+            }
 
             const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -65,7 +71,7 @@ if (cart.length > 0) {
             <div className="card max-w-sm w-full shadow-2xl bg-base-100">
                 <div className="px-6 pt-6">
                     <h1 className="text-3xl mb-1">Welcome Back</h1>
-                    <p className="text-gray-600">Login with QR Tag</p>
+                    <p className="text-gray-600">Login with {PRODUCT_NAME}</p>
                 </div>
 
                 <div className="card-body">
