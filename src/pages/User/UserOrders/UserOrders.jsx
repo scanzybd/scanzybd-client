@@ -3,6 +3,7 @@ import Swal from "sweetalert2";
 import React from "react";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import SmartLoader from "../../../components/SmartLoader";
 
 const UserOrders = () => {
   const { user } = useAuth();
@@ -37,7 +38,7 @@ const UserOrders = () => {
 
   // 🔥 LOADING STATE
   if (isLoading) {
-    return <p className="text-center">Loading...</p>;
+    return <SmartLoader label="Loading your orders..." />;
   }
 
   // ❌ ERROR STATE

@@ -5,7 +5,7 @@ import OrderTable from "../../../components/OrderTable";
 const CompletedOrders = () => {
   const axiosSecure = useAxiosSecure();
 
-  const { data: orders = [] } = useQuery({
+  const { data: orders = [], isLoading } = useQuery({
     queryKey: ["completed-orders"],
     queryFn: async () => {
       const res = await axiosSecure.get("/api/order/completed");
@@ -13,7 +13,7 @@ const CompletedOrders = () => {
     },
   });
 
-  return <OrderTable title="Completed Orders" orders={orders} />;
+  return <OrderTable title="Completed Orders" orders={orders} isLoading={isLoading} />;
 };
 
 export default CompletedOrders;

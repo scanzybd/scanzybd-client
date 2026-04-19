@@ -5,7 +5,7 @@ import OrderTable from "../../../components/OrderTable";
 const PendingOrders = () => {
   const axiosSecure = useAxiosSecure();
 
-  const { data: orders = [] } = useQuery({
+  const { data: orders = [], isLoading } = useQuery({
     queryKey: ["pending-orders"],
     queryFn: async () => {
       const res = await axiosSecure.get("/api/order/pending");
@@ -13,7 +13,7 @@ const PendingOrders = () => {
     },
   });
 
-  return <OrderTable title="Pending Orders" orders={orders} />;
+  return <OrderTable title="Pending Orders" orders={orders} isLoading={isLoading} />;
 };
 
 export default PendingOrders;

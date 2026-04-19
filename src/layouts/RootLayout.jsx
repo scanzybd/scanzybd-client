@@ -6,10 +6,12 @@ import ScrollToTop from "../components/ScrollToTop";
 
 const RootLayout = () => {
     return (
-        <div className='max-w-7xl mx-auto'>
+        <div className='min-h-dvh bg-slate-50 text-slate-900'>
             <ScrollToTop />
             <Navbar></Navbar>
-            <Outlet></Outlet>
+            <main className="min-h-[calc(100dvh-64px)]">
+                <Outlet></Outlet>
+            </main>
             <Footer></Footer>
         </div>
     );

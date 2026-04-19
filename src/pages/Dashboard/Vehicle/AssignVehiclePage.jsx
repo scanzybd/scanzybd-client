@@ -35,7 +35,9 @@ const AssignVehiclePage = () => {
   const loadQR = useCallback(async () => {
     try {
       const res = await axiosSecure.get("/api/qr/allQR");
-      setQrList(res.data || []);
+      const payload = res.data;
+      const list = Array.isArray(payload) ? payload : (payload?.data ?? []);
+      setQrList(list);
     } catch (err) {
       console.log(err);
     }
@@ -57,11 +59,13 @@ const AssignVehiclePage = () => {
 
   const filteredQR = useMemo(() => {
     const search = qrSearch.toLowerCase();
-    return qrList.filter(
-      (q) =>
-        q.status?.toLowerCase() === "not assigned" &&
-        (q.code ?? "").toLowerCase().includes(search)
-    );
+    return qrList.filter((q) => {
+      const unassigned =
+        !q.isAssigned && q.status !== "assigned";
+      return (
+        unassigned && (q.code ?? "").toLowerCase().includes(search)
+      );
+    });
   }, [qrList, qrSearch]);
 
   // ---------------- ASSIGN QR (OPTIMISTIC + FAST) ----------------

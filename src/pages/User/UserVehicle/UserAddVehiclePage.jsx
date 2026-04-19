@@ -3,6 +3,7 @@ import { Html5Qrcode } from "html5-qrcode";
 
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
+import SmartLoader from "../../../components/SmartLoader";
 
 
 const UserAddVehiclePage = () => {
@@ -10,6 +11,7 @@ const UserAddVehiclePage = () => {
   const axiosSecure = useAxiosSecure();
 
   const [mongoUser, setMongoUser] = useState(null);
+  const [roleLoading, setRoleLoading] = useState(true);
 
   const [form, setForm] = useState({
     vehicleName: "",
@@ -33,13 +35,18 @@ const UserAddVehiclePage = () => {
   // ---------------- GET USER (ROLE) ----------------
   useEffect(() => {
     const getUser = async () => {
-      if (!firebaseUser?.email) return;
+      if (!firebaseUser?.email) {
+        setRoleLoading(false);
+        return;
+      }
 
       try {
         const res = await axiosSecure.get("/api/auth/me");
         setMongoUser(res.data);
       } catch (err) {
         console.log(err);
+      } finally {
+        setRoleLoading(false);
       }
     };
 
@@ -115,6 +122,10 @@ const UserAddVehiclePage = () => {
   }, [scanning]);
 
   // ---------------- UI ----------------
+  if (roleLoading) {
+    return <SmartLoader fullPage label="Checking role permissions..." />;
+  }
+
   return (
     <div className="min-h-screen flex justify-center bg-gray-100 p-5">
       <div className="w-full max-w-md space-y-4">

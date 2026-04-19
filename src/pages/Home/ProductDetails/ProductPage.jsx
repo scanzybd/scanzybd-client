@@ -3,6 +3,7 @@ import ProductDetails from "./ProductDetails";
 import useCart from "../../../hooks/useCart.jsx";
 import { useNavigate, useParams } from "react-router-dom";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import SmartLoader from "../../../components/SmartLoader";
 
 const ProductPage = () => {
   const { addToCart, cartItems } = useCart();
@@ -50,11 +51,7 @@ const ProductPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="p-10 text-center">
-        Loading product...
-      </div>
-    );
+    return <SmartLoader fullPage label="Loading product details..." />;
   }
 
   if (!product) {

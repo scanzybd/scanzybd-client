@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
+import SmartLoader from "../../../components/SmartLoader";
 
 const MyVehiclePage = () => {
   const axiosSecure = useAxiosSecure();
@@ -10,6 +11,7 @@ const MyVehiclePage = () => {
   const [viewVehicle, setViewVehicle] = useState(null);
   const [editVehicle, setEditVehicle] = useState(null);
   const [mongoUser, setMongoUser] = useState(null);
+  const [roleLoading, setRoleLoading] = useState(true);
 
   const [qrMap, setQrMap] = useState({});
 
@@ -21,6 +23,8 @@ const MyVehiclePage = () => {
         setMongoUser(res.data);
       } catch (err) {
         console.log(err);
+      } finally {
+        setRoleLoading(false);
       }
     };
 
@@ -101,6 +105,10 @@ const MyVehiclePage = () => {
       console.log(err);
     }
   };
+
+  if (roleLoading) {
+    return <SmartLoader fullPage label="Checking role permissions..." />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-5 flex justify-center">

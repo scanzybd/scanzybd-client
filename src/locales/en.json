@@ -1,0 +1,180 @@
+{
+  "common": {
+    "language": "Language",
+    "english": "English",
+    "bengali": "Bengali",
+    "retry": "Try again",
+    "allYears": "All years",
+    "allMonths": "All months",
+    "allDays": "All days",
+    "months": {
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
+    }
+  },
+  "auth": {
+    "forgot": {
+      "title": "Forgot Password",
+      "subtitle": "Enter your email — we'll send a password reset link.",
+      "rememberPrompt": "Remember your password?",
+      "loginLink": "Login",
+      "sendResetLink": "Send reset link",
+      "emailSentTitle": "Email sent",
+      "emailSentText": "Check your inbox. Open the reset link to set a new password.",
+      "ok": "OK",
+      "failed": "Failed",
+      "errGeneric": "Something went wrong. Please try again.",
+      "errUserNotFound": "No account exists with this email.",
+      "errInvalidEmail": "Invalid email address.",
+      "errTooManyRequests": "Too many attempts. Try again later."
+    },
+    "enterCode": {
+      "noEmailTitle": "No email",
+      "noEmailText": "Start again from Forgot password and enter your email.",
+      "resentTitle": "Sent again",
+      "resentText": "Check your email.",
+      "failedTitle": "Failed",
+      "failedSend": "Could not send.",
+      "heading": "Check your email",
+      "body": "We sent a <strong>reset link</strong> to your email. Click it to set a new password.",
+      "note": "Note: check spam/promotions. The link may expire after a while.",
+      "resend": "Resend link",
+      "backLogin": "Back to login",
+      "otherEmail": "Use a different email"
+    },
+    "reset": {
+      "successTitle": "Password updated",
+      "successText": "Sign in with your new password.",
+      "login": "Login",
+      "failed": "Failed",
+      "errReset": "Reset failed. Request a new link.",
+      "errWeak": "Password is too weak. Choose a stronger one.",
+      "errInvalidLink": "Link expired or invalid. Request reset again.",
+      "verifying": "Verifying reset link…",
+      "invalidTitle": "Invalid link",
+      "invalidBody": "Open this page using the reset link from your email, or request a new reset.",
+      "expiredTitle": "Link expired or invalid",
+      "expiredBody": "Enter your email again to get a new reset link.",
+      "tryAgain": "Try again",
+      "setNew": "Set a new password",
+      "pageTitle": "Reset Password",
+      "forgotMenu": "Forgot password",
+      "backLogin": "Back to Login",
+      "resetBtn": "Reset Password"
+    }
+  },
+  "dashboard": {
+    "logout": {
+      "confirmTitle": "Are you sure?",
+      "confirmText": "Do you want to log out from the admin panel?",
+      "yes": "Yes, log out",
+      "cancel": "Cancel",
+      "successTitle": "Logged out",
+      "successText": "You have been logged out.",
+      "failTitle": "Logout failed",
+      "failText": "Could not log out.",
+      "ok": "OK",
+      "home": "Home",
+      "logout": "Log out"
+    },
+    "qr": {
+      "generate": {
+        "errGenerate": "Could not generate QR codes.",
+        "errPdf": "Could not create PDF. Please try again.",
+        "title": "QR tag generator",
+        "subtitle": "Separate print designs for bike and car. PDF download: one tag per A4 page — ready for press or home printing.",
+        "tagType": "Tag type",
+        "countLabel": "Quantity (max 50)",
+        "generating": "Generating…",
+        "generate": "Generate",
+        "created": "Created ({{count}} items)",
+        "previewHint": "Preview below. Download PDF for printing.",
+        "downloadAllPdf": "Download all (PDF)",
+        "downloadSingle": "Download PDF (print ready)",
+        "emptyHint": "Choose a type, enter a quantity, then generate.",
+        "types": {
+          "bike": {
+            "label": "Bike",
+            "sub": "",
+            "description": "Compact tag layout for two-wheelers."
+          },
+          "car": {
+            "label": "Car",
+            "sub": "",
+            "description": "Wide header strip suited for four-wheelers."
+          }
+        }
+      },
+      "all": {
+        "loading": "Loading QR list…",
+        "title": "All QR codes",
+        "subtitle": "Filter by tag type (bike/car) and date. Summary analytics in the cards above.",
+        "liveFilter": "Live filter",
+        "filterHeading": "Filter by type and date",
+        "typeLabel": "Tag type",
+        "allTypes": "All types",
+        "bike": "Bike",
+        "car": "Car",
+        "year": "Year",
+        "month": "Month",
+        "day": "Day",
+        "reset": "Reset",
+        "filterHint": "If you pick a month without a year, the current year is used. Pick a month before choosing a day.",
+        "analytics": "Analytics",
+        "loadError": "Could not load data.",
+        "noResults": "No QR codes match this filter.",
+        "scan": "Scans",
+        "created": "Created",
+        "openLink": "Open link",
+        "stats": {
+          "totalQr": "Total QR",
+          "totalQrSub": "For selected filters",
+          "assigned": "Assigned",
+          "assignedSub": "Linked to a vehicle",
+          "unassigned": "Unassigned",
+          "unassignedSub": "Unused tags",
+          "totalScans": "Total scans",
+          "totalScansSub": "All codes combined",
+          "bikeTags": "Bike tags",
+          "bikeTagsSub": "qrType: bike",
+          "carTags": "Car tags",
+          "carTagsSub": "qrType: car"
+        }
+      }
+    }
+  },
+  "user": {
+    "myPurchases": {
+      "loading": "Loading purchase validity…",
+      "loadError": "Could not load orders. Try again later.",
+      "title": "My product validity",
+      "subtitle": "Validity is counted from each successful payment. When it expires you can renew by purchasing again — added to cart.",
+      "totalLines": "Total lines",
+      "active": "Active",
+      "expired": "Expired",
+      "legacy": "Legacy (no tracking)",
+      "empty": "No paid orders yet. After you buy a product, validity will appear here.",
+      "order": "Order",
+      "priceQty": "৳ {{price}} × {{qty}}",
+      "badgeLegacy": "Legacy order",
+      "badgeActive": "Active",
+      "badgeExpired": "Expired",
+      "daysPerUnit": "{{days}} days / unit",
+      "start": "Start",
+      "end": "End",
+      "notTracked": "Not tracked",
+      "renew": "Renew (add to cart)",
+      "renewNote": "A new period will run from the date payment is confirmed."
+    }
+  }
+}

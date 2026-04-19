@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import SmartLoader from "../../../components/SmartLoader";
 
 
 
@@ -24,11 +25,7 @@ const AllProducts = () => {
   }, [axiosSecure]);
 
   if (loading) {
-    return (
-      <div className="text-center mt-10 text-gray-500">
-        Loading products...
-      </div>
-    );
+    return <SmartLoader label="Loading products..." />;
   }
 
   return (
@@ -66,6 +63,10 @@ const AllProducts = () => {
 
               <p className="text-green-600 font-bold mt-2">
                 ৳ {product.price}
+              </p>
+
+              <p className="text-xs text-indigo-600 mt-1 font-medium">
+                Validity: {product.validityDays ?? 365} days / unit (after payment)
               </p>
 
               <p className="text-xs text-gray-400 mt-2">

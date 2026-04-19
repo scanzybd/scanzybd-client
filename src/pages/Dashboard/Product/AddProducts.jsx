@@ -23,6 +23,8 @@ const AddProducts = () => {
     image: "",
     type: "",
     packInfo: "",
+    /** Days of access/service validity after each successful payment (per unit). */
+    validityDays: "365",
 
     rating: "",
     reviews: "",
@@ -83,6 +85,7 @@ const AddProducts = () => {
         ...form,
         price: Number(form.price),
         originalPrice: Number(form.originalPrice),
+        validityDays: Math.max(1, Number(form.validityDays) || 365),
         rating: Number(form.rating),
         reviews: Number(form.reviews),
 
@@ -109,6 +112,7 @@ const AddProducts = () => {
         image: "",
         type: "",
         packInfo: "",
+        validityDays: "365",
         rating: "",
         reviews: "",
         inStock: true,
@@ -199,6 +203,24 @@ const AddProducts = () => {
             placeholder="Pack Info"
             className="w-full p-3 border rounded mb-3"
           />
+
+          <div className="mb-3">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Validity (days per unit after payment)
+            </label>
+            <input
+              name="validityDays"
+              type="number"
+              min={1}
+              value={form.validityDays}
+              onChange={handleChange}
+              placeholder="365"
+              className="w-full p-3 border rounded"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Checkout: total days = this × quantity. After that, customer can renew.
+            </p>
+          </div>
 
           {/* RATING & REVIEWS */}
           <div className="grid grid-cols-2 gap-2">

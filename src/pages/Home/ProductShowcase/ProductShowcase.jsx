@@ -7,6 +7,7 @@ import productFallback from "../../../assets/product/product01.png";
 
 import useCart from "../../../hooks/useCart";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import SmartLoader from "../../../components/SmartLoader";
 
 const ProductShowcase = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -86,7 +87,7 @@ const ProductShowcase = () => {
 
   // ⏳ LOADING
   if (isLoading) {
-    return <p className="text-center py-10">Loading products...</p>;
+    return <SmartLoader fullPage label="Loading products..." />;
   }
 
   // ❌ ERROR
@@ -176,6 +177,10 @@ const ProductShowcase = () => {
 
                 <p className="text-yellow-600 font-bold mt-1">
                   ৳ {product.price}
+                </p>
+
+                <p className="text-xs text-indigo-600 mt-0.5">
+                  Validity: {product.validityDays ?? 365} days / unit after payment
                 </p>
 
                 <p className="text-sm text-gray-600">

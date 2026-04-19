@@ -40,6 +40,7 @@ import MyCart from "../pages/User/Cart/MyCart";
 import UserProfile from "../pages/User/Profile/UserProfile";
 import UserSettings from "../pages/User/Settings/UserSettings";
 import UserOrders from "../pages/User/UserOrders/UserOrders";
+import MyPurchases from "../pages/User/MyPurchases/MyPurchases";
 import AllVehiclePage from "../pages/Dashboard/Vehicle/AllVehiclePage";
 import AssignVehiclebyId from "../pages/Dashboard/Vehicle/AssignVehiclebyId";
 import PaymentReject from "../pages/Dashboard/Order/PaymentStatus/PaymentReject";
@@ -162,6 +163,10 @@ const router = createBrowserRouter([
       {
         path: 'user-orders',
         Component: UserOrders,
+      },
+      {
+        path: 'my-purchases',
+        Component: MyPurchases,
       },
      
 

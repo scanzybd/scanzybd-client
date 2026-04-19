@@ -35,10 +35,10 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="w-full bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-slate-100 mt-20 pt-20 border-t-2 border-slate-700">
+    <footer className="mt-16 w-full border-t-2 border-slate-700 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 pt-16 text-slate-100 sm:mt-20 sm:pt-20">
       {/* CTA Section */}
-      <div className="px-4 sm:px-6 lg:px-8 pb-32 sm:pb-40">
-        <div className="max-w-6xl mx-auto">
+      <div className="app-container pb-16 sm:pb-20">
+        <div className="mx-auto max-w-6xl">
           <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-2xl shadow-2xl overflow-hidden">
             <div className="px-6 sm:px-8 md:px-12 py-8 sm:py-12 md:py-16">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
@@ -63,8 +63,8 @@ const Footer = () => {
       </div>
 
       {/* Main Footer Content */}
-      <div className="px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-        <div className="max-w-7xl mx-auto">
+      <div className="app-container py-12 sm:py-16">
+        <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 sm:gap-10 mb-12 sm:mb-16">
             
             {/* Brand Section */}
@@ -85,7 +85,7 @@ const Footer = () => {
                       key={idx}
                       href={social.href}
                       aria-label={social.label}
-                      className="w-10 h-10 rounded-full bg-slate-700 hover:bg-yellow-500 flex items-center justify-center transition transform hover:scale-110"
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-700 transition hover:scale-110 hover:bg-yellow-500"
                     >
                       <Icon className="w-5 h-5 text-yellow-400" />
                     </a>
@@ -152,7 +152,7 @@ const Footer = () => {
             <div>
               <h3 className="text-lg font-semibold text-white mb-6">Get in Touch</h3>
               <div className="space-y-4">
-                <a href="tel:+880 1581 400 986" className="flex items-start gap-3 text-sm text-slate-400 hover:text-yellow-400 transition group">
+                <a href="tel:+8801581400986" className="flex items-start gap-3 text-sm text-slate-400 hover:text-yellow-400 transition group">
                   <Phone className="w-5 h-5 mt-0.5 flex-shrink-0 group-hover:text-yellow-400" />
                   <span>+880 1581 400 986</span>
                 </a>

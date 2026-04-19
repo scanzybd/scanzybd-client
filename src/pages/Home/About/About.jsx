@@ -45,12 +45,12 @@ const About = () => {
     return (
         <div className="w-full bg-gradient-to-b from-slate-50 via-white to-slate-50">
             {/* Hero Section */}
-            <div className="relative min-h-screen pt-16 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+            <div className="relative overflow-hidden pb-20 pt-12 sm:pt-16">
                 {/* Background Decorations */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-100/20 rounded-full blur-3xl"></div>
                 <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-100/20 rounded-full blur-3xl"></div>
 
-                <div className="relative max-w-6xl mx-auto">
+                <div className="app-container relative max-w-6xl">
                     {/* Hero Content */}
                     <div className="text-center mb-16 sm:mb-20">
                         <div className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-yellow-100 rounded-full mb-6">
@@ -133,8 +133,8 @@ const About = () => {
             </div>
 
             {/* Features Section */}
-            <div className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-slate-900">
-                <div className="max-w-6xl mx-auto">
+            <div className="bg-slate-900 py-16 sm:py-20 md:py-24">
+                <div className="app-container max-w-6xl">
                     <div className="text-center mb-12 sm:mb-16">
                         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
                             Powerful Features
@@ -171,8 +171,8 @@ const About = () => {
           
 
             {/* CTA Section */}
-            <div className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-yellow-400 to-amber-500">
-                <div className="max-w-4xl mx-auto text-center">
+            <div className="bg-gradient-to-r from-yellow-400 to-amber-500 py-16 sm:py-20 md:py-24">
+                <div className="app-container max-w-4xl text-center">
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
                         Ready to Get Started?
                     </h2>

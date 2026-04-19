@@ -4,15 +4,55 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-
-
-
-
-/* .font-urbanist {
-  font-family: "Urbanist", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
+:root {
+  --app-max-width: 1200px;
+  --app-gutter: clamp(14px, 2.8vw, 32px);
 }
 
- */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: "Urbanist", sans-serif;
+  color: #0f172a;
+  background: #f8fafc;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+.btn,
+[role="button"],
+button {
+  min-height: 42px;
+}
+
+.app-container {
+  width: min(var(--app-max-width), 100% - (var(--app-gutter) * 2));
+  margin-inline: auto;
+}

@@ -5,7 +5,7 @@ import OrderTable from "../../../components/OrderTable";
 const AllOrders = () => {
   const axiosSecure = useAxiosSecure();
 
-  const { data: orders = [] } = useQuery({
+  const { data: orders = [], isLoading } = useQuery({
     queryKey: ["all-orders"],
     queryFn: async () => {
       const res = await axiosSecure.get("/api/order");
@@ -13,7 +13,7 @@ const AllOrders = () => {
     },
   });
 
-  return <OrderTable title="All Orders" orders={orders} />;
+  return <OrderTable title="All Orders" orders={orders} isLoading={isLoading} />;
 };
 
 export default AllOrders;

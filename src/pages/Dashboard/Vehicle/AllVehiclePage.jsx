@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
+import SmartLoader from "../../../components/SmartLoader";
 
 const AllVehiclePage = () => {
   const axiosSecure = useAxiosSecure();
@@ -102,9 +103,7 @@ const AllVehiclePage = () => {
         />
 
         {/* LOADING */}
-        {loading && (
-          <p className="text-center text-gray-500">Loading...</p>
-        )}
+        {loading && <SmartLoader label="Loading vehicles..." />}
 
         {/* LIST */}
         {!loading && filteredVehicles.length === 0 && (

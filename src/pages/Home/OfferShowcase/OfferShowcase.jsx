@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, X, Zap, TrendingUp, Crown, ArrowRight } from "lucide-react";
 import useAxios from "../../../hooks/useAxios";
+import SmartLoader from "../../../components/SmartLoader";
 
 const defaultPlans = [
     {
@@ -73,13 +74,17 @@ const OfferShowcase = () => {
     const [billingCycle, setBillingCycle] = useState("monthly");
     const axios = useAxios();
 
-    const { data: packages = [] } = useQuery({
+    const { data: packages = [], isLoading } = useQuery({
         queryKey: ["homePackages"],
         queryFn: async () => {
             const response = await axios.get("/api/package");
             return response.data?.data || [];
         },
     });
+
+    if (isLoading) {
+        return <SmartLoader fullPage label="Loading packages..." />;
+    }
 
     const plans = useMemo(() => {
         if (!packages.length) return defaultPlans;
