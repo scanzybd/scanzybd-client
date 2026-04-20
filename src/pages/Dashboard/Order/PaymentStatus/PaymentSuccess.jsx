@@ -7,6 +7,8 @@ const PaymentSuccess = () => {
   const navigate = useNavigate();
   const axiosSecure = useAxiosSecure();
   const [params] = useSearchParams();
+  const paymentId = params.get("paymentId");
+  const transactionId = params.get("trxID");
 
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("processing");
@@ -14,22 +16,23 @@ const PaymentSuccess = () => {
   useEffect(() => {
     const confirmPayment = async () => {
       try {
-        const paymentId = params.get("paymentId");
-        const transactionId = params.get("trxID");
-
+        // Callback must append ?paymentId=&trxID= (see bkashCallback.controller)
         if (!paymentId || !transactionId) {
           setStatus("failed");
           setLoading(false);
           return;
         }
 
-        // 🔥 CONFIRM PAYMENT TO BACKEND
-        await axiosSecure.post("/api/payment/confirm", {
+        const { data } = await axiosSecure.post("/api/payment/confirm", {
           paymentId,
           transactionId,
         });
 
-        setStatus("success");
+        if (data?.success) {
+          setStatus("success");
+        } else {
+          setStatus("failed");
+        }
       } catch (error) {
         console.log(error);
         setStatus("failed");
@@ -39,7 +42,7 @@ const PaymentSuccess = () => {
     };
 
     confirmPayment();
-  }, [params]);
+  }, [paymentId, transactionId, axiosSecure]);
 
   if (loading) {
     return (

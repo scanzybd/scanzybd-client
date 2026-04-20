@@ -41,7 +41,7 @@ const AddVehicleForm = ({
         name="plate"
         value={form.plate}
         onChange={handleChange}
-        placeholder="Plate Number"
+        placeholder="Dhaka Metro 00-0000"
         className="w-full border p-2 rounded"
       />
 

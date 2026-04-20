@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { ShoppingCart, Star, Check, Truck, Shield, RotateCcw, Heart } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+    ShoppingCart,
+    Star,
+    Check,
+    Truck,
+    Shield,
+    RotateCcw,
+    Heart,
+    Sparkles,
+} from "lucide-react";
 
 const ProductDetails = ({ product, onAddToCart }) => {
     const [quantity, setQuantity] = useState(1);
@@ -23,6 +33,9 @@ const ProductDetails = ({ product, onAddToCart }) => {
             : 0;
     const saveAmount = Math.max(0, originalPrice - price);
 
+    const rating = Number(product.rating) || 0;
+    const reviewCount = product.reviews ?? 0;
+
     const handleAddToCart = () => {
         for (let i = 0; i < quantity; i++) {
             onAddToCart(product);
@@ -31,223 +44,290 @@ const ProductDetails = ({ product, onAddToCart }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-6xl mx-auto">
-                {/* Breadcrumb */}
-                <div className="mb-8 flex items-center gap-2 text-sm text-slate-600">
-                    <span className="hover:text-blue-600 cursor-pointer">Home</span>
-                    <span>/</span>
-                    <span className="hover:text-blue-600 cursor-pointer">Products</span>
-                    <span>/</span>
-                    <span className="text-blue-600 font-medium">{displayName}</span>
+        <div className="min-h-screen px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+            <div className="mx-auto max-w-6xl">
+                {/* Top accent bar */}
+                <div className="mb-8 overflow-hidden rounded-2xl border border-yellow-100 bg-gradient-to-r from-yellow-400/15 via-amber-50/50 to-yellow-100/30 px-4 py-3 sm:px-6">
+                    <div className="flex flex-wrap items-center justify-center gap-2 text-center sm:justify-between">
+                        <span className="inline-flex items-center gap-2 text-sm font-medium text-yellow-900">
+                            <Sparkles className="h-4 w-4 text-yellow-600" />
+                            Featured product — scan-ready QR solutions
+                        </span>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 mb-16">
-                    {/* Product Image Section */}
+                {/* Breadcrumb */}
+                <nav className="mb-8 flex flex-wrap items-center gap-2 text-sm text-yellow-900/60">
+                    <Link to="/" className="transition hover:text-yellow-700">
+                        Home
+                    </Link>
+                    <span className="text-yellow-400">/</span>
+                    <Link to="/Products" className="transition hover:text-yellow-700">
+                        Products
+                    </Link>
+                    <span className="text-yellow-400">/</span>
+                    <span className="line-clamp-1 font-medium text-yellow-950">
+                        {displayName}
+                    </span>
+                </nav>
+
+                <div className="mb-16 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
+                    {/* Gallery */}
                     <div className="flex flex-col gap-4">
-                        <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg">
+                        <div className="relative overflow-hidden rounded-3xl border border-yellow-100 bg-white shadow-xl shadow-yellow-900/5 ring-1 ring-yellow-100/80">
                             <img
                                 src={product.image}
                                 alt={displayName}
-                                className="w-full h-80 sm:h-96 object-cover"
+                                className="h-80 w-full object-cover sm:h-[22rem] lg:h-[26rem]"
                             />
                             {discountPct > 0 && (
-                                <div className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-2 rounded-full font-bold shadow-lg">
-                                    -{discountPct}%
+                                <div className="absolute right-4 top-4 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 px-4 py-2 text-sm font-bold text-white shadow-lg">
+                                    −{discountPct}%
                                 </div>
                             )}
                             {product.inStock && (
-                                <div className="absolute top-4 left-4 bg-emerald-500 text-white px-4 py-2 rounded-full font-semibold shadow-lg flex items-center gap-1">
-                                    <Check className="w-4 h-4" />
-                                    In Stock
+                                <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-yellow-500 px-4 py-2 text-sm font-semibold text-yellow-950 shadow-md">
+                                    <Check className="h-4 w-4" />
+                                    In stock
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Product Info Section */}
+                    {/* Info */}
                     <div className="flex flex-col justify-center">
-                        {/* Title and Rating */}
-                        <div className="mb-6">
-                            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
-                                {displayName}
-                            </h1>
-                            <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-1">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star
-                                            key={i}
-                                            className={`w-5 h-5 ${
-                                                i < Math.floor(product.rating)
-                                                    ? 'fill-yellow-400 text-yellow-400'
-                                                    : 'text-slate-300'
-                                            }`}
-                                        />
-                                    ))}
-                                </div>
-                                <span className="text-slate-600 font-medium">
-                                    {product.rating} ({product.reviews} reviews)
-                                </span>
+                        <h1 className="mb-4 text-3xl font-bold leading-tight tracking-tight text-yellow-950 sm:text-4xl lg:text-5xl">
+                            {displayName}
+                        </h1>
+
+                        <div className="mb-6 flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                    <Star
+                                        key={i}
+                                        className={`h-5 w-5 ${
+                                            i < Math.floor(rating)
+                                                ? "fill-yellow-400 text-yellow-400"
+                                                : "text-yellow-200"
+                                        }`}
+                                    />
+                                ))}
                             </div>
+                            <span className="text-sm font-medium text-yellow-900/70">
+                                {rating.toFixed(1)} ({reviewCount} reviews)
+                            </span>
                         </div>
 
-                        {/* Price Section */}
-                        <div className="mb-6 p-6 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl border border-yellow-200">
-                            <div className="flex items-baseline gap-3">
-                                <span className="text-3xl sm:text-4xl font-bold text-slate-900">
-                                    ৳ {product.price}
+                        <div className="mb-6 rounded-2xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50/80 p-6 shadow-sm">
+                            <div className="flex flex-wrap items-baseline gap-3">
+                                <span className="text-3xl font-bold tabular-nums text-yellow-950 sm:text-4xl">
+                                    ৳ {price}
                                 </span>
                                 {originalPrice > price && (
-                                    <span className="text-lg text-slate-400 line-through">
+                                    <span className="text-lg text-yellow-900/40 line-through">
                                         ৳ {originalPrice}
                                     </span>
                                 )}
                             </div>
                             {saveAmount > 0 && (
-                                <p className="text-sm text-slate-600 mt-2">
-                                    Save ৳ {saveAmount}
+                                <p className="mt-2 text-sm font-medium text-yellow-800">
+                                    You save ৳ {saveAmount}
                                 </p>
                             )}
                         </div>
 
-                        {/* Description */}
-                        <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                        <p className="mb-8 text-lg leading-relaxed text-yellow-900/75">
                             {product.description}
                         </p>
 
-                        {/* Features List */}
-                        <div className="mb-8">
-                            <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-4">
-                                Key Features
-                            </h3>
-                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {features.slice(0, 4).map((feature, idx) => (
-                                    <li key={idx} className="flex items-start gap-3">
-                                        <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                                        <span className="text-slate-700">{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                        {features.length > 0 && (
+                            <div className="mb-8">
+                                <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-yellow-900/50">
+                                    Key features
+                                </h3>
+                                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    {features.slice(0, 4).map((feature, idx) => (
+                                        <li
+                                            key={idx}
+                                            className="flex items-start gap-3 rounded-xl border border-yellow-100/80 bg-white/60 px-3 py-2.5"
+                                        >
+                                            <Check className="mt-0.5 h-5 w-5 shrink-0 text-yellow-600" />
+                                            <span className="text-yellow-950/90">
+                                                {feature}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
 
-                        {/* Quantity Selector */}
                         <div className="mb-8">
-                            <label className="block text-sm font-semibold text-slate-900 mb-3">
+                            <label className="mb-3 block text-sm font-semibold text-yellow-950">
                                 Quantity
                             </label>
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center border border-slate-300 rounded-lg">
+                            <div className="flex flex-wrap items-center gap-4">
+                                <div className="inline-flex items-center overflow-hidden rounded-xl border border-yellow-200 bg-white shadow-sm">
                                     <button
-                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                        className="px-4 py-2 text-slate-600 hover:text-slate-900 font-semibold transition"
+                                        type="button"
+                                        onClick={() =>
+                                            setQuantity(Math.max(1, quantity - 1))
+                                        }
+                                        className="px-4 py-2.5 font-semibold text-yellow-900 transition hover:bg-yellow-50"
                                     >
                                         −
                                     </button>
                                     <input
                                         type="number"
                                         value={quantity}
-                                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                        className="w-16 text-center py-2 font-semibold text-slate-900 focus:outline-none"
+                                        onChange={(e) =>
+                                            setQuantity(
+                                                Math.max(
+                                                    1,
+                                                    parseInt(e.target.value, 10) ||
+                                                        1
+                                                )
+                                            )
+                                        }
+                                        className="w-16 border-x border-yellow-100 py-2.5 text-center font-semibold text-yellow-950 focus:outline-none"
                                         min="1"
                                     />
                                     <button
-                                        onClick={() => setQuantity(quantity + 1)}
-                                        className="px-4 py-2 text-slate-600 hover:text-slate-900 font-semibold transition"
+                                        type="button"
+                                        onClick={() =>
+                                            setQuantity(quantity + 1)
+                                        }
+                                        className="px-4 py-2.5 font-semibold text-yellow-900 transition hover:bg-yellow-50"
                                     >
                                         +
                                     </button>
                                 </div>
-                                <p className="text-slate-600">
-                                    Total: <span className="font-bold text-slate-900">৳ {product.price * quantity}</span>
+                                <p className="text-yellow-900/70">
+                                    Line total:{" "}
+                                    <span className="font-bold tabular-nums text-yellow-950">
+                                        ৳ {price * quantity}
+                                    </span>
                                 </p>
                             </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                        <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
                             <button
+                                type="button"
                                 onClick={handleAddToCart}
-                                className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 font-semibold rounded-lg hover:from-yellow-500 hover:to-amber-600 transition transform hover:scale-105 shadow-lg"
+                                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-yellow-500 px-8 py-4 font-semibold text-yellow-950 shadow-lg shadow-yellow-900/10 transition hover:bg-yellow-600"
                             >
-                                <ShoppingCart className="w-5 h-5" />
-                                Add to Cart
+                                <ShoppingCart className="h-5 w-5" />
+                                Add to cart
                             </button>
                             <button
+                                type="button"
                                 onClick={() => setIsFavorite(!isFavorite)}
-                                className={`px-6 py-4 rounded-lg font-semibold border-2 transition ${
+                                className={`inline-flex items-center justify-center rounded-xl border-2 px-5 py-4 font-semibold transition ${
                                     isFavorite
-                                        ? 'bg-red-50 border-red-300 text-red-600'
-                                        : 'bg-white border-slate-300 text-slate-600 hover:border-red-300'
+                                        ? "border-rose-300 bg-rose-50 text-rose-600"
+                                        : "border-yellow-200 bg-white text-yellow-800 hover:border-yellow-400"
                                 }`}
+                                aria-label={
+                                    isFavorite
+                                        ? "Remove from favorites"
+                                        : "Add to favorites"
+                                }
                             >
-                                <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
+                                <Heart
+                                    className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`}
+                                />
                             </button>
                         </div>
 
-                        {/* Trust Badges */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 border-t border-slate-200">
-                            <div className="flex items-center gap-3">
-                                <Truck className="w-6 h-6 text-blue-600" />
-                                <div>
-                                    <p className="font-semibold text-slate-900">Free Shipping</p>
-                                    <p className="text-sm text-slate-600">On orders above ৳999</p>
+                        <div className="grid grid-cols-1 gap-4 border-t border-yellow-100 pt-8 sm:grid-cols-3">
+                            {[
+                                {
+                                    icon: Truck,
+                                    title: "Fast delivery",
+                                    sub: "Reliable shipping",
+                                },
+                                {
+                                    icon: Shield,
+                                    title: "Secure checkout",
+                                    sub: "Encrypted payments",
+                                },
+                                {
+                                    icon: RotateCcw,
+                                    title: "Support",
+                                    sub: "We are here to help",
+                                },
+                            ].map((row) => {
+                                const TrustIcon = row.icon;
+                                return (
+                                <div
+                                    key={row.title}
+                                    className="flex items-start gap-3 rounded-xl border border-yellow-100/80 bg-yellow-50/40 p-4"
+                                >
+                                    <TrustIcon className="h-6 w-6 shrink-0 text-yellow-600" />
+                                    <div>
+                                        <p className="font-semibold text-yellow-950">
+                                            {row.title}
+                                        </p>
+                                        <p className="text-sm text-yellow-900/55">
+                                            {row.sub}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <Shield className="w-6 h-6 text-blue-600" />
-                                <div>
-                                    <p className="font-semibold text-slate-900">Secure Payment</p>
-                                    <p className="text-sm text-slate-600">100% protected</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <RotateCcw className="w-6 h-6 text-blue-600" />
-                                <div>
-                                    <p className="font-semibold text-slate-900">Easy Returns</p>
-                                    <p className="text-sm text-slate-600">30-day guarantee</p>
-                                </div>
-                            </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
 
-                {/* Specifications Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-12 mb-12">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-8">
+                {/* Specifications */}
+                <div className="mb-12 rounded-3xl border border-yellow-100 bg-white p-8 shadow-lg shadow-yellow-900/5 sm:p-10">
+                    <h2 className="mb-8 text-2xl font-bold text-yellow-950 sm:text-3xl">
                         Specifications
                     </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
-                        {specEntries.length === 0 ? (
-                            <p className="text-slate-600 sm:col-span-2 md:col-span-5">
-                                No specifications listed.
-                            </p>
-                        ) : (
-                            specEntries.map(([key, value]) => (
-                                <div key={key} className="p-4 bg-slate-50 rounded-lg">
-                                    <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                    {specEntries.length === 0 ? (
+                        <p className="text-yellow-900/55">
+                            No specifications listed.
+                        </p>
+                    ) : (
+                        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {specEntries.map(([key, value]) => (
+                                <div
+                                    key={key}
+                                    className="rounded-2xl border border-yellow-100 bg-gradient-to-br from-yellow-50/80 to-white p-5"
+                                >
+                                    <dt className="text-xs font-semibold uppercase tracking-wide text-yellow-800/70">
                                         {key}
-                                    </p>
-                                    <p className="text-lg font-bold text-slate-900">{value}</p>
+                                    </dt>
+                                    <dd className="mt-2 text-lg font-bold text-yellow-950">
+                                        {value}
+                                    </dd>
                                 </div>
-                            ))
-                        )}
-                    </div>
+                            ))}
+                        </dl>
+                    )}
                 </div>
 
-                {/* All Features */}
-                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-2xl p-8 sm:p-12 border border-yellow-200">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-8">
-                        Complete Feature Set
-                    </h2>
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {features.map((feature, idx) => (
-                            <li key={idx} className="flex items-center gap-3">
-                                <Check className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                                <span className="text-slate-700 font-medium">{feature}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+                {/* All features */}
+                {features.length > 0 && (
+                    <div className="rounded-3xl border border-yellow-200 bg-gradient-to-br from-yellow-50 via-amber-50/50 to-white p-8 sm:p-10">
+                        <h2 className="mb-8 text-2xl font-bold text-yellow-950 sm:text-3xl">
+                            Everything included
+                        </h2>
+                        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {features.map((feature, idx) => (
+                                <li
+                                    key={idx}
+                                    className="flex items-center gap-3 rounded-xl border border-yellow-100/60 bg-white/70 px-4 py-3"
+                                >
+                                    <Check className="h-5 w-5 shrink-0 text-yellow-600" />
+                                    <span className="font-medium text-yellow-950/90">
+                                        {feature}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
             </div>
         </div>
     );

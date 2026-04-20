@@ -67,7 +67,7 @@ if (cart.length > 0) {
     
 
     return (
-        <div className="flex w-full h-screen items-center justify-center bg-yellow-300 px-4">
+        <div className="flex h-screen w-full items-center justify-center bg-slate-100 px-4 transition-colors dark:bg-slate-950">
             <div className="card max-w-sm w-full shadow-2xl bg-base-100">
                 <div className="px-6 pt-6">
                     <h1 className="text-3xl mb-1">Welcome Back</h1>

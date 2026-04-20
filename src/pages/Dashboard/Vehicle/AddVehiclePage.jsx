@@ -1,16 +1,20 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Html5Qrcode } from "html5-qrcode";
 import { Car, Hash, Phone, QrCode, UserPlus, ScanLine } from "lucide-react";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useMongoProfile from "../../../hooks/useMongoProfile";
 import SmartLoader from "../../../components/SmartLoader";
 
 const AddVehiclePage = () => {
   const { user: firebaseUser } = useAuth();
   const axiosSecure = useAxiosSecure();
+  const queryClient = useQueryClient();
 
-  const [mongoUser, setMongoUser] = useState(null);
-  const [roleLoading, setRoleLoading] = useState(true);
+  const { data: mongoUser, isLoading: roleLoading } = useMongoProfile(
+    Boolean(firebaseUser?.email)
+  );
 
   const [form, setForm] = useState({
     vehicleName: "",
@@ -29,29 +33,36 @@ const AddVehiclePage = () => {
   const [scanning, setScanning] = useState(false);
   const [scannedQR, setScannedQR] = useState(null);
 
+  const [assignableUsers, setAssignableUsers] = useState([]);
+  const [assignableLoading, setAssignableLoading] = useState(false);
+  const [selectedOwnerId, setSelectedOwnerId] = useState("");
+
   const scannerRef = useRef(null);
 
-  useEffect(() => {
-    const getUser = async () => {
-      if (!firebaseUser?.email) {
-        setRoleLoading(false);
-        return;
-      }
-
-      try {
-        const res = await axiosSecure.get("/api/auth/me");
-        setMongoUser(res.data);
-      } catch (err) {
-        console.log(err);
-      } finally {
-        setRoleLoading(false);
-      }
-    };
-
-    getUser();
-  }, [firebaseUser?.email, axiosSecure]);
-
   const role = mongoUser?.role || "user";
+  const isStaffAdd = useMemo(
+    () => role === "admin" || role === "provider",
+    [role]
+  );
+
+  useEffect(() => {
+    if (!isStaffAdd) return;
+    let cancelled = false;
+    (async () => {
+      setAssignableLoading(true);
+      try {
+        const res = await axiosSecure.get("/api/users/assignable");
+        if (!cancelled) setAssignableUsers(res.data?.data || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (!cancelled) setAssignableLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isStaffAdd, axiosSecure]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -69,15 +80,27 @@ const AddVehiclePage = () => {
       return;
     }
 
+    if (!mongoUser?._id) {
+      alert("Could not load your profile. Please sign in again.");
+      return;
+    }
+
+    if (isStaffAdd && !selectedOwnerId) {
+      alert("Select the customer user who owns this vehicle.");
+      return;
+    }
+
     try {
       const payload = {
         ...form,
-        owner: mongoUser?._id,
+        owner: isStaffAdd ? selectedOwnerId : mongoUser._id,
         driver: showDriverForm ? driver : null,
         qrData: scannedQR || null,
       };
 
       await axiosSecure.post("/api/vehicle/add", payload);
+
+      await queryClient.invalidateQueries({ queryKey: ["dashboard", "vehicles"] });
 
       alert("Vehicle added successfully.");
 
@@ -91,6 +114,7 @@ const AddVehiclePage = () => {
       setDriver({ name: "", phone: "" });
       setShowDriverForm(false);
       setScannedQR(null);
+      setSelectedOwnerId("");
     } catch (err) {
       console.log(err);
       alert("Failed to add vehicle.");
@@ -140,7 +164,9 @@ const AddVehiclePage = () => {
           Add vehicle
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          Register a vehicle and optionally link a driver or QR tag.
+          {isStaffAdd
+            ? "Register a vehicle for a customer account and optionally link a driver or QR tag."
+            : "Register a vehicle and optionally link a driver or QR tag."}
         </p>
       </div>
 
@@ -148,6 +174,36 @@ const AddVehiclePage = () => {
         onSubmit={handleSubmit}
         className="space-y-4 rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm"
       >
+        {isStaffAdd && (
+          <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/50 p-4">
+            <label className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-900">
+              <UserPlus className="h-3.5 w-3.5" />
+              Vehicle owner (customer)
+            </label>
+            <select
+              className="select select-bordered mt-1 w-full rounded-xl border-slate-200 bg-white focus:border-emerald-500"
+              value={selectedOwnerId}
+              onChange={(e) => setSelectedOwnerId(e.target.value)}
+              required={isStaffAdd}
+            >
+              <option value="">Select customer user…</option>
+              {assignableUsers.map((u) => (
+                <option key={u._id} value={u._id}>
+                  {u.name} — {u.email}
+                </option>
+              ))}
+            </select>
+            {assignableLoading && (
+              <p className="mt-2 text-xs text-slate-500">Loading users…</p>
+            )}
+            {!assignableLoading && assignableUsers.length === 0 && (
+              <p className="mt-2 text-xs text-amber-800">
+                No customer accounts found. Create users first (User management).
+              </p>
+            )}
+          </div>
+        )}
+
         <div>
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Vehicle name
@@ -184,7 +240,7 @@ const AddVehiclePage = () => {
             name="plate"
             value={form.plate}
             onChange={handleChange}
-            placeholder="Registration plate"
+            placeholder="Dhaka Metro 00-0000"
             className="input input-bordered w-full rounded-xl border-slate-200 font-mono focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             required
           />

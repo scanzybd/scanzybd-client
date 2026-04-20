@@ -10,14 +10,16 @@ const LanguageSwitcher = ({ className = "" }) => {
 
   return (
     <div
-      className={`join border border-base-300/80 bg-base-100/90 shadow-sm ${className}`}
+      className={`join rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-900 ${className}`}
       role="group"
       aria-label={t("common.language")}
     >
       <button
         type="button"
-        className={`btn btn-xs join-item border-none px-2.5 sm:px-3 ${
-          lng === "en" ? "btn-primary text-white" : "btn-ghost"
+        className={`join-item inline-flex h-7 min-h-0 min-w-[44px] items-center justify-center rounded-md px-2.5 text-[11px] font-medium leading-none transition-colors ${
+          lng === "en"
+            ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+            : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
         }`}
         onClick={() => i18n.changeLanguage("en")}
       >
@@ -25,8 +27,10 @@ const LanguageSwitcher = ({ className = "" }) => {
       </button>
       <button
         type="button"
-        className={`btn btn-xs join-item border-none px-2.5 sm:px-3 ${
-          lng === "bn" ? "btn-primary text-white" : "btn-ghost"
+        className={`join-item inline-flex h-7 min-h-0 min-w-[44px] items-center justify-center rounded-md px-2.5 text-[11px] font-medium leading-none transition-colors ${
+          lng === "bn"
+            ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+            : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
         }`}
         onClick={() => i18n.changeLanguage("bn")}
       >

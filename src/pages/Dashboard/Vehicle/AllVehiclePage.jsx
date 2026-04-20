@@ -1,73 +1,58 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { Car, QrCode, Search, UserRound, Phone, Shield } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
+import useMongoProfile from "../../../hooks/useMongoProfile";
 import SmartLoader from "../../../components/SmartLoader";
 
 const AllVehiclePage = () => {
   const axiosSecure = useAxiosSecure();
   const { user: firebaseUser } = useAuth();
+  const { data: mongoUser } = useMongoProfile();
 
-  const [vehicles, setVehicles] = useState([]);
-  const [mongoUser, setMongoUser] = useState(null);
-  const [qrMap, setQrMap] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = React.useState("");
 
-  const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const res = await axiosSecure.get("/api/auth/me");
-        setMongoUser(res.data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-
-    getUser();
-  }, [axiosSecure]);
-
-  const loadVehicles = useCallback(async () => {
-    setLoading(true);
-
-    try {
+  const {
+    data: vehicles = [],
+    isLoading: vehiclesLoading,
+    isError: vehiclesError,
+  } = useQuery({
+    queryKey: ["dashboard", "vehicles", "all"],
+    queryFn: async () => {
       const res = await axiosSecure.get("/api/vehicle");
+      return res.data.data || [];
+    },
+    staleTime: 30_000,
+  });
 
-      const data = res.data.data || [];
-      setVehicles(data);
+  const qrIds = useMemo(
+    () => [...new Set(vehicles.map((v) => v.qrData).filter(Boolean))],
+    [vehicles]
+  );
 
-      const qrIds = [...new Set(data.map((v) => v.qrData).filter(Boolean))];
+  const qrQueries = useQueries({
+    queries: qrIds.map((id) => ({
+      queryKey: ["qr", "detail", id],
+      queryFn: async () => {
+        const r = await axiosSecure.get(`/api/qr/id/${id}`);
+        return r.data;
+      },
+      staleTime: 120_000,
+      enabled: Boolean(id),
+    })),
+  });
 
-      if (qrIds.length > 0) {
-        const qrResults = await Promise.all(
-          qrIds.map(async (id) => {
-            try {
-              const r = await axiosSecure.get(`/api/qr/id/${id}`);
-              return r.data;
-            } catch {
-              return null;
-            }
-          })
-        );
+  const qrMap = useMemo(() => {
+    const map = {};
+    qrQueries.forEach((q) => {
+      const d = q.data;
+      if (d?._id) map[d._id] = d;
+    });
+    return map;
+  }, [qrQueries]);
 
-        const map = {};
-        qrResults.forEach((qr) => {
-          if (qr?._id) map[qr._id] = qr;
-        });
-
-        setQrMap(map);
-      }
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [axiosSecure]);
-
-  useEffect(() => {
-    loadVehicles();
-  }, [loadVehicles]);
+  const qrStillLoading = qrQueries.some((q) => q.isPending);
 
   const filteredVehicles = useMemo(() => {
     return vehicles.filter((v) =>
@@ -104,13 +89,19 @@ const AllVehiclePage = () => {
         </div>
       </div>
 
-      {loading && (
+      {vehiclesLoading && (
         <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-slate-200 bg-white">
           <SmartLoader label="Loading vehicles..." />
         </div>
       )}
 
-      {!loading && filteredVehicles.length === 0 && (
+      {vehiclesError && !vehiclesLoading && (
+        <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          Could not load vehicles. Try refreshing.
+        </p>
+      )}
+
+      {!vehiclesLoading && !vehiclesError && filteredVehicles.length === 0 && (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 py-16 text-center">
           <Car className="h-12 w-12 text-slate-300" />
           <p className="mt-3 font-medium text-slate-700">No vehicles match</p>
@@ -122,7 +113,7 @@ const AllVehiclePage = () => {
         </div>
       )}
 
-      {!loading && filteredVehicles.length > 0 && (
+      {!vehiclesLoading && !vehiclesError && filteredVehicles.length > 0 && (
         <ul className="grid gap-4 lg:grid-cols-2">
           {filteredVehicles.map((v) => {
             const qr = qrMap[v.qrData];
@@ -173,12 +164,18 @@ const AllVehiclePage = () => {
                 </div>
 
                 <div className="flex shrink-0 flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/80 p-3 sm:w-[120px]">
-                  {qr?.qrCode ? (
+                  {v.qrData && !qr && qrStillLoading ? (
+                    <div className="flex h-[88px] w-[88px] flex-col items-center justify-center gap-1 rounded-lg bg-white">
+                      <span className="loading loading-spinner loading-sm text-emerald-600" />
+                      <span className="text-[9px] text-slate-400">QR…</span>
+                    </div>
+                  ) : qr?.qrCode ? (
                     <>
                       <img
                         src={qr.qrCode}
                         alt=""
                         className="h-[88px] w-[88px] rounded-lg bg-white object-contain"
+                        loading="lazy"
                       />
                       <p className="mt-2 max-w-[100px] truncate text-center text-[10px] text-slate-500">
                         {qr.code}
@@ -189,6 +186,7 @@ const AllVehiclePage = () => {
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=88x88&data=${encodeURIComponent(v.qrData)}`}
                       alt=""
                       className="h-[88px] w-[88px] rounded-lg"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="flex h-[88px] w-[88px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white text-slate-400">

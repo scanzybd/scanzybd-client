@@ -27,6 +27,7 @@ import Swal from "sweetalert2";
 import { useState } from "react";
 import SmartLoader from "../components/SmartLoader";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import ThemeToggle from "../components/ThemeToggle";
 import { COMPANY_NAME, COMPANY_TAGLINE } from "../config/company";
 
 const ACCENT = "emerald";
@@ -80,67 +81,67 @@ const DashboardLayout = () => {
 
     const allMenuSections = [
         {
-            category: "Main menu",
+            category: t("dashboard.menu.main"),
             items: [
                 {
                     path: "/dashboard",
                     icon: LayoutDashboard,
-                    label: "Analytics",
+                    label: t("dashboard.menu.analytics"),
                 },
             ],
         },
         {
-            category: "Vehicle",
+            category: t("dashboard.menu.vehicle"),
             items: [
-                { path: "/dashboard/all-vehicles", icon: GraduationCap, label: "All Vehicles" },
-                { path: "/dashboard/add-vehicle", icon: UserPlus, label: "Add Vehicle" },
-                { path: "/dashboard/assign-vehicle", icon: Users, label: "Assign Vehicle" },
-                { path: "/dashboard/scan-assign-vehicle", icon: Clock, label: "Scan & Assign" },
+                { path: "/dashboard/all-vehicles", icon: GraduationCap, label: t("dashboard.menu.allVehicles") },
+                { path: "/dashboard/add-vehicle", icon: UserPlus, label: t("dashboard.menu.addVehicle") },
+                { path: "/dashboard/assign-vehicle", icon: Users, label: t("dashboard.menu.assign") },
+                { path: "/dashboard/scan-assign-vehicle", icon: Clock, label: t("dashboard.menu.scanAssign") },
             ],
         },
         {
-            category: "Products",
+            category: t("dashboard.menu.products"),
             items: [
-                { path: "/dashboard/all-products", icon: BookOpen, label: "Product List" },
-                { path: "/dashboard/add-product", icon: BookMarked, label: "Add Product" },
+                { path: "/dashboard/all-products", icon: BookOpen, label: t("dashboard.menu.productList") },
+                { path: "/dashboard/add-product", icon: BookMarked, label: t("dashboard.menu.addProduct") },
             ],
         },
         {
-            category: "Packages",
+            category: t("dashboard.menu.packages"),
             items: [
-                { path: "/dashboard/all-packages", icon: BookOpen, label: "Package List" },
-                { path: "/dashboard/add-package", icon: BookMarked, label: "Add Package" },
+                { path: "/dashboard/all-packages", icon: BookOpen, label: t("dashboard.menu.packageList") },
+                { path: "/dashboard/add-package", icon: BookMarked, label: t("dashboard.menu.addPackage") },
             ],
         },
         {
-            category: "Orders",
+            category: t("dashboard.menu.orders"),
             items: [
-                { path: "/dashboard/all-orders", icon: GraduationCap, label: "Order List" },
-                { path: "/dashboard/completed-orders", icon: UserPlus, label: "Completed" },
-                { path: "/dashboard/pending-orders", icon: Clock, label: "Pending" },
-                { path: "/dashboard/cancelled-orders", icon: XCircle, label: "Cancelled" },
-                { path: "/dashboard/order-reports", icon: ClipboardList, label: "Reports" },
+                { path: "/dashboard/all-orders", icon: GraduationCap, label: t("dashboard.menu.orderList") },
+                { path: "/dashboard/completed-orders", icon: UserPlus, label: t("dashboard.menu.completed") },
+                { path: "/dashboard/pending-orders", icon: Clock, label: t("dashboard.menu.pending") },
+                { path: "/dashboard/cancelled-orders", icon: XCircle, label: t("dashboard.menu.cancelled") },
+                { path: "/dashboard/order-reports", icon: ClipboardList, label: t("dashboard.menu.reports") },
             ],
         },
         {
-            category: "Finance",
+            category: t("dashboard.menu.finance"),
             items: [
-                { path: "/dashboard/finance-management", icon: Settings, label: "Finance" },
+                { path: "/dashboard/finance-management", icon: Settings, label: t("dashboard.menu.finance") },
             ],
         },
         {
-            category: "QR",
+            category: t("dashboard.menu.qr"),
             items: [
-                { path: "/dashboard/all-qr", icon: Award, label: "All QR Codes" },
-                { path: "/dashboard/generate-qr", icon: FileText, label: "Generate QR" },
+                { path: "/dashboard/all-qr", icon: Award, label: t("dashboard.menu.allQr") },
+                { path: "/dashboard/generate-qr", icon: FileText, label: t("dashboard.menu.generateQr") },
             ],
         },
         {
-            category: "Users",
+            category: t("dashboard.menu.users"),
             items: [
-                { path: "/dashboard/user-management", icon: UserCog, label: "User management" },
-                { path: "/dashboard/add-user", icon: UserPlus, label: "Add user" },
-                { path: "/dashboard/add-provider", icon: Building2, label: "Add provider" },
+                { path: "/dashboard/user-management", icon: UserCog, label: t("dashboard.menu.userManagement") },
+                { path: "/dashboard/add-user", icon: UserPlus, label: t("dashboard.menu.addUser") },
+                { path: "/dashboard/add-provider", icon: Building2, label: t("dashboard.menu.addProvider") },
             ],
         },
     ];
@@ -148,39 +149,39 @@ const DashboardLayout = () => {
     /** Provider: limited sidebar — vehicle ops, catalog read-only, completed orders only */
     const providerMenuSections = [
         {
-            category: "Main menu",
+            category: t("dashboard.menu.main"),
             items: [
                 {
                     path: "/dashboard",
                     icon: LayoutDashboard,
-                    label: "Analytics",
+                    label: t("dashboard.menu.analytics"),
                 },
             ],
         },
         {
-            category: "Vehicle",
+            category: t("dashboard.menu.vehicle"),
             items: [
-                { path: "/dashboard/all-vehicles", icon: GraduationCap, label: "All Vehicles" },
-                { path: "/dashboard/add-vehicle", icon: UserPlus, label: "Add Vehicle" },
-                { path: "/dashboard/assign-vehicle", icon: Users, label: "Assign Vehicle" },
-                { path: "/dashboard/scan-assign-vehicle", icon: Clock, label: "Scan & Assign" },
+                { path: "/dashboard/all-vehicles", icon: GraduationCap, label: t("dashboard.menu.allVehicles") },
+                { path: "/dashboard/add-vehicle", icon: UserPlus, label: t("dashboard.menu.addVehicle") },
+                { path: "/dashboard/assign-vehicle", icon: Users, label: t("dashboard.menu.assign") },
+                { path: "/dashboard/scan-assign-vehicle", icon: Clock, label: t("dashboard.menu.scanAssign") },
             ],
         },
         {
-            category: "Products",
-            items: [{ path: "/dashboard/all-products", icon: BookOpen, label: "Product List" }],
+            category: t("dashboard.menu.products"),
+            items: [{ path: "/dashboard/all-products", icon: BookOpen, label: t("dashboard.menu.productList") }],
         },
         {
-            category: "Packages",
-            items: [{ path: "/dashboard/all-packages", icon: BookOpen, label: "Package List" }],
+            category: t("dashboard.menu.packages"),
+            items: [{ path: "/dashboard/all-packages", icon: BookOpen, label: t("dashboard.menu.packageList") }],
         },
         {
-            category: "Orders",
+            category: t("dashboard.menu.orders"),
             items: [
                 {
                     path: "/dashboard/completed-orders",
                     icon: CheckCircle2,
-                    label: "Completed",
+                    label: t("dashboard.menu.completed"),
                 },
             ],
         },
@@ -205,7 +206,7 @@ const DashboardLayout = () => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-100">
+        <div className="min-h-screen bg-slate-100 transition-colors dark:bg-slate-900">
             {/* Mobile sidebar overlay */}
             {sidebarOpen && (
                 <button
@@ -218,12 +219,12 @@ const DashboardLayout = () => {
 
             {/* Sidebar — dark */}
             <aside
-                className={`fixed bottom-0 left-0 top-0 z-50 flex w-[min(100vw-3rem,18rem)] flex-col border-r border-white/[0.06] bg-[#141719] transition-transform duration-300 lg:w-72 ${
+                className={`fixed bottom-0 left-0 top-0 z-50 flex w-[min(100vw-3rem,18rem)] flex-col border-r border-white/6 bg-[#141719] transition-transform duration-300 lg:w-72 ${
                     sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
                 }`}
             >
-                <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 p-0.5 shadow-lg shadow-emerald-900/40">
+                <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/6 px-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-emerald-600 p-0.5 shadow-lg shadow-emerald-900/40">
                         <img
                             src={instituteLogo}
                             className="h-full w-full rounded-[10px] bg-white object-cover"
@@ -265,7 +266,7 @@ const DashboardLayout = () => {
                     ))}
                 </nav>
 
-                <div className="border-t border-white/[0.06] p-4 text-center text-[10px] leading-relaxed text-slate-500">
+                <div className="border-t border-white/6 p-4 text-center text-[10px] leading-relaxed text-slate-500">
                     <p className="font-medium text-slate-400">
                         © {new Date().getFullYear()}
                     </p>
@@ -276,7 +277,7 @@ const DashboardLayout = () => {
             {/* Main column */}
             <div className="min-h-screen lg:pl-72">
                 {/* Top bar */}
-                <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-slate-200/90 bg-white/95 px-3 shadow-sm backdrop-blur-md sm:px-5">
+                <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-slate-200/90 bg-white/95 px-3 shadow-sm backdrop-blur-md dark:border-slate-700/90 dark:bg-slate-950/95 sm:px-5">
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                         <button
                             type="button"
@@ -299,6 +300,7 @@ const DashboardLayout = () => {
                     </div>
 
                     <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                        <ThemeToggle />
                         <LanguageSwitcher className="hidden sm:flex" />
                         <Link
                             to="/"
@@ -307,7 +309,7 @@ const DashboardLayout = () => {
                             <Home size={16} />
                             <span className="hidden sm:inline">{t("dashboard.logout.home")}</span>
                         </Link>
-                        <div className="hidden h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-sm font-bold text-white shadow-md sm:flex">
+                        <div className="hidden h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-emerald-500 to-emerald-700 text-sm font-bold text-white shadow-md sm:flex">
                             {user?.displayName?.charAt(0) || user?.email?.charAt(0) || "U"}
                         </div>
                         <button

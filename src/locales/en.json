@@ -74,6 +74,35 @@
     }
   },
   "dashboard": {
+    "menu": {
+      "main": "Main menu",
+      "vehicle": "Vehicle",
+      "products": "Products",
+      "packages": "Packages",
+      "orders": "Orders",
+      "finance": "Finance",
+      "qr": "QR",
+      "users": "Users",
+      "analytics": "Analytics",
+      "allVehicles": "Vehicles",
+      "addVehicle": "Add Vehicle",
+      "assign": "Assign",
+      "scanAssign": "Scan & Assign",
+      "productList": "Product List",
+      "addProduct": "Add Product",
+      "packageList": "Package List",
+      "addPackage": "Add Package",
+      "orderList": "Order List",
+      "completed": "Completed",
+      "pending": "Pending",
+      "cancelled": "Cancelled",
+      "reports": "Reports",
+      "allQr": "QR Codes",
+      "generateQr": "Generate QR",
+      "userManagement": "Users",
+      "addUser": "Add user",
+      "addProvider": "Add provider"
+    },
     "logout": {
       "confirmTitle": "Are you sure?",
       "confirmText": "Do you want to log out from the admin panel?",
@@ -154,10 +183,20 @@
     }
   },
   "user": {
+    "menu": {
+      "profile": "My Profile",
+      "orders": "Orders",
+      "subscription": "Subscription",
+      "vehicles": "My Vehicles",
+      "payments": "Payments",
+      "settings": "Settings",
+      "logout": "Logout",
+      "myAccount": "My Profile"
+    },
     "myPurchases": {
       "loading": "Loading purchase validity…",
       "loadError": "Could not load orders. Try again later.",
-      "title": "My product validity",
+      "title": "Subscription",
       "subtitle": "Validity is counted from each successful payment. When it expires you can renew by purchasing again — added to cart.",
       "totalLines": "Total lines",
       "active": "Active",
@@ -176,5 +215,135 @@
       "renew": "Renew (add to cart)",
       "renewNote": "A new period will run from the date payment is confirmed."
     }
+  },
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "about": "About",
+    "contact": "Contact",
+    "dashboard": "Dashboard",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "role": "Role"
+  },
+  "home": {
+    "hero": {
+      "badge": "Smart QR Solution",
+      "heading": "Protect Your Vehicle with Smart QR Tags",
+      "subheading": "Scan the QR and instantly contact the vehicle owner in emergencies or parking situations",
+      "primaryCta": "Get Your QR Tag",
+      "secondaryCta": "How It Works",
+      "trust": "1000+ vehicles protected"
+    },
+    "features": {
+      "items": [
+        "Instant owner contact via QR scan",
+        "No app required (works with any phone camera)",
+        "Secure and private contact system",
+        "Works for bike, car and more",
+        "Easy setup and management dashboard"
+      ]
+    }
+  },
+  "aboutPage": {
+    "badge": "About",
+    "title": "About QR Tag System",
+    "intro": "QR Tag System is a smart solution that makes your vehicle safer and better connected.",
+    "missionTitle": "Mission",
+    "mission": "Solve everyday problems with simple technology.",
+    "visionTitle": "Vision",
+    "vision": "Build a smart vehicle ecosystem in Bangladesh.",
+    "storyTitle": "Our Story",
+    "story": "Started from a small idea to solve real-life parking and lost vehicle communication problems.",
+    "whyTitle": "Why choose QR Tag?",
+    "whyIntro": "Vehicle safety is now smarter and easier.",
+    "points": [
+      "Quick communication when a vehicle is misplaced",
+      "Parking issues are resolved faster",
+      "Works without installing any app"
+    ],
+    "ctaTitle": "Start Using QR Tag Today",
+    "ctaSubtitle": "Simple, secure and practical for daily vehicle safety.",
+    "ctaButton": "Get Your QR Tag"
+  },
+  "contactPage": {
+    "heading": "Get in Touch",
+    "subheading": "We are always here for you.",
+    "leadTitle": "Get in touch",
+    "leadText": "For support, orders, business queries, or urgent issues, send us a message and our team will respond.",
+    "phone": "+8801XXXXXXXXX",
+    "whatsapp": "+8801XXXXXXXXX",
+    "email": "support@qrtag.com",
+    "address1": "Dhaka",
+    "address2": "Bangladesh",
+    "hours": "10 AM – 8 PM (Sat–Thu)",
+    "map": "https://maps.google.com",
+    "formTitle": "Send a message",
+    "name": "Name",
+    "emailLabel": "Email",
+    "message": "Message",
+    "namePlaceholder": "Your name",
+    "emailPlaceholder": "you@example.com",
+    "messagePlaceholder": "How can we help?",
+    "send": "Send message",
+    "success": "Message sent successfully!",
+    "error": "Something went wrong. Try again."
+  },
+  "footer": {
+    "ctaTitle": "Get started with QR Tag",
+    "ctaSubtitle": "Smart QR-based vehicle safety system",
+    "ctaButton": "Get Your QR Tag",
+    "quickLinks": "Quick Links",
+    "company": "Company",
+    "support": "Support",
+    "contact": "Get in Touch",
+    "copyright": "All rights reserved",
+    "extraNote": "Smart Safety for Every Vehicle"
+  },
+  "policies": {
+    "termsTitle": "Terms of Use",
+    "termsBody": "Use responsibly. Service misuse is prohibited.",
+    "privacyTitle": "Privacy Policy",
+    "privacyBody": "We do not publicly expose personal data.",
+    "refundTitle": "Refund Policy",
+    "refundBody": "Refund applicable within 7 days (conditions apply).",
+    "shippingTitle": "Shipping Information",
+    "shippingBody": "Delivery within 3-5 business days.",
+    "businessTitle": "Business Terms",
+    "businessBody": "Bulk and business partnerships available.",
+    "faqTitle": "FAQ",
+    "faq": [
+      {
+        "q": "Will phone numbers be publicly visible after scanning?",
+        "a": "No. A secure contact flow is used."
+      },
+      {
+        "q": "Is internet required?",
+        "a": "Yes. Internet is required to access the scanned link."
+      },
+      {
+        "q": "Does it work on all phones?",
+        "a": "Yes. It is compatible with modern smartphone cameras."
+      }
+    ]
+  },
+  "store": {
+    "title": "Choose Your QR Tag Package",
+    "subtitle": "Pick the right plan for your needs.",
+    "featured": "Featured products",
+    "featuredSubtitle": "Smart QR tags and bundles for bike and car safety.",
+    "fullDetails": "Full page details",
+    "addToCart": "Add to cart",
+    "details": "Details",
+    "more": "More",
+    "showLess": "Show less",
+    "allPrices": "All prices",
+    "under300": "Under ৳300",
+    "between300500": "৳300 – ৳500",
+    "above500": "Above ৳500"
+  },
+  "labels": {
+    "checkout": "Checkout",
+    "addVehicle": "Add Vehicle"
   }
 }

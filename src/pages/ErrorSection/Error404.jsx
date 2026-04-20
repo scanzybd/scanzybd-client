@@ -2,7 +2,7 @@ import React from "react";
 
 const Error404 = () => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4 dark:bg-slate-950">
 
       {/* Image */}
       <img

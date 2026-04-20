@@ -1,15 +1,18 @@
 
 import React, { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { AuthContext } from './AuthContext';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
 import { auth } from '../../firebase/firebase.init';
 import axios from 'axios';
 import { setAppJwt, clearAppJwt, getAppJwtExpiresAt } from '../../utils/appJwtStorage';
+import { QUERY_CACHE_STORAGE_KEY } from '../../lib/queryPersister';
 import { API_BASE_URL } from '../../config/api';
 
 const googleProvider = new GoogleAuthProvider();
 
 const AuthProvider = ({ children }) => {
+    const queryClient = useQueryClient();
     const [user, setUser] = useState(null);
     const [userRole, setUserRole] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -32,6 +35,12 @@ const AuthProvider = ({ children }) => {
     const logOut = () => {
         setLoading(true);
         clearAppJwt();
+        queryClient.clear();
+        try {
+            localStorage.removeItem(QUERY_CACHE_STORAGE_KEY);
+        } catch {
+            /* ignore */
+        }
         return signOut(auth);
     }
 
@@ -46,7 +55,7 @@ const AuthProvider = ({ children }) => {
             if (expMs && Date.now() < expMs - 60_000) {
                 return;
             }
-            const idToken = await firebaseUser.getIdToken(true);
+            const idToken = await firebaseUser.getIdToken(false);
             if (!idToken) return;
             const res = await axios.post(`${API_BASE_URL}/api/auth/firebase`, {
                 token: idToken,
@@ -61,8 +70,8 @@ const AuthProvider = ({ children }) => {
 
     /** Load role from MongoDB via /api/auth/me (Firebase token only identifies user). */
     const fetchUserRole = async (firebaseUser) => {
-        const load = async () => {
-            const token = await firebaseUser.getIdToken(true);
+        const load = async (forceRefresh) => {
+            const token = await firebaseUser.getIdToken(forceRefresh);
             return axios.get(`${API_BASE_URL}/api/auth/me`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -70,11 +79,11 @@ const AuthProvider = ({ children }) => {
         try {
             let response;
             try {
-                response = await load();
+                response = await load(false);
             } catch (first) {
                 if (first?.response?.status === 401) {
                     await new Promise((r) => setTimeout(r, 400));
-                    response = await load();
+                    response = await load(true);
                 } else {
                     throw first;
                 }
@@ -100,8 +109,14 @@ const AuthProvider = ({ children }) => {
         const unSubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
             if (currentUser) {
-                await fetchUserRole(currentUser);
-                await syncBackendJwtIfNeeded(currentUser);
+                try {
+                    await Promise.all([
+                        fetchUserRole(currentUser),
+                        syncBackendJwtIfNeeded(currentUser),
+                    ]);
+                } catch (e) {
+                    console.warn("Auth sync:", e?.message || e);
+                }
             } else {
                 setUserRole(null);
                 clearAppJwt();

@@ -2,6 +2,15 @@ import React, { useCallback, useEffect, useState } from "react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 import SmartLoader from "../../../components/SmartLoader";
+import {
+  shellPage,
+  cardSurfaceSm,
+  fieldInput,
+  btnPrimaryInline,
+  btnSecondaryInline,
+  textHeading,
+  textMuted,
+} from "../../../lib/uiClasses";
 
 const MyVehiclePage = () => {
   const axiosSecure = useAxiosSecure();
@@ -38,9 +47,7 @@ const MyVehiclePage = () => {
     if (!firebaseUser?.email) return;
 
     try {
-      const res = await axiosSecure.get(
-        `/api/vehicle/my?email=${firebaseUser.email}`
-      );
+      const res = await axiosSecure.get("/api/vehicle/my");
 
       const data = res.data.data || [];
       setVehicles(data);
@@ -77,10 +84,14 @@ const MyVehiclePage = () => {
   // ---------------- UPDATE ----------------
   const handleUpdate = async () => {
     try {
-      await axiosSecure.put(
-        `/api/vehicle/update/${editVehicle._id}`,
-        editVehicle
-      );
+      await axiosSecure.post(`/api/vehicle/update/${editVehicle._id}`, {
+        vehicleName: editVehicle.vehicleName,
+        model: editVehicle.model,
+        plate: editVehicle.plate,
+        ownerPhone: editVehicle.ownerPhone,
+        driver: editVehicle.driver,
+        qrData: editVehicle.qrData,
+      });
 
       alert("✅ Vehicle updated");
       setEditVehicle(null);
@@ -111,19 +122,21 @@ const MyVehiclePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-5 flex justify-center">
+    <div className={`flex min-h-screen justify-center p-5 ${shellPage}`}>
       <div className="w-full max-w-md space-y-4">
 
         {/* HEADER */}
         <div className="text-center">
-          <h1 className="text-xl font-bold">My Vehicles</h1>
-          <p className="text-xs text-gray-500">{firebaseUser?.email}</p>
+          <h1 className={`text-xl font-bold tracking-tight ${textHeading}`}>
+            My Vehicles
+          </h1>
+          <p className={`text-xs ${textMuted}`}>{firebaseUser?.email}</p>
         </div>
 
         {/* LIST */}
         {vehicles.length === 0 ? (
-          <div className="bg-white p-5 rounded-xl text-center text-gray-500">
-            🚫 No vehicle found
+          <div className={`p-5 text-center shadow-sm ${cardSurfaceSm} ${textMuted}`}>
+            No vehicles yet
           </div>
         ) : (
           vehicles.map((v) => {
@@ -132,31 +145,31 @@ const MyVehiclePage = () => {
             return (
               <div
                 key={v._id}
-                className="bg-white p-4 rounded-xl shadow flex justify-between items-center gap-4"
+                className={`flex items-center justify-between gap-4 p-4 ${cardSurfaceSm}`}
               >
 
                 {/* LEFT SIDE */}
                 <div className="flex-1 space-y-1">
-                  <p className="font-bold">🚗 {v.vehicleName}</p>
+                  <p className={`font-bold ${textHeading}`}>{v.vehicleName}</p>
 
-                  <p className="text-xs text-gray-500">
+                  <p className={`text-xs ${textMuted}`}>
                     {v.model} • {v.plate}
                   </p>
 
                   {v.driver ? (
-                    <p className="text-xs text-blue-600">
-                      👨‍✈️ {v.driver.name} ({v.driver.phone})
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      {v.driver.name} ({v.driver.phone})
                     </p>
                   ) : (
-                    <p className="text-xs text-gray-400">
+                    <p className={`text-xs ${textMuted}`}>
                       No driver assigned
                     </p>
                   )}
 
-                  <p className="text-xs">
+                  <p className={`text-xs ${textMuted}`}>
                     QR:{" "}
-                    <span className={v.qrData ? "text-green-600" : "text-red-500"}>
-                      {v.qrData ? "Assigned" : "Not Assigned"}
+                    <span className={v.qrData ? "font-medium text-emerald-600 dark:text-emerald-400" : "font-medium text-rose-600 dark:text-rose-400"}>
+                      {v.qrData ? "Assigned" : "Not assigned"}
                     </span>
                   </p>
                 </div>
@@ -170,7 +183,7 @@ const MyVehiclePage = () => {
         alt="QR"
         className="w-[90px] h-[90px] rounded"
       />
-      <p className="text-[10px] text-gray-400 mt-1">
+      <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
         {qr.code}
       </p>
     </>
@@ -181,7 +194,7 @@ const MyVehiclePage = () => {
       className="w-[90px] h-[90px] rounded"
     />
   ) : (
-    <p className="text-xs text-gray-400">No QR</p>
+    <p className={`text-xs ${textMuted}`}>No QR</p>
   )}
 </div>
 
@@ -190,16 +203,18 @@ const MyVehiclePage = () => {
                 
 
                   <button
+                    type="button"
                     onClick={() => setEditVehicle(v)}
-                    className="px-2 py-1 bg-yellow-500 text-white text-xs rounded"
+                    className="rounded-lg bg-amber-600 px-2 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-600"
                   >
                     Edit
                   </button>
 
                   {role === "admin" && (
                     <button
+                      type="button"
                       onClick={() => handleDelete(v._id)}
-                      className="px-2 py-1 bg-red-600 text-white text-xs rounded"
+                      className="rounded-lg bg-rose-600 px-2 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
                     >
                       Delete
                     </button>
@@ -213,20 +228,21 @@ const MyVehiclePage = () => {
 
         {/* VIEW MODAL */}
         {viewVehicle && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center"
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
             onClick={() => setViewVehicle(null)}
           >
-            <div className="bg-white p-4 rounded-xl w-80"
+            <div className={`w-80 rounded-xl p-4 shadow-lg ${cardSurfaceSm}`}
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="font-bold">Vehicle Details</h2>
-              <p>🚗 {viewVehicle.vehicleName}</p>
-              <p>📌 {viewVehicle.model}</p>
-              <p>🔢 {viewVehicle.plate}</p>
+              <h2 className={`font-bold ${textHeading}`}>Vehicle Details</h2>
+              <p className={textMuted}>{viewVehicle.vehicleName}</p>
+              <p className={textMuted}>{viewVehicle.model}</p>
+              <p className={textMuted}>{viewVehicle.plate}</p>
 
               <button
+                type="button"
                 onClick={() => setViewVehicle(null)}
-                className="w-full bg-red-500 text-white py-1 rounded mt-2"
+                className={`mt-2 w-full ${btnSecondaryInline}`}
               >
                 Close
               </button>
@@ -236,20 +252,20 @@ const MyVehiclePage = () => {
 
         {/* EDIT MODAL */}
         {editVehicle && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center"
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
             onClick={() => setEditVehicle(null)}
           >
-            <div className="bg-white p-4 rounded-xl w-80 space-y-3"
+            <div className={`w-80 space-y-3 p-4 shadow-lg ${cardSurfaceSm}`}
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="font-bold text-center">Edit Vehicle</h2>
+              <h2 className={`text-center font-bold ${textHeading}`}>Edit Vehicle</h2>
 
               <input
                 value={editVehicle.vehicleName}
                 onChange={(e) =>
                   setEditVehicle({ ...editVehicle, vehicleName: e.target.value })
                 }
-                className="w-full p-2 border rounded"
+                className={fieldInput}
               />
 
               <input
@@ -257,7 +273,7 @@ const MyVehiclePage = () => {
                 onChange={(e) =>
                   setEditVehicle({ ...editVehicle, model: e.target.value })
                 }
-                className="w-full p-2 border rounded"
+                className={fieldInput}
               />
 
               <input
@@ -265,20 +281,22 @@ const MyVehiclePage = () => {
                 onChange={(e) =>
                   setEditVehicle({ ...editVehicle, plate: e.target.value })
                 }
-                className="w-full p-2 border rounded"
+                className={fieldInput}
               />
 
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={handleUpdate}
-                  className="w-full bg-green-600 text-white py-1 rounded"
+                  className={`flex-1 ${btnPrimaryInline} py-2.5`}
                 >
                   Save
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => setEditVehicle(null)}
-                  className="w-full bg-red-500 text-white py-1 rounded"
+                  className={`flex-1 ${btnSecondaryInline} py-2.5`}
                 >
                   Cancel
                 </button>

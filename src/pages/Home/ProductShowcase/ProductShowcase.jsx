@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import productFallback from "../../../assets/product/product01.png";
 
@@ -33,6 +34,7 @@ function normalizeProductList(raw) {
 const CATALOG_PAGE_SIZE = 4;
 
 const ProductShowcase = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPrice, setFilterPrice] = useState("all");
   const [notification, setNotification] = useState(null);
@@ -135,9 +137,9 @@ const ProductShowcase = () => {
   const cartCount = cartItems.reduce((n, i) => n + (i.quantity || 1), 0);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-slate-50 via-white to-slate-100/80">
+    <div className="min-h-screen w-full bg-linear-to-b from-slate-100 via-slate-50 to-slate-100">
       {notification && (
-        <div className="fixed inset-x-0 top-0 z-[100] flex justify-center px-3 pt-4 sm:left-auto sm:right-4 sm:top-4 sm:justify-end sm:px-0">
+        <div className="fixed inset-x-0 top-0 z-100 flex justify-center px-3 pt-4 sm:left-auto sm:right-4 sm:top-4 sm:justify-end sm:px-0">
           <div
             role="status"
             className={`max-w-md rounded-xl px-4 py-3 text-sm font-medium text-white shadow-lg sm:max-w-sm ${
@@ -162,21 +164,20 @@ const ProductShowcase = () => {
             <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
               <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-amber-200/90 backdrop-blur">
                 <Sparkles className="h-3.5 w-3.5" />
-                Store
+                {t("store.title")}
               </span>
               <h1 className="max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                Featured products
+                {t("store.featured")}
               </h1>
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
-                Smart QR tags and bundles — filter by price, add to cart, and checkout when
-                you&apos;re ready.
+                {t("store.featuredSubtitle")}
               </p>
               <button
                 type="button"
                 onClick={() => navigate("/product")}
                 className="mt-6 inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/15 px-4 py-2 text-sm font-semibold text-amber-100 backdrop-blur transition hover:bg-amber-500/25"
               >
-                Full page details
+                {t("store.fullDetails")}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -190,7 +191,7 @@ const ProductShowcase = () => {
               )}
               {!spotlightLoading && spotlightProduct && (
                 <article className="w-full max-w-md overflow-hidden rounded-2xl border border-amber-400/30 bg-white/10 shadow-2xl shadow-black/20 ring-1 ring-white/10 backdrop-blur-md">
-                  <div className="relative aspect-[4/3] bg-slate-800/40">
+                  <div className="relative aspect-4/3 bg-slate-800/40">
                     <img
                       src={spotlightProduct.image || productFallback}
                       alt=""
@@ -217,14 +218,14 @@ const ProductShowcase = () => {
                         className="btn flex-1 gap-2 rounded-xl border-0 bg-amber-500 text-sm font-semibold text-slate-900 hover:bg-amber-400"
                       >
                         <ShoppingCart className="h-4 w-4" />
-                        Add to cart
+                        {t("store.addToCart")}
                       </button>
                       <button
                         type="button"
                         onClick={() => navigate("/product")}
                         className="btn flex-1 rounded-xl border border-white/25 bg-transparent text-sm font-semibold text-white hover:bg-white/10"
                       >
-                        Details
+                        {t("store.details")}
                         <ArrowRight className="h-4 w-4" />
                       </button>
                     </div>
@@ -283,7 +284,7 @@ const ProductShowcase = () => {
                 />
                 <input
                   type="search"
-                  className="input input-bordered w-full rounded-xl border-slate-200 bg-white pl-10 pr-4 text-sm shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                  className="input input-bordered w-full rounded-xl border-slate-300 bg-slate-50 pl-10 pr-4 text-sm shadow-sm focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-600/15"
                   placeholder="Search by name..."
                   value={searchTerm}
                   onChange={(e) => {
@@ -296,17 +297,17 @@ const ProductShowcase = () => {
               <div className="relative sm:w-52">
                 <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:hidden" />
                 <select
-                  className="select select-bordered w-full rounded-xl border-slate-200 bg-white text-sm shadow-sm focus:border-amber-500 sm:pl-3"
+                  className="select select-bordered w-full rounded-xl border-slate-300 bg-slate-50 text-sm shadow-sm focus:border-amber-600 sm:pl-3"
                   value={filterPrice}
                   onChange={(e) => {
                     setFilterPrice(e.target.value);
                     setShowAllCatalog(false);
                   }}
                 >
-                  <option value="all">All prices</option>
-                  <option value="under300">Under ৳300</option>
-                  <option value="300-500">৳300 – ৳500</option>
-                  <option value="above500">Above ৳500</option>
+                  <option value="all">{t("store.allPrices")}</option>
+                  <option value="under300">{t("store.under300")}</option>
+                  <option value="300-500">{t("store.between300500")}</option>
+                  <option value="above500">{t("store.above500")}</option>
                 </select>
               </div>
             </div>
@@ -336,8 +337,8 @@ const ProductShowcase = () => {
                 <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-2">
                   {visibleCatalogProducts.map((product) => (
                     <li key={product._id}>
-                      <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm transition duration-200 hover:border-amber-200/80 hover:shadow-md">
-                        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                      <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-slate-50 shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md">
+                        <div className="relative aspect-4/3 overflow-hidden bg-slate-200">
                           <img
                             src={product.image || productFallback}
                             alt=""
@@ -359,7 +360,7 @@ const ProductShowcase = () => {
                           </p>
                           <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-slate-100 pt-4">
                             <div>
-                              <p className="text-lg font-bold tabular-nums text-amber-600">
+                              <p className="text-lg font-bold tabular-nums text-amber-700">
                                 ৳ {Number(product.price).toLocaleString()}
                               </p>
                               <p className="mt-0.5 text-[11px] text-slate-500">
@@ -378,10 +379,10 @@ const ProductShowcase = () => {
                           <button
                             type="button"
                             onClick={() => handleAddToCart(product)}
-                            className="btn mt-4 w-full gap-2 rounded-xl border-0 bg-amber-500 text-sm font-semibold text-slate-900 shadow-none hover:bg-amber-600"
+                            className="btn mt-4 w-full gap-2 rounded-xl border-0 bg-amber-600 text-sm font-semibold text-white shadow-none hover:bg-amber-700"
                           >
                             <ShoppingCart className="h-4 w-4" />
-                            Add to cart
+                            {t("store.addToCart")}
                           </button>
                         </div>
                       </article>
@@ -394,9 +395,9 @@ const ProductShowcase = () => {
                       <button
                         type="button"
                         onClick={() => setShowAllCatalog(true)}
-                        className="btn gap-2 rounded-xl border-2 border-amber-400 bg-amber-50 px-8 text-base font-semibold text-amber-900 shadow-sm hover:bg-amber-100"
+                        className="btn gap-2 rounded-xl border-2 border-amber-600/40 bg-amber-100/60 px-8 text-base font-semibold text-amber-900 shadow-sm hover:bg-amber-100"
                       >
-                        More
+                        {t("store.more")}
                         <span className="text-sm font-normal opacity-80">
                           ({catalogProducts.length - CATALOG_PAGE_SIZE} more)
                         </span>
@@ -409,7 +410,7 @@ const ProductShowcase = () => {
                         className="btn btn-ghost gap-2 rounded-xl text-slate-600 hover:bg-slate-100"
                       >
                         <ChevronUp className="h-4 w-4" aria-hidden />
-                        Show less
+                        {t("store.showLess")}
                       </button>
                     )}
                   </div>
@@ -423,7 +424,7 @@ const ProductShowcase = () => {
               <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-5">
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="text-lg font-bold text-slate-900">Your cart</h2>
-                  <span className="flex h-8 min-w-[2rem] items-center justify-center rounded-full bg-amber-500 px-2 text-sm font-bold text-slate-900">
+                  <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-amber-500 px-2 text-sm font-bold text-slate-900">
                     {cartCount}
                   </span>
                 </div>
@@ -503,7 +504,7 @@ const ProductShowcase = () => {
                     onClick={handleCheckout}
                     className="btn w-full gap-2 rounded-xl border-0 bg-emerald-600 text-base font-semibold text-white hover:bg-emerald-700"
                   >
-                    Checkout
+                    {t("labels.checkout")}
                     <ArrowRight className="h-4 w-4" />
                   </button>
                   <button

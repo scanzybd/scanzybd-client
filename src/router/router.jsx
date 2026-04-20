@@ -1,58 +1,68 @@
+import { Suspense } from "react";
 import { createBrowserRouter, Navigate } from "react-router";
 import RootLayout from "../layouts/RootLayout";
-import Home from "../pages/Home/Home/Home";
-import About from "../pages/Home/About/About";
-
 import AuthLayout from "../layouts/AuthLayout";
-import Login from "../pages/Authentication/Login/Login";
-import Register from "../pages/Authentication/Register/Register";
-import ForgotPassword from '../pages/Authentication/ForgotPassword/ForgotPassword';
-import EnterCode from '../pages/Authentication/ForgotPassword/EnterCode';
-import ResetPassword from "../pages/Authentication/ForgotPassword/ResetPassword";
 import Error404 from "../pages/ErrorSection/Error404";
 import PrivateRoute from "../routes/PrivetRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
-import DashboardHome from "../pages/Dashboard/DashboardHome/DashboardHome";
-import AllOrders from "../pages/Dashboard/Order/AllOrders";
-import CancelledOrders from "../pages/Dashboard/Order/CancelledOrders";
-import PendingOrders from "../pages/Dashboard/Order/PendingOrders";
-import OrderReports from "../pages/Dashboard/Order/OrderReports";
-
-import CompletedOrders from "../pages/Dashboard/Order/CompletedOrders";
-import AllProducts from "../pages/Dashboard/Product/AllProducts";
-import AddProducts from "../pages/Dashboard/Product/AddProducts";
-import AllQR from "../pages/Dashboard/QR/AllQR";
-import GenerateQR from "../pages/Dashboard/QR/GenerateQR";
-import FinanceManagement from "../pages/Dashboard/Finance/FinanceManagement";
-
-import AllPackages from "../pages/Dashboard/Package/AllPackages";
-import AddPackages from "../pages/Dashboard/Package/AddPackages";
 import UserLayout from "../layouts/UserLayout";
-import QrLandingPage from "../pages/Home/QrLanding/QrLandingPage";
-import MyVehiclePage from "../pages/User/UserVehicle/MyVehiclePage";
-import QrScanner from "../pages/Dashboard/QR/QrScanner";
-import AddVehiclePage from "../pages/Dashboard/Vehicle/AddVehiclePage";
-import AssignVehiclePage from "../pages/Dashboard/Vehicle/AssignVehiclePage";
-import ScanAssignPage from "../pages/Dashboard/Vehicle/ScanAssignPage";
-import UserAddVehiclePage from "../pages/User/UserVehicle/UserAddVehiclePage";
-import Checkout from "../pages/Dashboard/Order/Checkout";
-import MyCart from "../pages/User/Cart/MyCart";
-import UserProfile from "../pages/User/Profile/UserProfile";
-import UserSettings from "../pages/User/Settings/UserSettings";
-import UserOrders from "../pages/User/UserOrders/UserOrders";
-import MyPurchases from "../pages/User/MyPurchases/MyPurchases";
-import AllVehiclePage from "../pages/Dashboard/Vehicle/AllVehiclePage";
-import AssignVehiclebyId from "../pages/Dashboard/Vehicle/AssignVehiclebyId";
-import PaymentReject from "../pages/Dashboard/Order/PaymentStatus/PaymentReject";
-import PaymentSuccess from "../pages/Dashboard/Order/PaymentStatus/PaymentSuccess";
-import ProductShowcase from "../pages/Home/ProductShowcase/ProductShowcase";
-import ProductPage from "../pages/Home/ProductDetails/ProductPage";
-import ContactPage from "../pages/Home/Contact/ContactPage";
-import Payment from "../pages/User/Payment/Payment";
 import AdminRoute from "../routes/AdminRoute";
-import UserManagementPage from "../pages/Dashboard/Users/UserManagementPage";
-import AddUserPage from "../pages/Dashboard/Users/AddUserPage";
-import AddProviderPage from "../pages/Dashboard/Users/AddProviderPage";
+import { lazyPage, lazyImport, RouteFallback } from "./lazyRoute";
+import * as chunks from "./routeChunks";
+
+// ——— Public & marketing ———
+const Home = lazyPage(chunks.loadHome);
+const About = lazyPage(chunks.loadAbout);
+const ContactPage = lazyPage(chunks.loadContactPage);
+const ProductPage = lazyPage(chunks.loadProductPage);
+const ProductShowcase = lazyPage(chunks.loadProductShowcase);
+const QrLandingPage = lazyPage(chunks.loadQrLandingPage);
+const FooterStaticPage = lazyPage(chunks.loadFooterStaticPage);
+
+// ——— Auth ———
+const Login = lazyPage(chunks.loadLogin);
+const Register = lazyPage(chunks.loadRegister);
+const ForgotPassword = lazyPage(chunks.loadForgotPassword);
+const EnterCode = lazyPage(chunks.loadEnterCode);
+const ResetPassword = lazyPage(chunks.loadResetPassword);
+
+const PaymentRejectLazy = lazyImport(chunks.loadPaymentReject);
+const PaymentSuccessLazy = lazyImport(chunks.loadPaymentSuccess);
+
+// ——— User area ———
+const Payment = lazyPage(chunks.loadPayment);
+const MyVehiclePage = lazyPage(chunks.loadMyVehiclePage);
+const UserAddVehiclePage = lazyPage(chunks.loadUserAddVehiclePage);
+const MyCart = lazyPage(chunks.loadMyCart);
+const Checkout = lazyPage(chunks.loadCheckout);
+const UserProfile = lazyPage(chunks.loadUserProfile);
+const UserSettings = lazyPage(chunks.loadUserSettings);
+const UserOrders = lazyPage(chunks.loadUserOrders);
+const MyPurchases = lazyPage(chunks.loadMyPurchases);
+
+// ——— Dashboard ———
+const DashboardHome = lazyPage(chunks.loadDashboardHome);
+const AllOrders = lazyPage(chunks.loadAllOrders);
+const CancelledOrders = lazyPage(chunks.loadCancelledOrders);
+const PendingOrders = lazyPage(chunks.loadPendingOrders);
+const OrderReports = lazyPage(chunks.loadOrderReports);
+const CompletedOrders = lazyPage(chunks.loadCompletedOrders);
+const AllProducts = lazyPage(chunks.loadAllProducts);
+const AddProductsLazy = lazyImport(chunks.loadAddProducts);
+const AllQR = lazyPage(chunks.loadAllQR);
+const GenerateQR = lazyPage(chunks.loadGenerateQR);
+const FinanceManagement = lazyPage(chunks.loadFinanceManagement);
+const AllPackages = lazyPage(chunks.loadAllPackages);
+const AddPackagesLazy = lazyImport(chunks.loadAddPackages);
+const QrScanner = lazyPage(chunks.loadQrScanner);
+const AddVehiclePage = lazyPage(chunks.loadAddVehiclePage);
+const AssignVehiclePage = lazyPage(chunks.loadAssignVehiclePage);
+const ScanAssignPage = lazyPage(chunks.loadScanAssignPage);
+const AllVehiclePage = lazyPage(chunks.loadAllVehiclePage);
+const AssignVehiclebyId = lazyPage(chunks.loadAssignVehiclebyId);
+const UserManagementPageLazy = lazyImport(chunks.loadUserManagementPage);
+const AddUserPageLazy = lazyImport(chunks.loadAddUserPage);
+const AddProviderPageLazy = lazyImport(chunks.loadAddProviderPage);
 
 const router = createBrowserRouter([
   {
@@ -65,270 +75,266 @@ const router = createBrowserRouter([
         Component: Home,
       },
       {
-        path: 'about',
+        path: "about",
         Component: About,
-
       },
       {
-        path: 'contact',
+        path: "contact",
         Component: ContactPage,
       },
       {
-        path: 'product',
+        path: "product",
         Component: ProductPage,
       },
       {
-        path: 'Products/:id',
+        path: "Products/:id",
         element: <Navigate to="/product" replace />,
       },
       {
-        path: 'Products',
+        path: "Products",
         Component: ProductShowcase,
-
       },
       {
-        path: 'qr-landing/:code',
-        Component:QrLandingPage,
+        path: "qr-landing/:code",
+        Component: QrLandingPage,
       },
-    
-
-    ]
+      { path: "terms-of-use", Component: FooterStaticPage },
+      { path: "privacy-policy", Component: FooterStaticPage },
+      { path: "blog", Component: FooterStaticPage },
+      { path: "business-terms", Component: FooterStaticPage },
+      { path: "refund-policy", Component: FooterStaticPage },
+      { path: "shipping-info", Component: FooterStaticPage },
+      { path: "careers", Component: FooterStaticPage },
+      { path: "partners", Component: FooterStaticPage },
+      { path: "help-center", Component: FooterStaticPage },
+      { path: "faq", Component: FooterStaticPage },
+      { path: "documentation", Component: FooterStaticPage },
+      { path: "community", Component: FooterStaticPage },
+    ],
   },
   {
     path: "/",
     Component: AuthLayout,
-    errorElement: <Error404 />, // <-- Also handle errors in auth layout
-    children: [
-      {
-        path: 'login',
-        Component: Login,
-      },
-      {
-        path: 'register',
-        Component: Register,
-      },
-      {
-        path: 'forgotPassword',
-        Component: ForgotPassword,
-      },
-      
-      {
-        path: 'forgotPassword/enterCode',
-        Component: EnterCode,
-      },
-      {
-        path: 'forgotPassword/resetPassword',
-        Component: ResetPassword,
-      },
-       {
-  path: "payment/failed",
-  element: (
-    <PrivateRoute>
-      <PaymentReject />
-    </PrivateRoute>
-  ),
-},
-{
-  path: "payment/success",
-  element: (
-    <PrivateRoute>
-      <PaymentSuccess />
-    </PrivateRoute>
-  ),
-},
-    ]
-  },
-  {
-    path: "/user",
-    element: <PrivateRoute>
-      <UserLayout></UserLayout>
-    </PrivateRoute>,
     errorElement: <Error404 />,
     children: [
       {
-      path: 'payment',
-      Component: Payment,
+        path: "login",
+        Component: Login,
       },
       {
-      path: 'my-vehiclePage',
-      Component: MyVehiclePage,
+        path: "register",
+        Component: Register,
       },
       {
-        path: 'user-add-vehicle',
+        path: "forgotPassword",
+        Component: ForgotPassword,
+      },
+      {
+        path: "forgotPassword/enterCode",
+        Component: EnterCode,
+      },
+      {
+        path: "forgotPassword/resetPassword",
+        Component: ResetPassword,
+      },
+      {
+        path: "payment/failed",
+        element: (
+          <PrivateRoute>
+            <Suspense fallback={<RouteFallback />}>
+              <PaymentRejectLazy />
+            </Suspense>
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "payment/success",
+        element: (
+          <PrivateRoute>
+            <Suspense fallback={<RouteFallback />}>
+              <PaymentSuccessLazy />
+            </Suspense>
+          </PrivateRoute>
+        ),
+      },
+    ],
+  },
+  {
+    path: "/user",
+    element: (
+      <PrivateRoute>
+        <UserLayout />
+      </PrivateRoute>
+    ),
+    errorElement: <Error404 />,
+    children: [
+      {
+        path: "payment",
+        Component: Payment,
+      },
+      {
+        path: "my-vehiclePage",
+        Component: MyVehiclePage,
+      },
+      {
+        path: "user-add-vehicle",
         Component: UserAddVehiclePage,
       },
       {
-        path: 'my-cart',
+        path: "my-cart",
         Component: MyCart,
       },
       {
-        path: 'checkout',
+        path: "checkout",
         Component: Checkout,
       },
       {
-        path: 'user-profile',
+        path: "user-profile",
         Component: UserProfile,
       },
       {
-        path: 'user-settings',
+        path: "user-settings",
         Component: UserSettings,
       },
       {
-        path: 'user-orders',
+        path: "user-orders",
         Component: UserOrders,
       },
       {
-        path: 'my-purchases',
+        path: "my-purchases",
         Component: MyPurchases,
       },
-     
-
-      // Add user-specific routes here
-    ] 
-
-
-
+    ],
   },
   {
-
-    path: '/dashboard',
-    element: <PrivateRoute allowedRoles={['admin', 'provider']}>
-      <DashboardLayout></DashboardLayout>
-    </PrivateRoute>,
+    path: "/dashboard",
+    element: (
+      <PrivateRoute allowedRoles={["admin", "provider"]}>
+        <DashboardLayout />
+      </PrivateRoute>
+    ),
     errorElement: <Error404 />,
     children: [
       {
         index: true,
         Component: DashboardHome,
-
       },
-
-      //Products
       {
-        path: 'all-products',
+        path: "all-products",
         Component: AllProducts,
-
       },
       {
         path: "add-product",
         element: (
           <AdminRoute>
-            <AddProducts />
+            <Suspense fallback={<RouteFallback />}>
+              <AddProductsLazy />
+            </Suspense>
           </AdminRoute>
         ),
       },
-
-      //packages
       {
-        path: 'all-packages',
+        path: "all-packages",
         Component: AllPackages,
       },
       {
         path: "add-package",
         element: (
           <AdminRoute>
-            <AddPackages />
+            <Suspense fallback={<RouteFallback />}>
+              <AddPackagesLazy />
+            </Suspense>
           </AdminRoute>
         ),
       },
-
-      //orders
       {
-        path: 'all-orders',
+        path: "all-orders",
         Component: AllOrders,
-
       },
       {
-        path: 'completed-orders',
+        path: "completed-orders",
         Component: CompletedOrders,
       },
       {
-        path: 'cancelled-orders',
+        path: "cancelled-orders",
         Component: CancelledOrders,
       },
       {
-        path: 'pending-orders', 
-        Component: PendingOrders  ,
+        path: "pending-orders",
+        Component: PendingOrders,
       },
       {
-        path: 'order-reports',
+        path: "order-reports",
         Component: OrderReports,
-      },  
-
-      //finance management
-      {
-        path: 'finance-management',
-        Component: FinanceManagement, 
       },
-      
-
-      //QR
       {
-        path: 'all-qr',
+        path: "finance-management",
+        Component: FinanceManagement,
+      },
+      {
+        path: "all-qr",
         Component: AllQR,
       },
       {
-        path: 'generate-qr',
+        path: "generate-qr",
         Component: GenerateQR,
       },
       {
-        path: 'qr-scanner',
+        path: "qr-scanner",
         Component: QrScanner,
       },
-
-      //Vehicle
-      
       {
-        path: 'all-vehicles',
+        path: "all-vehicles",
         Component: AllVehiclePage,
       },
       {
-        path: 'add-vehicle',
+        path: "add-vehicle",
         Component: AddVehiclePage,
       },
       {
-        path: 'assign-vehicle',
+        path: "assign-vehicle",
         Component: AssignVehiclePage,
       },
       {
-        path: 'assign-vehicle/:code',
+        path: "assign-vehicle/:code",
         Component: AssignVehiclebyId,
       },
       {
-        path: 'scan-assign-vehicle',
+        path: "scan-assign-vehicle",
         Component: ScanAssignPage,
       },
-
       {
-        path: 'user-management',
+        path: "user-management",
         element: (
           <AdminRoute>
-            <UserManagementPage />
+            <Suspense fallback={<RouteFallback />}>
+              <UserManagementPageLazy />
+            </Suspense>
           </AdminRoute>
         ),
       },
       {
-        path: 'add-user',
+        path: "add-user",
         element: (
           <AdminRoute>
-            <AddUserPage />
+            <Suspense fallback={<RouteFallback />}>
+              <AddUserPageLazy />
+            </Suspense>
           </AdminRoute>
         ),
       },
       {
-        path: 'add-provider',
+        path: "add-provider",
         element: (
           <AdminRoute>
-            <AddProviderPage />
+            <Suspense fallback={<RouteFallback />}>
+              <AddProviderPageLazy />
+            </Suspense>
           </AdminRoute>
         ),
       },
-
-    ]
-
+    ],
   },
-
-  // Optional: catch all unmatched routes outside layouts
   {
     path: "*",
     Component: Error404,

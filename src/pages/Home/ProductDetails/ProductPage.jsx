@@ -5,8 +5,10 @@ import { Link, useNavigate } from "react-router-dom";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
 import { FEATURED_PRODUCT_ID } from "../../../config/featuredProduct";
+import { useTranslation } from "react-i18next";
 
 const ProductPage = () => {
+  const { t } = useTranslation();
   const { addToCart, cartItems } = useCart();
   const axiosSecure = useAxiosSecure();
   const navigate = useNavigate();
@@ -45,7 +47,7 @@ const ProductPage = () => {
 
     setNotification({
       type: "success",
-      message: `${product.title} added to cart!`,
+      message: `${product.title} ${t("store.addToCart").toLowerCase()}!`,
     });
 
     setTimeout(() => setNotification(null), 2000);
@@ -61,60 +63,58 @@ const ProductPage = () => {
 
   if (!product) {
     return (
-      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 px-4 text-center">
-        <p className="text-lg font-medium text-slate-800">Spotlight product could not be loaded.</p>
-        <p className="max-w-md text-sm text-slate-600">
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 bg-linear-to-b from-yellow-50/90 to-white px-4 py-16 text-center">
+        <p className="text-lg font-semibold text-yellow-950">Spotlight product could not be loaded.</p>
+        <p className="max-w-md text-sm text-yellow-900/60">
           Check that this id exists in the database, then try again.
         </p>
-        <Link to="/Products" className="btn btn-primary rounded-xl">
-          Back to store
+        <Link
+          to="/Products"
+          className="inline-flex items-center justify-center rounded-xl bg-yellow-500 px-6 py-3 font-semibold text-yellow-950 shadow-sm transition hover:bg-yellow-600"
+        >
+          {t("store.title")}
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="w-full bg-gradient-to-b from-slate-50 to-white">
+    <div className="w-full bg-linear-to-b from-yellow-50/40 via-white to-amber-50/20">
 
-      {/* 🔔 Notification */}
+      {/* Toast */}
       {notification && (
-        <div className="fixed top-4 right-4 z-50">
-          <div className="px-6 py-3 rounded-lg shadow-lg text-white bg-emerald-500">
+        <div className="fixed top-4 right-4 z-50 max-w-sm transition-opacity duration-300">
+          <div className="rounded-xl border border-yellow-200 bg-yellow-500 px-5 py-3 font-medium text-yellow-950 shadow-lg shadow-yellow-900/10">
             {notification.message}
           </div>
         </div>
       )}
 
-      {/* PRODUCT DETAILS */}
       <ProductDetails product={product} onAddToCart={handleAddToCart} />
 
-      {/* CART SUMMARY */}
-      <div className="py-8 px-4 border-t bg-white">
-        <div className="max-w-6xl mx-auto">
-
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg border border-yellow-200">
-
+      {/* Sticky cart strip */}
+      <div className="border-t border-yellow-100 bg-white/80 px-4 py-8 backdrop-blur-sm">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-yellow-100 bg-linear-to-r from-yellow-50 to-amber-50/80 p-6 shadow-sm sm:flex-row sm:p-8">
             <div>
-              <p className="text-slate-600 font-medium">
-                Shopping Cart Summary
+              <p className="text-sm font-medium uppercase tracking-wide text-yellow-800/80">
+                {t("labels.checkout")}
               </p>
-
-              <p className="text-2xl font-bold text-amber-600 mt-1">
-                {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
+              <p className="mt-1 text-2xl font-bold tabular-nums text-yellow-950">
+                {cartItems.length}{" "}
+                {cartItems.length === 1 ? "item" : "items"}
               </p>
             </div>
-
             <button
+              type="button"
               onClick={handleViewCart}
-              className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 font-semibold rounded-lg hover:scale-105 transition"
+              className="w-full rounded-xl bg-yellow-500 px-8 py-3.5 font-semibold text-yellow-950 shadow-sm transition hover:bg-yellow-600 sm:w-auto"
             >
-              View Cart
+              {t("store.details")}
             </button>
-
           </div>
         </div>
       </div>
-
     </div>
   );
 };

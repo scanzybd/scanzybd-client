@@ -4,7 +4,14 @@ import { Html5Qrcode } from "html5-qrcode";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 import SmartLoader from "../../../components/SmartLoader";
-
+import {
+  shellPage,
+  cardSurfaceSm,
+  fieldInput,
+  btnPrimary,
+  textHeading,
+  textMuted,
+} from "../../../lib/uiClasses";
 
 const UserAddVehiclePage = () => {
   const { user: firebaseUser } = useAuth();
@@ -32,7 +39,6 @@ const UserAddVehiclePage = () => {
 
   const scannerRef = useRef(null);
 
-  // ---------------- GET USER (ROLE) ----------------
   useEffect(() => {
     const getUser = async () => {
       if (!firebaseUser?.email) {
@@ -55,7 +61,6 @@ const UserAddVehiclePage = () => {
 
   const role = mongoUser?.role || "user";
 
-  // ---------------- INPUT ----------------
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -64,7 +69,6 @@ const UserAddVehiclePage = () => {
     setDriver({ ...driver, [e.target.name]: e.target.value });
   };
 
-  // ---------------- ADD VEHICLE ----------------
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -73,10 +77,15 @@ const UserAddVehiclePage = () => {
       return;
     }
 
+    if (!mongoUser?._id) {
+      alert("⚠️ Sign in required. Your profile could not be loaded.");
+      return;
+    }
+
     try {
       const payload = {
         ...form,
-        owner: mongoUser?._id,
+        owner: mongoUser._id,
         driver: showDriverForm ? driver : null,
         qrData: scannedQR || null,
       };
@@ -95,7 +104,6 @@ const UserAddVehiclePage = () => {
     }
   };
 
-  // ---------------- QR SCANNER ----------------
   useEffect(() => {
     if (!scanning) return;
 
@@ -121,27 +129,26 @@ const UserAddVehiclePage = () => {
     };
   }, [scanning]);
 
-  // ---------------- UI ----------------
   if (roleLoading) {
     return <SmartLoader fullPage label="Checking role permissions..." />;
   }
 
   return (
-    <div className="min-h-screen flex justify-center bg-gray-100 p-5">
+    <div className={`flex min-h-screen justify-center p-5 ${shellPage}`}>
       <div className="w-full max-w-md space-y-4">
 
-        <h1 className="text-center font-bold text-xl">
+        <h1 className={`text-center text-xl font-bold tracking-tight ${textHeading}`}>
           Add Vehicle
         </h1>
 
-        <form onSubmit={handleSubmit} className="bg-white p-4 rounded space-y-3">
+        <form onSubmit={handleSubmit} className={`space-y-3 p-4 ${cardSurfaceSm}`}>
 
           <input
             name="vehicleName"
             value={form.vehicleName}
             onChange={handleChange}
             placeholder="Vehicle Name"
-            className="w-full p-3 border rounded"
+            className={fieldInput}
           />
 
           <input
@@ -149,7 +156,7 @@ const UserAddVehiclePage = () => {
             value={form.model}
             onChange={handleChange}
             placeholder="Model"
-            className="w-full p-3 border rounded"
+            className={fieldInput}
           />
 
           <input
@@ -157,23 +164,22 @@ const UserAddVehiclePage = () => {
             value={form.plate}
             onChange={handleChange}
             placeholder="Plate"
-            className="w-full p-3 border rounded"
+            className={fieldInput}
           />
           <input
             name="ownerPhone"
             value={form.ownerPhone}
             onChange={handleChange}
             placeholder="Owner Number"
-            className="w-full p-3 border rounded"
+            className={fieldInput}
           />
 
-          {/* DRIVER */}
           <button
             type="button"
             onClick={() => setShowDriverForm(!showDriverForm)}
-            className="w-full bg-gray-700 text-white py-2 rounded"
+            className="w-full rounded-lg border border-slate-200 bg-slate-100 py-2.5 font-semibold text-slate-800 transition hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
           >
-            {showDriverForm ? "Remove Driver" : "Add Driver"}
+            {showDriverForm ? "Remove Driver" : "Add Driver (optional)"}
           </button>
 
           {showDriverForm && (
@@ -183,7 +189,7 @@ const UserAddVehiclePage = () => {
                 value={driver.name}
                 onChange={handleDriverChange}
                 placeholder="Driver Name"
-                className="w-full p-2 border"
+                className={fieldInput}
               />
 
               <input
@@ -191,19 +197,18 @@ const UserAddVehiclePage = () => {
                 value={driver.phone}
                 onChange={handleDriverChange}
                 placeholder="Phone"
-                className="w-full p-2 border"
+                className={fieldInput}
               />
             </div>
           )}
 
-          {/* QR */}
           {(role === "admin" || role === "provider") && (
             <div>
               {!scanning ? (
                 <button
                   type="button"
                   onClick={() => setScanning(true)}
-                  className="w-full bg-yellow-400 py-2 rounded"
+                  className={`${btnPrimary}`}
                 >
                   Scan QR
                 </button>
@@ -212,15 +217,14 @@ const UserAddVehiclePage = () => {
               )}
 
               {scannedQR && (
-                <p className="text-xs text-blue-600">
+                <p className={`mt-2 text-xs ${textMuted}`}>
                   QR: {scannedQR}
                 </p>
               )}
             </div>
           )}
 
-          {/* SUBMIT */}
-          <button className="w-full bg-green-600 text-white py-3 rounded">
+          <button type="submit" className={btnPrimary}>
             Save Vehicle
           </button>
         </form>

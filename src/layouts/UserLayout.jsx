@@ -7,7 +7,7 @@ import ScrollToTop from "../components/ScrollToTop";
 
 const UserLayout = () => {
     return (
-        <div>
+        <div className="min-h-dvh bg-slate-50 transition-colors dark:bg-slate-950">
             <ScrollToTop />
              <Navbar></Navbar>
             <Outlet></Outlet>

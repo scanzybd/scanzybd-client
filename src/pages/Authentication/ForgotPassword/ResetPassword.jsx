@@ -113,7 +113,7 @@ const ResetPassword = () => {
 
   if (checking) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-yellow-300 px-4">
+      <div className="flex min-h-screen w-full items-center justify-center bg-slate-100 px-4 transition-colors dark:bg-slate-950">
         <div className="flex flex-col items-center gap-3 rounded-2xl bg-base-100 px-8 py-10 shadow-xl">
           <span className="loading loading-spinner loading-lg text-primary" />
           <p className="text-sm text-gray-600">{t("auth.reset.verifying")}</p>
@@ -124,7 +124,7 @@ const ResetPassword = () => {
 
   if (codeError === "no-code" || !oobCode) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-yellow-300 px-4">
+      <div className="flex min-h-screen w-full items-center justify-center bg-slate-100 px-4 transition-colors dark:bg-slate-950">
         <div className="card w-full max-w-sm bg-base-100 shadow-2xl">
           <div className="card-body text-center">
             <h1 className="text-xl font-bold">{t("auth.reset.invalidTitle")}</h1>
@@ -143,7 +143,7 @@ const ResetPassword = () => {
 
   if (codeError && codeError !== "no-code") {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-yellow-300 px-4">
+      <div className="flex min-h-screen w-full items-center justify-center bg-slate-100 px-4 transition-colors dark:bg-slate-950">
         <div className="card w-full max-w-sm bg-base-100 shadow-2xl">
           <div className="card-body text-center">
             <h1 className="text-xl font-bold text-rose-700">
@@ -160,7 +160,7 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-yellow-300 px-4">
+    <div className="flex min-h-screen w-full items-center justify-center bg-slate-100 px-4 transition-colors dark:bg-slate-950">
       <div className="w-full max-w-sm">
         <div className="card bg-base-100 shadow-2xl">
           <div className="space-y-1 px-6 pt-6 text-center">
