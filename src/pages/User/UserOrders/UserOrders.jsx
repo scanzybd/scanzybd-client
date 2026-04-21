@@ -45,9 +45,9 @@ const UserOrders = () => {
       });
 
       if (res.data?.bkashURL) {
-        window.location.href = res.data.bkashURL;
+        window.location.assign(res.data.bkashURL);
       }
-    } catch (error) {
+    } catch {
       Swal.fire("Error", "Payment failed", "error");
     }
   };

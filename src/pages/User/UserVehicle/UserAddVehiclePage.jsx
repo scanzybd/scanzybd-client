@@ -14,7 +14,7 @@ import {
 } from "../../../lib/uiClasses";
 
 const UserAddVehiclePage = () => {
-  const { user: firebaseUser } = useAuth();
+  const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
 
   const [mongoUser, setMongoUser] = useState(null);
@@ -41,7 +41,7 @@ const UserAddVehiclePage = () => {
 
   useEffect(() => {
     const getUser = async () => {
-      if (!firebaseUser?.email) {
+      if (!user?.email) {
         setRoleLoading(false);
         return;
       }
@@ -57,7 +57,7 @@ const UserAddVehiclePage = () => {
     };
 
     getUser();
-  }, [firebaseUser?.email, axiosSecure]);
+  }, [user?.email, axiosSecure]);
 
   const role = mongoUser?.role || "user";
 

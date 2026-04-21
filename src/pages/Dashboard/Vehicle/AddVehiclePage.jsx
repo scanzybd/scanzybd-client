@@ -8,12 +8,12 @@ import useMongoProfile from "../../../hooks/useMongoProfile";
 import SmartLoader from "../../../components/SmartLoader";
 
 const AddVehiclePage = () => {
-  const { user: firebaseUser } = useAuth();
+  const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
   const queryClient = useQueryClient();
 
   const { data: mongoUser, isLoading: roleLoading } = useMongoProfile(
-    Boolean(firebaseUser?.email)
+    Boolean(user?.email)
   );
 
   const [form, setForm] = useState({

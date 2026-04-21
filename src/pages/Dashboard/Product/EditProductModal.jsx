@@ -92,7 +92,7 @@ const EditProductModal = ({ product, onClose, onSaved }) => {
       setForm(productToForm(product));
       setUploadError(null);
     }
-  }, [product?._id]);
+  }, [product]);
 
   if (!product) return null;
 

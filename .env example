@@ -3,12 +3,13 @@ VITE_API_BASE_URL=http://localhost:5000
 # Production (Vercel serverless) — no trailing slash; same origin as Express /api routes
 # VITE_API_BASE_URL=https://startup-server-eight.vercel.app
 
-VITE_apiKey=AIzaSyAIcCCr3Tfj87ufEhKhWdbiTPilSxVuMZ8
-VITE_authDomain=qr-tag-239b8.firebaseapp.com
-VITE_projectId=qr-tag-239b8
-VITE_storageBucket=qr-tag-239b8.firebasestorage.app
-VITE_messagingSenderId=1086253288448
-VITE_appId=1:1086253288448:web:4e3d8eb62bc7cc973bdce5
+VITE_apiKey=your_firebase_api_key
+VITE_authDomain=your-project.firebaseapp.com
+VITE_projectId=your-project-id
+VITE_storageBucket=your-project.firebasestorage.app
+VITE_messagingSenderId=your_sender_id
+VITE_appId=your_app_id
+
 # Central branding (change company name / product in one place)
 VITE_COMPANY_NAME=NYSDTI
 VITE_PRODUCT_NAME=QR Tag

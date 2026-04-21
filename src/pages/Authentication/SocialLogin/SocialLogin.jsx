@@ -1,37 +1,14 @@
 import React from "react";
 import useAuth from "../../../hooks/useAuth";
-import useAxios from "../../../hooks/useAxios";
-import { setAppJwt } from "../../../utils/appJwtStorage";
 import { useNavigate } from "react-router";
 
 const SocialLogin = () => {
     const { signInGoogle } = useAuth();
-    const api = useAxios();
     const navigate = useNavigate();
 
     const handleGoogleSignIn = async () => {
         try {
-            // 1️⃣ Google sign in (Firebase)
-            const result = await signInGoogle();
-
-            // 2️⃣ Get Firebase ID token
-            const idToken = await result.user.getIdToken();
-
-            console.log("Firebase ID Token:", idToken);
-
-            // 3️⃣ Send to backend
-            const res = await api.post("/api/auth/firebase", {
-                token: idToken,
-            });
-
-            // 4️⃣ Save backend JWT (24h) + expiry
-            if (res.data?.expiresAt != null) {
-                setAppJwt(res.data.token, res.data.expiresAt);
-            } else {
-                localStorage.setItem("token", res.data.token);
-            }
-
-            // 5️⃣ Redirect
+            await signInGoogle();
             navigate("/");
 
         } catch (error) {

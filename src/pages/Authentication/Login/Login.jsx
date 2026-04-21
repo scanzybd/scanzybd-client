@@ -3,8 +3,6 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate, useLocation } from "react-router";
 import SocialLogin from "../SocialLogin/SocialLogin";
 import useAuth from "../../../hooks/useAuth";
-import useAxios from "../../../hooks/useAxios";
-import { setAppJwt } from "../../../utils/appJwtStorage";
 import { PRODUCT_NAME } from "../../../config/company";
 
 const Login = () => {
@@ -16,30 +14,15 @@ const Login = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
-    const { signInUser } = useAuth(); // 🔥 Firebase login
-    const api = useAxios(); // 🔥 backend call
+    const { signInUser } = useAuth();
 
-const from = location.state?.from?.pathname || "/checkout";
+const from = location.state?.from?.pathname || "/";
 
 const onSubmit = async (data) => {
         try {
-            // ✅ 1. Firebase login
-            const result = await signInUser(data.email, data.password);
-
-            // ✅ 2. Firebase ID token
-            const idToken = await result.user.getIdToken();
-
-            // ✅ 3. Send token to backend
-            const res = await api.post("/api/auth/firebase", {
-                token: idToken,
-            });
-
-            // ✅ 4. Save backend JWT (24h) + expiry
-            if (res.data?.expiresAt != null) {
-                setAppJwt(res.data.token, res.data.expiresAt);
-            } else {
-                localStorage.setItem("token", res.data.token);
-            }
+            const res = await signInUser(data.email, data.password);
+            const role = String(res?.data?.user?.role || "").toLowerCase();
+            const destination = role === "admin" || role === "provider" ? "/dashboard" : from;
 
             const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -56,12 +39,22 @@ if (cart.length > 0) {
     localStorage.removeItem("cart");
 }
 
-            // ✅ 5. Redirect
-            navigate(from, { replace: true });
+            navigate(destination, { replace: true });
 
         } catch (error) {
-            console.log(error);
-            alert(error.message || "Login failed");
+            const msg =
+                error?.response?.data?.message ||
+                error?.response?.data?.msg ||
+                error?.message ||
+                "Login failed";
+            if (msg.toLowerCase().includes("password is not set for this account")) {
+                const goForgot = window.confirm(`${msg}\n\nGo to Forgot Password now?`);
+                if (goForgot) {
+                    navigate("/forgotPassword", { state: { email: data.email }, replace: true });
+                    return;
+                }
+            }
+            alert(msg);
         }
     };
     

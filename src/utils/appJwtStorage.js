@@ -2,7 +2,7 @@ const KEY_TOKEN = "token";
 const KEY_EXPIRES = "tokenExpiresAt";
 
 /**
- * Backend JWT from /api/auth/firebase or /api/auth/login (24h).
+ * Backend JWT from /api/auth/login or /api/auth/social (24h).
  * @param {string} token
  * @param {number} expiresAtMs epoch milliseconds when JWT expires
  */

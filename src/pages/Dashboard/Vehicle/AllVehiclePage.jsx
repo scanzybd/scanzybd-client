@@ -8,7 +8,7 @@ import SmartLoader from "../../../components/SmartLoader";
 
 const AllVehiclePage = () => {
   const axiosSecure = useAxiosSecure();
-  const { user: firebaseUser } = useAuth();
+  const { user } = useAuth();
   const { data: mongoUser } = useMongoProfile();
 
   const [search, setSearch] = React.useState("");
@@ -75,7 +75,7 @@ const AllVehiclePage = () => {
           </h1>
           <p className="mt-1 text-sm text-slate-600">
             {mongoUser?.role === "admin" ? "Admin view" : "Directory"} ·{" "}
-            <span className="font-medium text-slate-800">{firebaseUser?.email}</span>
+            <span className="font-medium text-slate-800">{user?.email}</span>
           </p>
         </div>
         <div className="relative w-full max-w-md">

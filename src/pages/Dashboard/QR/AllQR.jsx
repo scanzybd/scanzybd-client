@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -60,20 +60,19 @@ const AllQR = () => {
 
   const maxDay = daysInMonth(filterYear || String(new Date().getFullYear()), filterMonth);
 
-  useEffect(() => {
-    if (!filterMonth || !filterDay) return;
-    const d = parseInt(filterDay, 10);
-    if (d > maxDay) setFilterDay(String(maxDay));
-  }, [filterMonth, filterYear, maxDay, filterDay]);
+  const effectiveDay =
+    filterMonth && filterDay && parseInt(filterDay, 10) > maxDay
+      ? String(maxDay)
+      : filterDay;
 
   const queryParams = useMemo(() => {
     const p = new URLSearchParams();
     if (filterYear) p.set("year", filterYear);
     if (filterMonth) p.set("month", filterMonth);
-    if (filterDay && filterMonth) p.set("day", filterDay);
+    if (effectiveDay && filterMonth) p.set("day", effectiveDay);
     if (filterQrType) p.set("qrType", filterQrType);
     return p.toString();
-  }, [filterYear, filterMonth, filterDay, filterQrType]);
+  }, [filterYear, filterMonth, effectiveDay, filterQrType]);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["dashboard-all-qr", filterYear, filterMonth, filterDay, filterQrType],
@@ -85,13 +84,6 @@ const AllQR = () => {
   });
 
   const qrCodes = Array.isArray(data?.data) ? data.data : [];
-  const analytics = data?.analytics ?? {
-    total: 0,
-    assigned: 0,
-    unassigned: 0,
-    totalScans: 0,
-    byType: {},
-  };
 
   const resetFilters = () => {
     setFilterYear("");
@@ -109,6 +101,18 @@ const AllQR = () => {
     }
     return opts;
   }, [filterMonth, maxDay, t]);
+
+  const analytics = useMemo(
+    () =>
+      data?.analytics ?? {
+        total: 0,
+        assigned: 0,
+        unassigned: 0,
+        totalScans: 0,
+        byType: {},
+      },
+    [data]
+  );
 
   const statCards = useMemo(
     () => [
@@ -176,7 +180,7 @@ const AllQR = () => {
 
   return (
     <div className="min-h-[calc(100vh-6rem)] space-y-6">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 p-6 shadow-sm sm:p-8">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-linear-to-br from-slate-50 via-white to-indigo-50/30 p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/25">
@@ -273,7 +277,7 @@ const AllQR = () => {
             </span>
             <select
               className="select select-bordered w-full rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-500 disabled:opacity-50"
-              value={filterDay}
+              value={effectiveDay}
               disabled={!filterMonth}
               onChange={(e) => setFilterDay(e.target.value)}
             >
@@ -365,7 +369,7 @@ const AllQR = () => {
                 key={qr._id}
                 className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-indigo-200 hover:shadow-md"
               >
-                <div className="relative bg-gradient-to-b from-slate-50 to-white px-4 pt-4">
+                <div className="relative bg-linear-to-b from-slate-50 to-white px-4 pt-4">
                   <div className="mx-auto flex h-[148px] w-[148px] items-center justify-center rounded-2xl bg-white p-2 shadow-inner ring-1 ring-slate-100">
                     <img
                       src={qr.qrCode}

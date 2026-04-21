@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import Swal from "sweetalert2";
 import useAuth from "../../../hooks/useAuth";
@@ -8,14 +8,18 @@ import useAuth from "../../../hooks/useAuth";
 const ForgotPassword = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { sendUserPasswordResetEmail } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const initialEmail = location.state?.email || "";
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: { email: initialEmail },
+  });
 
   const onSubmit = async (data) => {
     setSubmitting(true);
@@ -27,19 +31,24 @@ const ForgotPassword = () => {
         text: t("auth.forgot.emailSentText"),
         confirmButtonText: t("auth.forgot.ok"),
       });
+      try {
+        sessionStorage.setItem("fp_email", data.email.trim());
+      } catch {
+        /* ignore */
+      }
       navigate("/forgotPassword/enterCode", {
         state: { email: data.email.trim() },
         replace: true,
       });
     } catch (err) {
-      const code = err?.code || "";
+      const code = err?.response?.status;
       let msg = t("auth.forgot.errGeneric");
-      if (code === "auth/user-not-found") {
-        msg = t("auth.forgot.errUserNotFound");
-      } else if (code === "auth/invalid-email") {
-        msg = t("auth.forgot.errInvalidEmail");
-      } else if (code === "auth/too-many-requests") {
+      if (code === 400) {
+        msg = err?.response?.data?.message || t("auth.forgot.errInvalidEmail");
+      } else if (code === 429) {
         msg = t("auth.forgot.errTooManyRequests");
+      } else if (!err?.response) {
+        msg = "Server unreachable. Start backend and database first.";
       }
       await Swal.fire({
         icon: "error",

@@ -1,7 +1,6 @@
 import axios from "axios";
 import { useEffect } from "react";
-import { auth } from "../firebase/firebase.init";
-import { getFreshFirebaseIdToken } from "../utils/firebaseIdToken";
+import { getAppJwtIfValid } from "../utils/appJwtStorage";
 import { API_BASE_URL } from "../config/api";
 
 const axiosSecure = axios.create({
@@ -13,19 +12,9 @@ const useAxiosSecure = () => {
     const id = axiosSecure.interceptors.request.use(
       async (config) => {
         try {
-          const user = auth.currentUser;
-          if (user) {
-            try {
-              const token = await getFreshFirebaseIdToken(user);
-              if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-              }
-            } catch (e) {
-              console.warn(
-                "[axios] Skipping Firebase token (public request can still proceed):",
-                e?.message || e
-              );
-            }
+          const token = getAppJwtIfValid();
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
           }
         } catch {
           /* never block the request */

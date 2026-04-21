@@ -1,7 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import axios from "axios";
-import { Link,  } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import SocialLogin from "../SocialLogin/SocialLogin";
 import useAuth from "../../../hooks/useAuth";
 import { COMPANY_NAME } from "../../../config/company";
@@ -14,43 +13,32 @@ const Register = () => {
         reset,
     } = useForm();
 
-        const { registerUser, updateUserProfile } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || "/";
+    const { registerUser, signInUser } = useAuth();
 
 
     const onSubmit = async (data) => {
     try {
 
- // 🔥 1. Firebase register
-            const result = await registerUser(data.email, data.password);
-            const firebaseUser = result.user;
-
-            // 🔥 2. Update profile (name save)
-            await updateUserProfile({
-                displayName: data.name,
-            });
-
-
-        const payload = {
-            name: data.name,
-            email: data.email,
-            password: data.password,
-            uid: firebaseUser.uid,
-            role: "user",
-        };
-
-        const res = await axios.post(
-            "http://localhost:5000/api/auth/register",
-            payload
-        );
+        const res = await registerUser(data.name, data.email, data.password);
 
         console.log("REGISTER SUCCESS:", res.data);
 
+        const loginRes = await signInUser(data.email, data.password);
+        const role = String(loginRes?.data?.user?.role || "").toLowerCase();
+        const destination = role === "admin" || role === "provider" ? "/dashboard" : from;
         reset();
-        alert("Registration successful!");
+        navigate(destination, { replace: true });
 
     } catch (error) {
-        console.log(error);
-        alert(error?.message || "Registration failed");
+        const msg =
+            error?.response?.data?.message ||
+            error?.response?.data?.msg ||
+            error?.message ||
+            "Registration failed";
+        alert(msg);
     }
 };
 

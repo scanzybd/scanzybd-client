@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, Copy, MapPin } from "lucide-react";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useCart from "../../../hooks/useCart";
+import { getAppJwtIfValid } from "../../../utils/appJwtStorage";
 import {
   shellPage,
   cardSurface,
@@ -32,7 +33,7 @@ const STEPS = [
 
 const Checkout = () => {
   const axiosSecure = useAxiosSecure();
-  const { user: firebaseUser } = useAuth();
+  const { user } = useAuth();
   const { cartItems } = useCart();
 
   const [step, setStep] = useState(1);
@@ -157,7 +158,7 @@ const Checkout = () => {
   const handlePayment = async () => {
     if (loading) return;
 
-    if (!firebaseUser?.email) {
+    if (!user?.email) {
       alert("Please login first");
       return;
     }
@@ -177,7 +178,11 @@ const Checkout = () => {
     setLoading(true);
 
     try {
-      const token = await firebaseUser.getIdToken();
+      const token = getAppJwtIfValid();
+      if (!token) {
+        alert("Session expired. Please login again.");
+        return;
+      }
 
       const tagAssignments = slots.map((slot, i) => {
         const v = vehicles[i];

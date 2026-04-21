@@ -155,7 +155,7 @@ const AddProducts = () => {
         msg = "Not logged in or session expired — sign in again and retry.";
       } else if (status === 404 && String(data?.message || "").includes("User")) {
         msg =
-          "Your Firebase user is not in the database — ask an admin to add your account.";
+          "Your user account is not in the database — ask an admin to add your account.";
       } else if (status === 502 || status === 500) {
         msg = msg || "Server or ImgBB error — check IMGBB_API_KEY in server .env and restart.";
       }

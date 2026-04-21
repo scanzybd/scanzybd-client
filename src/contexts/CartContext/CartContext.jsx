@@ -9,26 +9,21 @@ const EXPIRY_KEY = "cart_expiry";
 const EXPIRY_TIME = 48 * 60 * 60 * 1000;
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
-
-  // 🔥 LOAD CART WITH EXPIRY CHECK
-  useEffect(() => {
+  const [cartItems, setCartItems] = useState(() => {
     const storedCart = localStorage.getItem(CART_KEY);
     const expiry = localStorage.getItem(EXPIRY_KEY);
-
     const now = new Date().getTime();
 
     if (storedCart && expiry) {
       if (now > Number(expiry)) {
-        // ❌ expired → clear
         localStorage.removeItem(CART_KEY);
         localStorage.removeItem(EXPIRY_KEY);
-        setCartItems([]);
-      } else {
-        setCartItems(JSON.parse(storedCart));
+        return [];
       }
+      return JSON.parse(storedCart);
     }
-  }, []);
+    return [];
+  });
 
   // 🔥 SAVE CART WITH 48H EXPIRY RESET
   useEffect(() => {

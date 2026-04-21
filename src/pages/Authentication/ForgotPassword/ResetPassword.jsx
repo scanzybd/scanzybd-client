@@ -1,41 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import Swal from "sweetalert2";
 import useAuth from "../../../hooks/useAuth";
 
-function readOobCode() {
-  try {
-    const u = new URL(window.location.href);
-    let c = u.searchParams.get("oobCode");
-    if (c) return c;
-    if (u.hash && u.hash.length > 1) {
-      const raw = u.hash.slice(1);
-      const queryPart = raw.includes("?")
-        ? raw.split("?").slice(1).join("?")
-        : raw;
-      c = new URLSearchParams(queryPart).get("oobCode");
-      if (c) return c;
-    }
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
-
 const ResetPassword = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { confirmUserPasswordReset, verifyUserPasswordResetCode } = useAuth();
 
-  const [oobCode, setOobCode] = useState(
-    () => searchParams.get("oobCode") || readOobCode()
+  const email = useMemo(
+    () => location.state?.email || sessionStorage.getItem("fp_email") || "",
+    [location.state]
   );
-  const [verifiedEmail, setVerifiedEmail] = useState("");
-  const [checking, setChecking] = useState(true);
-  const [codeError, setCodeError] = useState("");
+  const code = useMemo(
+    () => location.state?.code || sessionStorage.getItem("fp_code") || "",
+    [location.state]
+  );
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -47,42 +30,18 @@ const ResetPassword = () => {
 
   const newPassword = watch("newPassword");
 
-  useEffect(() => {
-    const code = searchParams.get("oobCode") || readOobCode();
-    setOobCode(code);
-    if (!code) {
-      setChecking(false);
-      setCodeError("no-code");
-      return;
-    }
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const email = await verifyUserPasswordResetCode(code);
-        if (!cancelled) {
-          setVerifiedEmail(email);
-          setCodeError("");
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setCodeError(err?.code || "invalid-or-expired");
-        }
-      } finally {
-        if (!cancelled) setChecking(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [searchParams, verifyUserPasswordResetCode]);
-
   const onSubmit = async (data) => {
-    if (!oobCode) return;
+    if (!email || !code) return;
     setSubmitting(true);
     try {
-      await confirmUserPasswordReset(oobCode, data.newPassword);
+      await verifyUserPasswordResetCode(email, code);
+      await confirmUserPasswordReset(email, code, data.newPassword);
+      try {
+        sessionStorage.removeItem("fp_email");
+        sessionStorage.removeItem("fp_code");
+      } catch {
+        /* ignore */
+      }
       await Swal.fire({
         icon: "success",
         title: t("auth.reset.successTitle"),
@@ -91,16 +50,11 @@ const ResetPassword = () => {
       });
       navigate("/login", { replace: true });
     } catch (err) {
-      const code = err?.code || "";
-      let msg = t("auth.reset.errReset");
-      if (code === "auth/weak-password") {
-        msg = t("auth.reset.errWeak");
-      } else if (
-        code === "auth/invalid-action-code" ||
-        code === "auth/expired-action-code"
-      ) {
-        msg = t("auth.reset.errInvalidLink");
-      }
+      const errCode = err?.response?.status;
+      const serverMsg = err?.response?.data?.message;
+      let msg = serverMsg || t("auth.reset.errReset");
+      if (!err?.response) msg = "Server unreachable. Start backend and database first.";
+      if (errCode === 410 || errCode === 404) msg = t("auth.reset.errInvalidLink");
       await Swal.fire({
         icon: "error",
         title: t("auth.reset.failed"),
@@ -111,18 +65,7 @@ const ResetPassword = () => {
     }
   };
 
-  if (checking) {
-    return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-slate-100 px-4 transition-colors dark:bg-slate-950">
-        <div className="flex flex-col items-center gap-3 rounded-2xl bg-base-100 px-8 py-10 shadow-xl">
-          <span className="loading loading-spinner loading-lg text-primary" />
-          <p className="text-sm text-gray-600">{t("auth.reset.verifying")}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (codeError === "no-code" || !oobCode) {
+  if (!email || !code) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-slate-100 px-4 transition-colors dark:bg-slate-950">
         <div className="card w-full max-w-sm bg-base-100 shadow-2xl">
@@ -141,24 +84,6 @@ const ResetPassword = () => {
     );
   }
 
-  if (codeError && codeError !== "no-code") {
-    return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-slate-100 px-4 transition-colors dark:bg-slate-950">
-        <div className="card w-full max-w-sm bg-base-100 shadow-2xl">
-          <div className="card-body text-center">
-            <h1 className="text-xl font-bold text-rose-700">
-              {t("auth.reset.expiredTitle")}
-            </h1>
-            <p className="text-sm text-gray-600">{t("auth.reset.expiredBody")}</p>
-            <Link to="/forgotPassword" className="btn btn-primary btn-block mt-2">
-              {t("auth.reset.tryAgain")}
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-slate-100 px-4 transition-colors dark:bg-slate-950">
       <div className="w-full max-w-sm">
@@ -166,11 +91,7 @@ const ResetPassword = () => {
           <div className="space-y-1 px-6 pt-6 text-center">
             <h1 className="text-3xl font-bold">{t("auth.reset.pageTitle")}</h1>
             <p className="text-gray-600">{t("auth.reset.setNew")}</p>
-            {verifiedEmail && (
-              <p className="break-all text-sm font-medium text-indigo-800">
-                {verifiedEmail}
-              </p>
-            )}
+            <p className="break-all text-sm font-medium text-indigo-800">{email}</p>
           </div>
 
           <div className="card-body">

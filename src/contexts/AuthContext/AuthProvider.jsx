@@ -2,12 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AuthContext } from './AuthContext';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
-import { auth } from '../../firebase/firebase.init';
+import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import axios from 'axios';
-import { setAppJwt, clearAppJwt, getAppJwtExpiresAt } from '../../utils/appJwtStorage';
+import { setAppJwt, clearAppJwt, getAppJwtIfValid } from '../../utils/appJwtStorage';
 import { QUERY_CACHE_STORAGE_KEY } from '../../lib/queryPersister';
 import { API_BASE_URL } from '../../config/api';
+import { auth } from '../../firebase/firebase.init';
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -17,116 +17,121 @@ const AuthProvider = ({ children }) => {
     const [userRole, setUserRole] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const registerUser = (email, password) => {
+    const registerUser = (name, email, password) => {
         setLoading(true);
-        return createUserWithEmailAndPassword(auth, email, password)
-    }
+        return axios.post(`${API_BASE_URL}/api/auth/register`, { name, email, password });
+    };
 
-    const signInUser = (email, password) => {
+    const signInUser = async (email, password) => {
         setLoading(true);
-        return signInWithEmailAndPassword(auth, email, password)
-    }
+        const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
+        if (res.data?.token && res.data?.expiresAt != null) {
+            setAppJwt(res.data.token, res.data.expiresAt);
+        }
+        setUser(res.data?.user ?? null);
+        setUserRole(res.data?.user?.role ?? null);
+        setLoading(false);
+        return res;
+    };
 
-    const signInGoogle = () => {
+    const signInGoogle = async () => {
         setLoading(true);
-        return signInWithPopup(auth, googleProvider);
-    }
+        const result = await signInWithPopup(auth, googleProvider);
+        const socialUser = result.user;
+        const res = await axios.post(`${API_BASE_URL}/api/auth/social`, {
+            email: socialUser.email,
+            name: socialUser.displayName || "Social User",
+            photo: socialUser.photoURL || null,
+            provider: "google",
+            providerId: socialUser.uid,
+        });
+        if (res.data?.token && res.data?.expiresAt != null) {
+            setAppJwt(res.data.token, res.data.expiresAt);
+        }
+        setUser(res.data?.user ?? null);
+        setUserRole(res.data?.user?.role ?? null);
+        setLoading(false);
+        return res;
+    };
 
-    const logOut = () => {
+    const logOut = async () => {
         setLoading(true);
         clearAppJwt();
+        setUser(null);
+        setUserRole(null);
         queryClient.clear();
         try {
             localStorage.removeItem(QUERY_CACHE_STORAGE_KEY);
         } catch {
             /* ignore */
         }
-        return signOut(auth);
-    }
-
-    const updateUserProfile = (profile) => {
-        return updateProfile(auth.currentUser, profile)
-    }
-
-    /** Sync backend JWT (24h) when missing or expired — uses Firebase session */
-    const syncBackendJwtIfNeeded = async (firebaseUser) => {
         try {
-            const expMs = getAppJwtExpiresAt();
-            if (expMs && Date.now() < expMs - 60_000) {
-                return;
-            }
-            const idToken = await firebaseUser.getIdToken(false);
-            if (!idToken) return;
-            const res = await axios.post(`${API_BASE_URL}/api/auth/firebase`, {
-                token: idToken,
-            });
-            if (res.data?.token && res.data?.expiresAt != null) {
-                setAppJwt(res.data.token, res.data.expiresAt);
-            }
-        } catch (e) {
-            console.warn('Backend JWT sync skipped:', e?.message || e);
+            await signOut(auth);
+        } catch {
+            /* ignore social session signout failures */
         }
+        setLoading(false);
     };
 
-    /** Load role from MongoDB via /api/auth/me (Firebase token only identifies user). */
-    const fetchUserRole = async (firebaseUser) => {
-        const load = async (forceRefresh) => {
-            const token = await firebaseUser.getIdToken(forceRefresh);
-            return axios.get(`${API_BASE_URL}/api/auth/me`, {
+    const updateUserProfile = (profile) => {
+        setUser((prev) => (prev ? { ...prev, ...profile } : prev));
+        return Promise.resolve();
+    };
+
+    const sendUserPasswordResetEmail = async (email) => {
+        const res = await axios.post(`${API_BASE_URL}/api/auth/forgot-password`, { email });
+        return res.data;
+    };
+
+    const verifyUserPasswordResetCode = async (email, code) => {
+        const res = await axios.post(`${API_BASE_URL}/api/auth/verify-reset-code`, { email, code });
+        return res.data;
+    };
+
+    const confirmUserPasswordReset = async (email, code, newPassword) => {
+        const res = await axios.post(`${API_BASE_URL}/api/auth/reset-password`, {
+            email,
+            code,
+            newPassword,
+        });
+        return res.data;
+    };
+
+    const fetchUserRole = async (token) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-        };
-        try {
-            let response;
-            try {
-                response = await load(false);
-            } catch (first) {
-                if (first?.response?.status === 401) {
-                    await new Promise((r) => setTimeout(r, 400));
-                    response = await load(true);
-                } else {
-                    throw first;
-                }
-            }
             const raw = response.data?.role;
             const role =
                 raw != null && String(raw).trim() !== ""
                     ? String(raw).trim()
                     : null;
+            setUser(response.data ?? null);
             setUserRole(role);
-        } catch (error) {
-            console.error(
-                "Failed to fetch user role:",
-                error?.response?.status,
-                error?.response?.data || error?.message
-            );
+        } catch {
+            setUser(null);
             setUserRole(null);
+            clearAppJwt();
         }
     };
 
-    // observe user state
+    // Restore session from backend JWT.
     useEffect(() => {
-        const unSubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            setUser(currentUser);
-            if (currentUser) {
-                try {
-                    await Promise.all([
-                        fetchUserRole(currentUser),
-                        syncBackendJwtIfNeeded(currentUser),
-                    ]);
-                } catch (e) {
-                    console.warn("Auth sync:", e?.message || e);
-                }
-            } else {
-                setUserRole(null);
-                clearAppJwt();
+        let cancelled = false;
+        const init = async () => {
+            await Promise.resolve();
+            const token = getAppJwtIfValid();
+            if (token) {
+                await fetchUserRole(token);
             }
-            setLoading(false);
-        })
+            if (!cancelled) setLoading(false);
+        };
+        init();
         return () => {
-            unSubscribe();
-        }
-    }, [])
+            cancelled = true;
+        };
+    }, []);
 
     const authInfo = {
         user,
@@ -136,7 +141,10 @@ const AuthProvider = ({ children }) => {
         signInUser,
         signInGoogle,
         logOut,
-        updateUserProfile
+        updateUserProfile,
+        sendUserPasswordResetEmail,
+        verifyUserPasswordResetCode,
+        confirmUserPasswordReset,
     }
 
     return (

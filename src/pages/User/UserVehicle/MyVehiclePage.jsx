@@ -14,7 +14,7 @@ import {
 
 const MyVehiclePage = () => {
   const axiosSecure = useAxiosSecure();
-  const { user: firebaseUser } = useAuth();
+  const { user } = useAuth();
 
   const [vehicles, setVehicles] = useState([]);
   const [viewVehicle, setViewVehicle] = useState(null);
@@ -44,7 +44,7 @@ const MyVehiclePage = () => {
 
   // ---------------- LOAD VEHICLES ----------------
   const loadVehicles = useCallback(async () => {
-    if (!firebaseUser?.email) return;
+    if (!user?.email) return;
 
     try {
       const res = await axiosSecure.get("/api/vehicle/my");
@@ -75,7 +75,7 @@ const MyVehiclePage = () => {
     } catch (err) {
       console.log(err);
     }
-  }, [firebaseUser, axiosSecure]);
+  }, [user, axiosSecure]);
 
   useEffect(() => {
     loadVehicles();
@@ -130,7 +130,7 @@ const MyVehiclePage = () => {
           <h1 className={`text-xl font-bold tracking-tight ${textHeading}`}>
             My Vehicles
           </h1>
-          <p className={`text-xs ${textMuted}`}>{firebaseUser?.email}</p>
+          <p className={`text-xs ${textMuted}`}>{user?.email}</p>
         </div>
 
         {/* LIST */}

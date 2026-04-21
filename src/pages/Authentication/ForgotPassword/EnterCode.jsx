@@ -10,7 +10,8 @@ const EnterCode = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { sendUserPasswordResetEmail } = useAuth();
-  const email = location.state?.email || "";
+  const email = location.state?.email || sessionStorage.getItem("fp_email") || "";
+  const [code, setCode] = useState("");
   const [resending, setResending] = useState(false);
 
   const handleResend = async () => {
@@ -42,6 +43,24 @@ const EnterCode = () => {
     }
   };
 
+  const goNext = async () => {
+    const cleaned = code.trim();
+    if (!cleaned) {
+      await Swal.fire({ icon: "warning", title: "Code required", text: "Please enter reset code." });
+      return;
+    }
+    navigate("/forgotPassword/resetPassword", {
+      state: { email, code: cleaned },
+      replace: true,
+    });
+    try {
+      sessionStorage.setItem("fp_email", email);
+      sessionStorage.setItem("fp_code", cleaned);
+    } catch {
+      /* ignore */
+    }
+  };
+
   return (
     <div className="flex h-screen w-full items-center justify-center bg-slate-100 px-4 transition-colors dark:bg-slate-950">
       <div className="card w-full max-w-sm bg-base-100 shadow-2xl">
@@ -68,6 +87,21 @@ const EnterCode = () => {
         </div>
 
         <div className="card-body space-y-3">
+          <input
+            type="text"
+            inputMode="numeric"
+            className="input input-bordered w-full"
+            placeholder="Enter 6-digit code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
+          <button
+            type="button"
+            className="btn btn-block btn-primary"
+            onClick={goNext}
+          >
+            Continue
+          </button>
           <p className="text-xs text-gray-500">{t("auth.enterCode.note")}</p>
 
           <button

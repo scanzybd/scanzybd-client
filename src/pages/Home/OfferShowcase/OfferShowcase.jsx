@@ -82,10 +82,6 @@ const OfferShowcase = () => {
         },
     });
 
-    if (isLoading) {
-        return <SmartLoader fullPage label="Loading packages..." />;
-    }
-
     const plans = useMemo(() => {
         if (!packages.length) return defaultPlans;
 
@@ -103,10 +99,14 @@ const OfferShowcase = () => {
         }));
     }, [packages]);
 
+    if (isLoading) {
+        return <SmartLoader fullPage label="Loading packages..." />;
+    }
+
     return (
-        <div className="w-full bg-gradient-to-b from-slate-50 via-white to-slate-50">
+        <div className="w-full bg-linear-to-b from-slate-50 via-white to-slate-50">
             {/* Header Section */}
-            <div className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-yellow-400 to-amber-500">
+            <div className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-linear-to-r from-yellow-400 to-amber-500">
                 <div className="max-w-4xl mx-auto text-center">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
                         Flexible Plans for Every Business
@@ -163,7 +163,7 @@ const OfferShowcase = () => {
                             >
                                 {/* Badge */}
                                 {plan.badge && (
-                                    <div className="absolute top-0 right-0 bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 px-4 py-2 text-xs font-bold rounded-bl-lg">
+                                    <div className="absolute top-0 right-0 bg-linear-to-r from-yellow-400 to-amber-500 text-gray-900 px-4 py-2 text-xs font-bold rounded-bl-lg">
                                         {plan.badge}
                                     </div>
                                 )}
@@ -174,7 +174,7 @@ const OfferShowcase = () => {
                                     <div className="flex items-center gap-3 mb-6">
                                         <div className={`p-3 rounded-lg ${
                                             plan.highlight
-                                                ? "bg-gradient-to-r from-yellow-400 to-amber-500"
+                                                ? "bg-linear-to-r from-yellow-400 to-amber-500"
                                                 : "bg-slate-100"
                                         }`}>
                                             <IconComponent className={`w-6 h-6 ${
@@ -213,7 +213,7 @@ const OfferShowcase = () => {
                                     <button
                                         className={`w-full mb-8 py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 transition transform hover:scale-105 ${
                                             plan.highlight
-                                                ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 hover:from-yellow-500 hover:to-amber-600"
+                                                ? "bg-linear-to-r from-yellow-400 to-amber-500 text-gray-900 hover:from-yellow-500 hover:to-amber-600"
                                                 : "bg-slate-100 text-slate-900 hover:bg-slate-200"
                                         }`}
                                     >
@@ -233,9 +233,9 @@ const OfferShowcase = () => {
                                                     className="flex items-start gap-3 text-sm text-slate-600"
                                                 >
                                                     {feature.included ? (
-                                                        <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                                        <Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                                                     ) : (
-                                                        <X className="w-5 h-5 text-slate-300 flex-shrink-0 mt-0.5" />
+                                                        <X className="w-5 h-5 text-slate-300 shrink-0 mt-0.5" />
                                                     )}
                                                     <span className={feature.included ? "" : "text-slate-400 line-through"}>
                                                         {feature.name}
@@ -248,7 +248,7 @@ const OfferShowcase = () => {
 
                                 {/* Highlight Border Animation */}
                                 {plan.highlight && (
-                                    <div className="absolute inset-0 border-2 border-transparent bg-gradient-to-r from-yellow-400 to-amber-500 opacity-0 hover:opacity-10 rounded-2xl transition pointer-events-none"></div>
+                                    <div className="absolute inset-0 border-2 border-transparent bg-linear-to-r from-yellow-400 to-amber-500 opacity-0 hover:opacity-10 rounded-2xl transition pointer-events-none"></div>
                                 )}
                             </div>
                         );
