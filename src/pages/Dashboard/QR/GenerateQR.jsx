@@ -6,7 +6,6 @@ import { Bike, Car, Download, FileDown, Loader2, QrCode } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import {
   companyNameSlug,
-  COMPANY_ORG_TITLE,
   COMPANY_PRINT_ORG_LINE,
 } from "../../../config/company";
 
@@ -22,8 +21,10 @@ const QR_TYPE_LAYOUT = {
   },
 };
 
-const CARD_W_PX = 288;
-const CARD_H_PX = 384;
+const CARD_SIZE = {
+  bike: { width: 360, height: 180 },
+  car: { width: 300, height: 420 },
+};
 
 const toPngOptions = {
   pixelRatio: 3,
@@ -31,115 +32,144 @@ const toPngOptions = {
   cacheBust: true,
 };
 
-/** Fits image on A4 with safe margins — suitable for home / press printing. */
-function addPrintImagePage(pdf, imgData, imgProps, isFirstPage) {
-  if (!isFirstPage) pdf.addPage();
-  const marginPt = 40;
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const maxW = pageWidth - 2 * marginPt;
-  const maxH = pageHeight - 2 * marginPt;
-  let w = maxW;
-  let h = (imgProps.height * w) / imgProps.width;
-  if (h > maxH) {
-    h = maxH;
-    w = (imgProps.width * h) / imgProps.height;
+const PAGE_LAYOUT_MM = {
+  margin: 0,
+  gap: 0,
+};
+
+const STICKER_SIZE_MM = {
+  bike: { w: 76.2, h: 38.1 }, // 3 x 1.5 inch
+  car: { w: 63.5, h: 88.9 }, // 2.5 x 3.5 inch
+};
+
+function getStickerSizeMm(type) {
+  return STICKER_SIZE_MM[type] || STICKER_SIZE_MM.bike;
+}
+
+/**
+ * Place one sticker on current page; add new page automatically if needed.
+ * Returns next cursor position.
+ */
+function placeStickerOnLetterPage(pdf, imgData, stickerMm, cursor) {
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const { margin, gap } = PAGE_LAYOUT_MM;
+
+  let { x, y, rowHeight } = cursor;
+
+  if (x + stickerMm.w > pageW - margin) {
+    x = margin;
+    y += rowHeight + gap;
+    rowHeight = 0;
   }
-  const x = (pageWidth - w) / 2;
-  const y = (pageHeight - h) / 2;
-  pdf.addImage(imgData, "PNG", x, y, w, h);
+
+  if (y + stickerMm.h > pageH - margin) {
+    pdf.addPage("letter", "p");
+    x = margin;
+    y = margin;
+    rowHeight = 0;
+  }
+
+  pdf.addImage(imgData, "PNG", x, y, stickerMm.w, stickerMm.h);
+  rowHeight = Math.max(rowHeight, stickerMm.h);
+
+  return { x: x + stickerMm.w + gap, y, rowHeight };
 }
 
 function PrintCardBike({ item }) {
+  const phoneText = item?.code ? String(item.code).slice(-10) : "01841662686";
   return (
     <div
-      className="flex h-full flex-col overflow-hidden rounded-[22px] bg-white"
-      style={{ width: CARD_W_PX, height: CARD_H_PX }}
+      className="flex h-full overflow-hidden rounded-[24px] bg-[#f7ea00] p-3"
+      style={{ width: CARD_SIZE.bike.width, height: CARD_SIZE.bike.height }}
     >
-      <div className="flex shrink-0 items-center justify-center gap-2 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 px-3 py-3 text-white">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
-          <Bike className="h-6 w-6" strokeWidth={2.2} />
-        </div>
-        <div className="text-left">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-100">
-            Vehicle tag
+      <div className="flex h-full w-full gap-3">
+        <div className="flex w-[44%] flex-col rounded-[20px] bg-[#ededed] p-2">
+          <div className="flex flex-1 items-center justify-center rounded-lg bg-white p-2">
+            <img
+              src={item.qrCode}
+              alt=""
+              className="h-full w-full object-contain"
+              crossOrigin="anonymous"
+              draggable={false}
+            />
+          </div>
+          <p className="mt-1.5 text-center text-[7px] font-medium text-slate-700">
+            Call-{phoneText}
           </p>
-          <p className="text-lg font-black leading-tight tracking-tight">BIKE</p>
         </div>
-      </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-2 bg-gradient-to-b from-stone-50 to-white px-4 py-3">
-        <p className="text-center text-[11px] font-semibold text-stone-600">
-          {COMPANY_PRINT_ORG_LINE}
-        </p>
-        <div className="rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
-          <img
-            src={item.qrCode}
-            alt=""
-            className="h-[176px] w-[176px]"
-            crossOrigin="anonymous"
-            draggable={false}
-          />
+        <div className="flex w-[56%] flex-col justify-between py-1 pr-1">
+          <div className="ml-auto w-fit rounded-xl border border-[#e6da00] bg-[#fff260] px-4 py-0.5 text-[11px] font-bold text-slate-900 shadow-sm">
+            Cre8
+          </div>
+          <div>
+            <p className="inline-block rounded-r-2xl rounded-l-sm bg-[#1f88a2] px-4 py-0.5 text-[28px] font-black uppercase leading-none tracking-wide text-white">
+              Scan To
+            </p>
+            <h3 className="mt-0.5 text-[52px] font-black leading-[0.88] tracking-tight text-[#003f76]">
+              Contact
+            </h3>
+            <p className="text-[17px] font-black leading-[0.95] text-[#003f76]">
+              Vehicle Owner
+            </p>
+          </div>
+          <p className="text-center text-[8px] font-medium leading-tight text-slate-800">
+            This QR is created from {COMPANY_PRINT_ORG_LINE}
+          </p>
         </div>
-        <p className="text-center text-[10px] font-medium text-stone-500">
-          Scan to contact owner
-        </p>
-      </div>
-
-      <div className="shrink-0 bg-emerald-950 px-2 py-2.5 text-center">
-        <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-emerald-100/90">
-          Scan to verify · {COMPANY_ORG_TITLE}
-        </p>
       </div>
     </div>
   );
 }
 
 function PrintCardCar({ item }) {
+  const phoneText = item?.code ? String(item.code).slice(-10) : "01841662686";
   return (
     <div
-      className="flex h-full flex-col overflow-hidden rounded-[18px] bg-white"
-      style={{ width: CARD_W_PX, height: CARD_H_PX }}
+      className="flex h-full flex-col overflow-hidden rounded-[26px] bg-[#f7ea00] p-3"
+      style={{ width: CARD_SIZE.car.width, height: CARD_SIZE.car.height }}
     >
-      <div className="relative shrink-0 overflow-hidden bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 px-4 py-4 text-white">
-        <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-500/20 blur-2xl" />
-        <div className="relative flex items-center gap-3">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10">
-            <Car className="h-7 w-7" strokeWidth={2} />
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-200">
-              Official tag
-            </p>
-            <p className="text-xl font-black tracking-tight">CAR</p>
-            <p className="mt-0.5 text-[10px] text-blue-100/90">
-              {COMPANY_PRINT_ORG_LINE}
-            </p>
-          </div>
+      <div className="mb-1 flex justify-center">
+        <div className="rounded-xl border border-[#e6da00] bg-[#fff260] px-5 py-0.5 text-[20px] font-bold text-slate-900 shadow-sm">
+          Cre8
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-slate-50 px-4 py-4">
-        <div className="w-full border-y border-dashed border-slate-300 py-1 text-center text-[10px] font-medium uppercase tracking-widest text-slate-500">
-          Scan below
-        </div>
-        <div className="rounded-2xl bg-white p-2.5 shadow-md ring-2 ring-slate-200">
+      <div className="relative rounded-[20px] bg-[#e9e9e9] p-2.5">
+        <p className="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 text-[13px] font-medium tracking-wide text-slate-700">
+          Scan Me
+        </p>
+        <p className="absolute right-1 top-1/2 -translate-y-1/2 rotate-90 text-[13px] font-medium tracking-wide text-slate-700">
+          or Call-{phoneText}
+        </p>
+        <div className="flex items-center justify-center rounded-[16px] bg-white p-3">
           <img
             src={item.qrCode}
             alt=""
-            className="h-[168px] w-[168px]"
+            className="h-[174px] w-[174px]"
             crossOrigin="anonymous"
             draggable={false}
           />
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center justify-between gap-2 bg-slate-950 px-3 py-2.5 text-[9px] text-slate-300">
-        <span className="font-semibold uppercase tracking-wider text-slate-400">
-          Secure QR
-        </span>
-        <span className="text-slate-100">Ready to print</span>
+      <div className="mt-1.5">
+        <p className="mx-auto w-fit -rotate-12 rounded-r-2xl rounded-l-sm bg-[#1f88a2] px-4 py-0.5 text-[30px] font-black uppercase leading-none tracking-wide text-white">
+          Scan To
+        </p>
       </div>
+
+      <h3 className="mt-0.5 text-center text-[44px] font-black leading-[0.9] tracking-tight text-[#003f76]">
+        Contact
+      </h3>
+      <p className="text-center text-[41px] font-black leading-[0.9] tracking-tight text-[#003f76]">
+        Vehicle Owner
+      </p>
+
+      <p className="mt-1 text-center text-[7px] font-medium leading-tight text-slate-800">
+        This QR is created from {COMPANY_PRINT_ORG_LINE}
+      </p>
     </div>
   );
 }
@@ -147,11 +177,12 @@ function PrintCardCar({ item }) {
 function QrPrintSurface({ item, qrType }) {
   const cfg = QR_TYPE_LAYOUT[qrType] || QR_TYPE_LAYOUT.bike;
   const ring = cfg.ringClass;
+  const size = CARD_SIZE[qrType] || CARD_SIZE.bike;
 
   return (
     <div
       className={`overflow-hidden rounded-[24px] bg-white shadow-2xl ${ring}`}
-      style={{ width: CARD_W_PX, height: CARD_H_PX }}
+      style={{ width: size.width, height: size.height }}
     >
       {qrType === "car" ? (
         <PrintCardCar item={item} />
@@ -213,12 +244,16 @@ const QRGenerator = () => {
     setError(null);
     try {
       const imgData = await captureNodePng(index);
-      const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
-      const imgProps = pdf.getImageProperties(imgData);
-      addPrintImagePage(pdf, imgData, imgProps, true);
       const item = qrList[index];
       const code = item?.code || index;
       const type = item?.qrType || selectedType;
+      const sticker = getStickerSizeMm(type);
+      const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "letter" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const x = (pageW - sticker.w) / 2;
+      const y = (pageH - sticker.h) / 2;
+      pdf.addImage(imgData, "PNG", x, y, sticker.w, sticker.h);
       pdf.save(`${companyNameSlug()}-QR-${type}-${code}.pdf`);
     } catch (e) {
       console.error(e);
@@ -233,12 +268,19 @@ const QRGenerator = () => {
     setDownloading(true);
     setError(null);
     try {
-      const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
+      const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "letter" });
+      let cursor = {
+        x: PAGE_LAYOUT_MM.margin,
+        y: PAGE_LAYOUT_MM.margin,
+        rowHeight: 0,
+      };
 
       for (let i = 0; i < qrList.length; i++) {
         const imgData = await captureNodePng(i);
-        const imgProps = pdf.getImageProperties(imgData);
-        addPrintImagePage(pdf, imgData, imgProps, i === 0);
+        const item = qrList[i];
+        const type = item?.qrType || selectedType;
+        const sticker = getStickerSizeMm(type);
+        cursor = placeStickerOnLetterPage(pdf, imgData, sticker, cursor);
       }
 
       const stamp = new Date().toISOString().slice(0, 10);
@@ -254,7 +296,7 @@ const QRGenerator = () => {
   return (
     <div className="min-h-[calc(100vh-6rem)] space-y-6">
       {/* Header */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50/40 p-6 shadow-sm sm:p-8">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-linear-to-br from-slate-50 via-white to-blue-50/40 p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/25">
@@ -395,7 +437,7 @@ const QRGenerator = () => {
 
           <div className="grid grid-cols-1 gap-8 justify-items-center sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {qrList.map((item, index) => {
-              const t = item.qrType || selectedType;
+              const currentType = item.qrType || selectedType;
               return (
                 <div
                   key={item._id || item.code || index}
@@ -407,7 +449,7 @@ const QRGenerator = () => {
                     }}
                     className="origin-top scale-100"
                   >
-                    <QrPrintSurface item={item} qrType={t} />
+                    <QrPrintSurface item={item} qrType={currentType} />
                   </div>
                   <p className="w-full truncate text-center font-mono text-xs text-slate-600">
                     {item.code}

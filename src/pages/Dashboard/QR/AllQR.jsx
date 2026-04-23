@@ -16,6 +16,82 @@ import {
 } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
+import { COMPANY_PRINT_ORG_LINE } from "../../../config/company";
+
+function BikeStickerPreview({ qrCode, code }) {
+  const phoneText = code ? String(code).slice(-10) : "01841662686";
+  return (
+    <div className="h-[132px] w-full rounded-[16px] bg-[#f7ea00] p-2">
+      <div className="flex h-full gap-2">
+        <div className="flex w-[42%] flex-col rounded-[12px] bg-[#ececec] p-1.5">
+          <div className="flex flex-1 items-center justify-center rounded-md bg-white p-1">
+            <img src={qrCode} alt="" className="h-full w-full object-contain" />
+          </div>
+          <p className="mt-1 truncate text-center text-[7px] font-medium text-slate-700">
+            Call-{phoneText}
+          </p>
+        </div>
+        <div className="flex w-[58%] flex-col justify-between pr-0.5 pt-0.5">
+          <p className="ml-auto w-fit rounded-md bg-[#fff260] px-2 py-0.5 text-[8px] font-bold text-slate-900">
+            Cre8
+          </p>
+          <div>
+            <p className="inline-block rounded-r-xl rounded-l-sm bg-[#1f88a2] px-2 py-px text-[13px] font-black uppercase leading-none text-white">
+              Scan To
+            </p>
+            <p className="text-[24px] font-black leading-[0.86] tracking-tight text-[#003f76]">
+              Contact
+            </p>
+            <p className="text-[10px] font-black leading-none text-[#003f76]">
+              Vehicle Owner
+            </p>
+          </div>
+          <p className="text-center text-[6px] font-medium text-slate-800">
+            {COMPANY_PRINT_ORG_LINE}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CarStickerPreview({ qrCode, code }) {
+  const phoneText = code ? String(code).slice(-10) : "01841662686";
+  return (
+    <div className="h-[220px] w-[160px] rounded-[16px] bg-[#f7ea00] p-2">
+      <div className="mb-1 flex justify-center">
+        <p className="rounded-md bg-[#fff260] px-2.5 py-0.5 text-[10px] font-bold text-slate-900">
+          Cre8
+        </p>
+      </div>
+      <div className="relative rounded-[12px] bg-[#ececec] p-2">
+        <p className="absolute left-[-13px] top-1/2 -translate-y-1/2 -rotate-90 text-[8px] text-slate-700">
+          Scan Me
+        </p>
+        <p className="absolute right-[-19px] top-1/2 -translate-y-1/2 rotate-90 text-[8px] text-slate-700">
+          or Call-{phoneText}
+        </p>
+        <div className="rounded-md bg-white p-1.5">
+          <img src={qrCode} alt="" className="h-[96px] w-[96px] object-contain" />
+        </div>
+      </div>
+      <div className="mt-1">
+        <p className="mx-auto w-fit -rotate-12 rounded-r-lg rounded-l-sm bg-[#1f88a2] px-2 py-0.5 text-[12px] font-black uppercase leading-none text-white">
+          Scan To
+        </p>
+      </div>
+      <p className="mt-1 text-center text-[21px] font-black leading-[0.82] tracking-tight text-[#003f76]">
+        Contact
+      </p>
+      <p className="text-center text-[19px] font-black leading-[0.82] tracking-tight text-[#003f76]">
+        Vehicle Owner
+      </p>
+      <p className="mt-1 text-center text-[6px] font-medium text-slate-800">
+        {COMPANY_PRINT_ORG_LINE}
+      </p>
+    </div>
+  );
+}
 
 function daysInMonth(yearStr, monthStr) {
   const y = yearStr ? parseInt(yearStr, 10) : new Date().getFullYear();
@@ -370,12 +446,12 @@ const AllQR = () => {
                 className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-indigo-200 hover:shadow-md"
               >
                 <div className="relative bg-linear-to-b from-slate-50 to-white px-4 pt-4">
-                  <div className="mx-auto flex h-[148px] w-[148px] items-center justify-center rounded-2xl bg-white p-2 shadow-inner ring-1 ring-slate-100">
-                    <img
-                      src={qr.qrCode}
-                      alt=""
-                      className="h-full w-full object-contain"
-                    />
+                  <div className="mx-auto flex items-center justify-center">
+                    {type === "car" ? (
+                      <CarStickerPreview qrCode={qr.qrCode} code={qr.code} />
+                    ) : (
+                      <BikeStickerPreview qrCode={qr.qrCode} code={qr.code} />
+                    )}
                   </div>
                   <div className="absolute right-3 top-3 flex gap-1">
                     <span
