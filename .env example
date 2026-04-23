@@ -1,7 +1,6 @@
 # Backend API (must match where `npm run dev` runs for server — default port 5000)
-VITE_API_BASE_URL=http://localhost:5000
-# Production (Vercel serverless) — no trailing slash; same origin as Express /api routes
-# VITE_API_BASE_URL=https://startup-server-eight.vercel.app
+# VITE_API_BASE_URL=http://localhost:5000
+VITE_API_BASE_URL=https://startup-server-eight.vercel.app
 
 VITE_apiKey=your_firebase_api_key
 VITE_authDomain=your-project.firebaseapp.com
