@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { Search, UserPlus, Building2, Users, Shield } from "lucide-react";
+import { Search, UserPlus, Building2, Users, Shield, Pencil, Save, X } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 import SmartLoader from "../../../components/SmartLoader";
@@ -22,6 +22,9 @@ const UserManagementPage = () => {
     const [roleFilter, setRoleFilter] = useState("");
     const [error, setError] = useState(null);
     const [busyId, setBusyId] = useState(null);
+    const [editingId, setEditingId] = useState(null);
+    const [editName, setEditName] = useState("");
+    const [editRole, setEditRole] = useState("user");
 
     const load = useCallback(async () => {
         setError(null);
@@ -57,9 +60,7 @@ const UserManagementPage = () => {
         setBusyId(row._id);
         try {
             await axiosSecure.patch(`/api/users/${row._id}`, { isActive: next });
-            setList((prev) =>
-                prev.map((u) => (u._id === row._id ? { ...u, isActive: next } : u))
-            );
+            await load();
         } catch (e) {
             alert(e.response?.data?.message || "Update failed.");
         } finally {
@@ -74,6 +75,38 @@ const UserManagementPage = () => {
         });
         return c;
     }, [list]);
+
+    const startEdit = (row) => {
+        setEditingId(row._id);
+        setEditName(row.name || "");
+        setEditRole(row.role || "user");
+    };
+
+    const cancelEdit = () => {
+        setEditingId(null);
+        setEditName("");
+        setEditRole("user");
+    };
+
+    const saveEdit = async (row) => {
+        const name = editName.trim();
+        const role = editRole;
+        const isActive = row.isActive !== false;
+        if (!name) {
+            alert("Name is required.");
+            return;
+        }
+        setBusyId(row._id);
+        try {
+            await axiosSecure.patch(`/api/users/${row._id}`, { name, role, isActive });
+            await load();
+            cancelEdit();
+        } catch (e) {
+            alert(e.response?.data?.message || "User edit failed.");
+        } finally {
+            setBusyId(null);
+        }
+    };
 
     if (loading && list.length === 0 && !error) {
         return <SmartLoader fullPage label="Loading users..." />;
@@ -161,7 +194,7 @@ const UserManagementPage = () => {
                                 <th className="px-4 py-3">Email</th>
                                 <th className="px-4 py-3">Role</th>
                                 <th className="px-4 py-3">Status</th>
-                                <th className="px-4 py-3 text-right">Access</th>
+                                <th className="px-4 py-3 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm">
@@ -176,32 +209,53 @@ const UserManagementPage = () => {
                                     const isSelf =
                                         row.email?.toLowerCase() === currentEmail;
                                     const active = row.isActive !== false;
+                                    const isEditing = editingId === row._id;
                                     return (
                                         <tr
                                             key={row._id}
                                             className="border-t border-slate-100 hover:bg-slate-50/80"
                                         >
                                             <td className="px-4 py-3 font-medium text-slate-900">
-                                                <span className="flex items-center gap-2">
-                                                    {row.name}
-                                                    {isSelf && (
-                                                        <span
-                                                            title="You"
-                                                            className="inline-flex items-center gap-0.5 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-800"
-                                                        >
-                                                            <Shield className="h-3 w-3" />
-                                                            You
-                                                        </span>
-                                                    )}
-                                                </span>
+                                                {isEditing ? (
+                                                    <input
+                                                        value={editName}
+                                                        onChange={(e) => setEditName(e.target.value)}
+                                                        className="input input-sm input-bordered w-full max-w-[220px] rounded-lg border-slate-200 bg-white"
+                                                    />
+                                                ) : (
+                                                    <span className="flex items-center gap-2">
+                                                        {row.name}
+                                                        {isSelf && (
+                                                            <span
+                                                                title="You"
+                                                                className="inline-flex items-center gap-0.5 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-800"
+                                                            >
+                                                                <Shield className="h-3 w-3" />
+                                                                You
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="px-4 py-3 font-mono text-xs text-slate-600">
                                                 {row.email}
                                             </td>
                                             <td className="px-4 py-3">
-                                                <span className={roleBadge(row.role)}>
-                                                    {row.role}
-                                                </span>
+                                                {isEditing ? (
+                                                    <select
+                                                        value={editRole}
+                                                        onChange={(e) => setEditRole(e.target.value)}
+                                                        className="select select-sm select-bordered w-full max-w-[140px] rounded-lg border-slate-200"
+                                                    >
+                                                        <option value="admin">Admin</option>
+                                                        <option value="provider">Provider</option>
+                                                        <option value="user">User</option>
+                                                    </select>
+                                                ) : (
+                                                    <span className={roleBadge(row.role)}>
+                                                        {row.role}
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="px-4 py-3">
                                                 {active ? (
@@ -211,23 +265,58 @@ const UserManagementPage = () => {
                                                 )}
                                             </td>
                                             <td className="px-4 py-3 text-right">
-                                                <input
-                                                    type="checkbox"
-                                                    className="toggle toggle-success"
-                                                    checked={active}
-                                                    disabled={
-                                                        busyId === row._id ||
-                                                        (isSelf && active)
-                                                    }
-                                                    title={
-                                                        isSelf && active
-                                                            ? "You cannot disable your own account here"
-                                                            : active
-                                                              ? "Disable account"
-                                                              : "Enable account"
-                                                    }
-                                                    onChange={() => toggleActive(row)}
-                                                />
+                                                <div className="inline-flex items-center justify-end gap-2">
+                                                    {isEditing ? (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => saveEdit(row)}
+                                                                disabled={busyId === row._id}
+                                                                className="btn btn-xs gap-1 rounded-lg border-0 bg-emerald-600 text-white hover:bg-emerald-700"
+                                                            >
+                                                                <Save className="h-3.5 w-3.5" />
+                                                                Save
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={cancelEdit}
+                                                                disabled={busyId === row._id}
+                                                                className="btn btn-xs gap-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                                                            >
+                                                                <X className="h-3.5 w-3.5" />
+                                                                Cancel
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => startEdit(row)}
+                                                            disabled={busyId === row._id}
+                                                            className="btn btn-xs gap-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                                                        >
+                                                            <Pencil className="h-3.5 w-3.5" />
+                                                            Edit
+                                                        </button>
+                                                    )}
+                                                    <input
+                                                        type="checkbox"
+                                                        className="toggle toggle-success"
+                                                        checked={active}
+                                                        disabled={
+                                                            busyId === row._id ||
+                                                            isEditing ||
+                                                            (isSelf && active)
+                                                        }
+                                                        title={
+                                                            isSelf && active
+                                                                ? "You cannot disable your own account here"
+                                                                : active
+                                                                  ? "Disable account"
+                                                                  : "Enable account"
+                                                        }
+                                                        onChange={() => toggleActive(row)}
+                                                    />
+                                                </div>
                                             </td>
                                         </tr>
                                     );

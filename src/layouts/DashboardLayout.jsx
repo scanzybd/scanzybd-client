@@ -41,6 +41,9 @@ const DashboardLayout = () => {
     const navigate = useNavigate();
     const { user, userRole, logOut, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profileOpen, setProfileOpen] = useState(false);
+    const userName = user?.name || user?.displayName || "User";
+    const userEmail = user?.email || "";
 
     const handleLogout = async () => {
         try {
@@ -302,24 +305,47 @@ const DashboardLayout = () => {
                     <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                         <ThemeToggle />
                         <LanguageSwitcher className="hidden sm:flex" />
-                        <Link
-                            to="/"
-                            className="btn btn-sm gap-1.5 border-0 bg-emerald-500 text-white hover:bg-emerald-600"
-                        >
-                            <Home size={16} />
-                            <span className="hidden sm:inline">{t("dashboard.logout.home")}</span>
-                        </Link>
-                        <div className="hidden h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-emerald-500 to-emerald-700 text-sm font-bold text-white shadow-md sm:flex">
-                            {user?.displayName?.charAt(0) || user?.email?.charAt(0) || "U"}
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setProfileOpen((prev) => !prev)}
+                                className="hidden h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-emerald-500 to-emerald-700 text-sm font-bold text-white shadow-md sm:flex"
+                                aria-haspopup="menu"
+                                aria-expanded={profileOpen}
+                                title={userName}
+                            >
+                                {userName?.charAt(0)?.toUpperCase() || "U"}
+                            </button>
+                            {profileOpen && (
+                                <div className="absolute right-0 top-11 z-50 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                                    <div className="border-b border-slate-100 px-4 py-3">
+                                        <p className="truncate text-sm font-semibold text-slate-900">
+                                            {userName}
+                                        </p>
+                                        <p className="truncate text-xs text-slate-500">{userEmail}</p>
+                                    </div>
+                                    <Link
+                                        to="/"
+                                        onClick={() => setProfileOpen(false)}
+                                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50"
+                                    >
+                                        <Home size={16} />
+                                        {t("dashboard.logout.home")}
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            setProfileOpen(false);
+                                            await handleLogout();
+                                        }}
+                                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-rose-700 transition-colors hover:bg-rose-50"
+                                    >
+                                        <LogOut size={16} />
+                                        {t("dashboard.logout.logout")}
+                                    </button>
+                                </div>
+                            )}
                         </div>
-                        <button
-                            type="button"
-                            onClick={handleLogout}
-                            className="btn btn-sm gap-1 border-slate-200 bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-700"
-                        >
-                            <LogOut size={16} />
-                            <span className="hidden sm:inline">{t("dashboard.logout.logout")}</span>
-                        </button>
                     </div>
                 </header>
 

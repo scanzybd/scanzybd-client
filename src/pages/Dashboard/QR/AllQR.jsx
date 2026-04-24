@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { toPng } from "html-to-image";
+import { jsPDF } from "jspdf";
 import {
   QrCode,
   Filter,
@@ -13,84 +15,140 @@ import {
   CheckCircle2,
   CircleDashed,
   CalendarDays,
+  Eye,
+  FileDown,
+  Loader2,
 } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
-import { COMPANY_PRINT_ORG_LINE } from "../../../config/company";
+import qrBikeFrame from "../../../assets/qr-frame/QR UI-bike.png";
+import qrCarFrame from "../../../assets/qr-frame/QR UI-car.png";
 
-function BikeStickerPreview({ qrCode, code }) {
-  const phoneText = code ? String(code).slice(-10) : "01841662686";
+const CARD_SIZE = {
+  bike: { width: 360, height: 180 },
+  car: { width: 300, height: 420 },
+};
+
+const QR_FRAME_ASSET = {
+  bike: qrBikeFrame,
+  car: qrCarFrame,
+};
+
+const QR_OVERLAY_LAYOUT = {
+  bike: { top: "50%", left: "23.5%", size: "39%" },
+  car: { top: "40%", left: "50%", size: "65%" },
+};
+
+const FRAME_ZOOM_LAYOUT = {
+  bike: 7.38,
+  car: 3.4,
+};
+
+const FRAME_OFFSET_LAYOUT = {
+  bike: { x: "6.8%", y: "0.5%" },
+  car: { x: "3.5%", y: "3.8%" },
+};
+
+const LIST_PREVIEW_SCALE = {
+  bike: 0.48,
+  car: 0.35,
+};
+
+const LIST_PREVIEW_HEIGHT = {
+  bike: 124,
+  car: 190,
+};
+
+const STICKER_SIZE_MM = {
+  bike: { w: 76.2, h: 38.1 },
+  car: { w: 63.5, h: 88.9 },
+};
+
+const PAGE_LAYOUT_MM = {
+  margin: 5, // Keep away from page edge to avoid print crop.
+  gap: 1,
+};
+
+const STICKER_MARGIN_MM = 1;
+
+const toPngOptions = {
+  pixelRatio: 2,
+  backgroundColor: "#ffffff",
+  cacheBust: true,
+};
+
+function StickerFramePreview({ qrCode, qrType }) {
+  const frameSrc = QR_FRAME_ASSET[qrType] || QR_FRAME_ASSET.bike;
+  const overlay = QR_OVERLAY_LAYOUT[qrType] || QR_OVERLAY_LAYOUT.bike;
+  const frameZoom = FRAME_ZOOM_LAYOUT[qrType] || FRAME_ZOOM_LAYOUT.bike;
+  const frameOffset = FRAME_OFFSET_LAYOUT[qrType] || FRAME_OFFSET_LAYOUT.bike;
+  const size = CARD_SIZE[qrType] || CARD_SIZE.bike;
+
   return (
-    <div className="h-[132px] w-full rounded-[16px] bg-[#f7ea00] p-2">
-      <div className="flex h-full gap-2">
-        <div className="flex w-[42%] flex-col rounded-[12px] bg-[#ececec] p-1.5">
-          <div className="flex flex-1 items-center justify-center rounded-md bg-white p-1">
-            <img src={qrCode} alt="" className="h-full w-full object-contain" />
-          </div>
-          <p className="mt-1 truncate text-center text-[7px] font-medium text-slate-700">
-            Call-{phoneText}
-          </p>
-        </div>
-        <div className="flex w-[58%] flex-col justify-between pr-0.5 pt-0.5">
-          <p className="ml-auto w-fit rounded-md bg-[#fff260] px-2 py-0.5 text-[8px] font-bold text-slate-900">
-            Cre8
-          </p>
-          <div>
-            <p className="inline-block rounded-r-xl rounded-l-sm bg-[#1f88a2] px-2 py-px text-[13px] font-black uppercase leading-none text-white">
-              Scan To
-            </p>
-            <p className="text-[24px] font-black leading-[0.86] tracking-tight text-[#003f76]">
-              Contact
-            </p>
-            <p className="text-[10px] font-black leading-none text-[#003f76]">
-              Vehicle Owner
-            </p>
-          </div>
-          <p className="text-center text-[6px] font-medium text-slate-800">
-            {COMPANY_PRINT_ORG_LINE}
-          </p>
-        </div>
-      </div>
+    <div
+      className="relative overflow-hidden rounded-[24px] bg-white"
+      style={{ width: size.width, height: size.height }}
+    >
+      <img
+        src={frameSrc}
+        alt=""
+        className="absolute left-1/2 top-1/2 h-full w-full object-contain"
+        style={{
+          left: `calc(50% + ${frameOffset.x})`,
+          top: `calc(50% + ${frameOffset.y})`,
+          transform: `translate(-50%, -50%) scale(${frameZoom})`,
+          transformOrigin: "center center",
+        }}
+        crossOrigin="anonymous"
+        draggable={false}
+      />
+      <img
+        src={qrCode}
+        alt=""
+        className="absolute aspect-square -translate-x-1/2 -translate-y-1/2 mix-blend-multiply"
+        style={{ top: overlay.top, left: overlay.left, width: overlay.size }}
+        crossOrigin="anonymous"
+        draggable={false}
+      />
     </div>
   );
 }
 
-function CarStickerPreview({ qrCode, code }) {
-  const phoneText = code ? String(code).slice(-10) : "01841662686";
-  return (
-    <div className="h-[220px] w-[160px] rounded-[16px] bg-[#f7ea00] p-2">
-      <div className="mb-1 flex justify-center">
-        <p className="rounded-md bg-[#fff260] px-2.5 py-0.5 text-[10px] font-bold text-slate-900">
-          Cre8
-        </p>
-      </div>
-      <div className="relative rounded-[12px] bg-[#ececec] p-2">
-        <p className="absolute left-[-13px] top-1/2 -translate-y-1/2 -rotate-90 text-[8px] text-slate-700">
-          Scan Me
-        </p>
-        <p className="absolute right-[-19px] top-1/2 -translate-y-1/2 rotate-90 text-[8px] text-slate-700">
-          or Call-{phoneText}
-        </p>
-        <div className="rounded-md bg-white p-1.5">
-          <img src={qrCode} alt="" className="h-[96px] w-[96px] object-contain" />
-        </div>
-      </div>
-      <div className="mt-1">
-        <p className="mx-auto w-fit -rotate-12 rounded-r-lg rounded-l-sm bg-[#1f88a2] px-2 py-0.5 text-[12px] font-black uppercase leading-none text-white">
-          Scan To
-        </p>
-      </div>
-      <p className="mt-1 text-center text-[21px] font-black leading-[0.82] tracking-tight text-[#003f76]">
-        Contact
-      </p>
-      <p className="text-center text-[19px] font-black leading-[0.82] tracking-tight text-[#003f76]">
-        Vehicle Owner
-      </p>
-      <p className="mt-1 text-center text-[6px] font-medium text-slate-800">
-        {COMPANY_PRINT_ORG_LINE}
-      </p>
-    </div>
+function getStickerSizeMm(type) {
+  return STICKER_SIZE_MM[type] || STICKER_SIZE_MM.bike;
+}
+
+function placeStickerOnPage(pdf, imgData, stickerMm, cursor) {
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const { margin, gap } = PAGE_LAYOUT_MM;
+  let { x, y, rowHeight } = cursor;
+
+  if (x + stickerMm.w > pageW - margin) {
+    x = margin;
+    y += rowHeight + gap;
+    rowHeight = 0;
+  }
+
+  if (y + stickerMm.h > pageH - margin) {
+    pdf.addPage("letter", "p");
+    x = margin;
+    y = margin;
+    rowHeight = 0;
+  }
+
+  const innerW = Math.max(1, stickerMm.w - STICKER_MARGIN_MM * 2);
+  const innerH = Math.max(1, stickerMm.h - STICKER_MARGIN_MM * 2);
+  pdf.addImage(
+    imgData,
+    "PNG",
+    x + STICKER_MARGIN_MM,
+    y + STICKER_MARGIN_MM,
+    innerW,
+    innerH
   );
+  rowHeight = Math.max(rowHeight, stickerMm.h);
+  return { x: x + stickerMm.w + gap, y, rowHeight };
 }
 
 function daysInMonth(yearStr, monthStr) {
@@ -133,6 +191,9 @@ const AllQR = () => {
   const [filterMonth, setFilterMonth] = useState("");
   const [filterDay, setFilterDay] = useState("");
   const [filterQrType, setFilterQrType] = useState("");
+  const [isPreviewingFiltered, setIsPreviewingFiltered] = useState(false);
+  const [isDownloadingFiltered, setIsDownloadingFiltered] = useState(false);
+  const cardRefs = React.useRef({});
 
   const maxDay = daysInMonth(filterYear || String(new Date().getFullYear()), filterMonth);
 
@@ -157,6 +218,7 @@ const AllQR = () => {
       const res = await axiosSecure.get(`/api/qr/allQR${q}`);
       return res.data;
     },
+    placeholderData: (previousData) => previousData,
   });
 
   const qrCodes = Array.isArray(data?.data) ? data.data : [];
@@ -166,6 +228,59 @@ const AllQR = () => {
     setFilterMonth("");
     setFilterDay("");
     setFilterQrType("");
+  };
+
+  const captureNodePng = async (index) => {
+    const node = cardRefs.current[index];
+    if (!node) throw new Error("Card not ready");
+    return toPng(node, toPngOptions);
+  };
+
+  const buildFilteredPdf = async () => {
+    const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "letter" });
+    let cursor = {
+      x: PAGE_LAYOUT_MM.margin,
+      y: PAGE_LAYOUT_MM.margin,
+      rowHeight: 0,
+    };
+
+    for (let i = 0; i < qrCodes.length; i++) {
+      const imgData = await captureNodePng(i);
+      const item = qrCodes[i];
+      const sticker = getStickerSizeMm(item?.qrType || "bike");
+      cursor = placeStickerOnPage(pdf, imgData, sticker, cursor);
+    }
+    return pdf;
+  };
+
+  const previewFilteredPdf = async () => {
+    if (qrCodes.length === 0) return;
+    setIsPreviewingFiltered(true);
+    try {
+      const pdf = await buildFilteredPdf();
+      const previewBlob = pdf.output("blob");
+      const previewUrl = URL.createObjectURL(previewBlob);
+      window.open(previewUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(previewUrl), 60_000);
+    } catch (e) {
+      console.error("Preview filtered PDF error:", e);
+    } finally {
+      setIsPreviewingFiltered(false);
+    }
+  };
+
+  const downloadFilteredPdf = async () => {
+    if (qrCodes.length === 0) return;
+    setIsDownloadingFiltered(true);
+    try {
+      const pdf = await buildFilteredPdf();
+      const stamp = new Date().toISOString().slice(0, 10);
+      pdf.save(`all-qr-filtered-${stamp}.pdf`);
+    } catch (e) {
+      console.error("Download filtered PDF error:", e);
+    } finally {
+      setIsDownloadingFiltered(false);
+    }
   };
 
   const dayOptions = useMemo(() => {
@@ -294,11 +409,13 @@ const AllQR = () => {
             <span className="label-text mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-500">
               <Bike className="h-3.5 w-3.5" />
               {t("dashboard.qr.all.typeLabel")}
+              <span className="text-rose-500">*</span>
             </span>
             <select
               className="select select-bordered w-full rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-500"
               value={filterQrType}
               onChange={(e) => setFilterQrType(e.target.value)}
+              required
             >
               <option value="">{t("dashboard.qr.all.allTypes")}</option>
               <option value="bike">{t("dashboard.qr.all.bike")}</option>
@@ -373,6 +490,32 @@ const AllQR = () => {
             <RotateCcw className="h-4 w-4" />
             {t("dashboard.qr.all.reset")}
           </button>
+          <button
+            type="button"
+            className="btn gap-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            onClick={previewFilteredPdf}
+            disabled={isPreviewingFiltered || qrCodes.length === 0 || !filterQrType}
+          >
+            {isPreviewingFiltered ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+            Preview Filtered PDF
+          </button>
+          <button
+            type="button"
+            className="btn gap-2 rounded-xl border-none bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-60"
+            onClick={downloadFilteredPdf}
+            disabled={isDownloadingFiltered || qrCodes.length === 0 || !filterQrType}
+          >
+            {isDownloadingFiltered ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileDown className="h-4 w-4" />
+            )}
+            Download Filtered PDF
+          </button>
         </div>
 
         <p className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
@@ -440,18 +583,24 @@ const AllQR = () => {
           {qrCodes.map((qr) => {
             const isAssigned = qr.status === "assigned" || qr.isAssigned;
             const type = qr.qrType || "bike";
+            const previewScale = LIST_PREVIEW_SCALE[type] || LIST_PREVIEW_SCALE.bike;
+            const previewHeight = LIST_PREVIEW_HEIGHT[type] || LIST_PREVIEW_HEIGHT.bike;
             return (
               <article
                 key={qr._id}
                 className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-indigo-200 hover:shadow-md"
               >
                 <div className="relative bg-linear-to-b from-slate-50 to-white px-4 pt-4">
-                  <div className="mx-auto flex items-center justify-center">
-                    {type === "car" ? (
-                      <CarStickerPreview qrCode={qr.qrCode} code={qr.code} />
-                    ) : (
-                      <BikeStickerPreview qrCode={qr.qrCode} code={qr.code} />
-                    )}
+                  <div
+                    className="mx-auto flex w-full items-center justify-center overflow-hidden"
+                    style={{ height: previewHeight }}
+                  >
+                    <div
+                      className="origin-center"
+                      style={{ transform: `scale(${previewScale})` }}
+                    >
+                      <StickerFramePreview qrCode={qr.qrCode} qrType={type} />
+                    </div>
                   </div>
                   <div className="absolute right-3 top-3 flex gap-1">
                     <span
@@ -506,6 +655,22 @@ const AllQR = () => {
           })}
         </div>
       )}
+
+      <div className="pointer-events-none fixed -left-[9999px] top-0 opacity-0">
+        {qrCodes.map((qr, index) => {
+          const type = qr.qrType || "bike";
+          return (
+            <div
+              key={`capture-${qr._id || index}`}
+              ref={(el) => {
+                cardRefs.current[index] = el;
+              }}
+            >
+              <StickerFramePreview qrCode={qr.qrCode} qrType={type} />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
