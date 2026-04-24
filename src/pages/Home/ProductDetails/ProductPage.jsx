@@ -93,28 +93,30 @@ const ProductPage = () => {
       <ProductDetails product={product} onAddToCart={handleAddToCart} />
 
       {/* Sticky cart strip */}
-      <div className="border-t border-yellow-100 bg-white/80 px-4 py-8 backdrop-blur-sm">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-yellow-100 bg-linear-to-r from-yellow-50 to-amber-50/80 p-6 shadow-sm sm:flex-row sm:p-8">
-            <div>
-              <p className="text-sm font-medium uppercase tracking-wide text-yellow-800/80">
-                {t("labels.checkout")}
-              </p>
-              <p className="mt-1 text-2xl font-bold tabular-nums text-yellow-950">
-                {cartItems.length}{" "}
-                {cartItems.length === 1 ? "item" : "items"}
-              </p>
+      {cartItems.length > 0 && (
+        <div className="border-t border-yellow-100 bg-white/80 px-4 py-8 backdrop-blur-sm">
+          <div className="mx-auto max-w-6xl">
+            <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-yellow-100 bg-linear-to-r from-yellow-50 to-amber-50/80 p-6 shadow-sm sm:flex-row sm:p-8">
+              <div>
+                <p className="text-sm font-medium uppercase tracking-wide text-yellow-800/80">
+                  {t("labels.checkout")}
+                </p>
+                <p className="mt-1 text-2xl font-bold tabular-nums text-yellow-950">
+                  {cartItems.length}{" "}
+                  {cartItems.length === 1 ? "item" : "items"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleViewCart}
+                className="w-full rounded-xl bg-yellow-500 px-8 py-3.5 font-semibold text-yellow-950 shadow-sm transition hover:bg-yellow-600 sm:w-auto"
+              >
+                {t("store.details")}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleViewCart}
-              className="w-full rounded-xl bg-yellow-500 px-8 py-3.5 font-semibold text-yellow-950 shadow-sm transition hover:bg-yellow-600 sm:w-auto"
-            >
-              {t("store.details")}
-            </button>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

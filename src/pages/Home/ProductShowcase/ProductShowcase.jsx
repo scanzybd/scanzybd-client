@@ -419,8 +419,9 @@ const ProductShowcase = () => {
             )}
           </section>
 
-          <aside className="order-2 lg:sticky lg:top-20 lg:col-span-4 lg:self-start">
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {cartItems.length > 0 && (
+            <aside className="order-2 lg:sticky lg:top-20 lg:col-span-4 lg:self-start">
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-5">
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="text-lg font-bold text-slate-900">Your cart</h2>
@@ -516,8 +517,9 @@ const ProductShowcase = () => {
                   </button>
                 </div>
               )}
-            </div>
-          </aside>
+              </div>
+            </aside>
+          )}
         </div>
       </div>
     </div>
