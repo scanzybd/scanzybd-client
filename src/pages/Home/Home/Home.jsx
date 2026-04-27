@@ -8,9 +8,9 @@ const Home = () => {
   return (
     <div>
       <Banner></Banner>
-      <About></About>
       <ProductShowcase></ProductShowcase>
       {/* <OfferShowcase></OfferShowcase> */}
+      <About></About>
       <Reviews></Reviews>
     </div>
   );

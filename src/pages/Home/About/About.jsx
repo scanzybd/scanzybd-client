@@ -11,10 +11,13 @@ const About = () => {
         <div className="w-full bg-linear-to-b from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
             <div className="app-container max-w-6xl py-12 sm:py-16">
                 <div className="mb-10 text-center">
-                    <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-amber-700">
+
+ {/* Badge */}
+                    {/* <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-amber-700">
                         <Award className="h-4 w-4" />
                         <span className="text-sm font-semibold">{t("aboutPage.badge")}</span>
-                    </div>
+                    </div> */}
+
                     <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
                         {t("aboutPage.title")}
                     </h1>

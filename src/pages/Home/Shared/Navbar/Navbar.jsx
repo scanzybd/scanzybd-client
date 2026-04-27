@@ -1,5 +1,5 @@
 import React from 'react';
-import ProFastLogo from '../Logo/ProFastLogo';
+import Logo from "../Logo/logo";
 import { HashLink } from 'react-router-hash-link';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
@@ -102,7 +102,7 @@ const Navbar = () => {
             </div>
 
             <Link to="/" className="btn btn-ghost px-2 text-lg sm:text-xl">
-              <ProFastLogo />
+              <Logo />
             </Link>
           </div>
 

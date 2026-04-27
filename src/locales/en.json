@@ -99,6 +99,8 @@
       "reports": "Reports",
       "allQr": "QR Codes",
       "generateQr": "Generate QR",
+      "reviews": "Reviews",
+      "messages": "Messages",
       "userManagement": "Users",
       "addUser": "Add user",
       "addProvider": "Add provider"
@@ -230,7 +232,7 @@
     "hero": {
       "badge": "Smart QR Solution",
       "heading": "Protect Your Vehicle with Smart QR Tags",
-      "subheading": "Scan the QR and instantly contact the vehicle owner in emergencies or parking situations",
+      "subheading": "Scan the QR to quickly reach the vehicle owner when needed.",
       "primaryCta": "Get Your QR Tag",
       "secondaryCta": "How It Works",
       "trust": "1000+ vehicles protected"
@@ -239,7 +241,6 @@
       "items": [
         "Instant owner contact via QR scan",
         "No app required (works with any phone camera)",
-        "Secure and private contact system",
         "Works for bike, car and more",
         "Easy setup and management dashboard"
       ]
@@ -248,19 +249,21 @@
   "aboutPage": {
     "badge": "About",
     "title": "About QR Tag System",
-    "intro": "QR Tag System is a smart solution that makes your vehicle safer and better connected.",
+    "intro": "QR Tag System is a smart solution that makes your vehicle safer and better connected. By simply scanning a QR code, anyone can quickly contact the vehicle owner in parking or emergency situations.",
     "missionTitle": "Mission",
-    "mission": "Solve everyday problems with simple technology.",
+    "mission": "To solve everyday problems using simple, effective technology.",
     "visionTitle": "Vision",
-    "vision": "Build a smart vehicle ecosystem in Bangladesh.",
+    "vision": "To build a smart vehicle ecosystem in Bangladesh.",
     "storyTitle": "Our Story",
-    "story": "Started from a small idea to solve real-life parking and lost vehicle communication problems.",
+    "story": "It started with a simple idea—to solve real-life parking and vehicle communication problems. Today, that idea has grown into a practical solution helping people every day.",
     "whyTitle": "Why choose QR Tag?",
-    "whyIntro": "Vehicle safety is now smarter and easier.",
+    "whyIntro": "Vehicle communication is now smarter, faster, and easier.",
     "points": [
-      "Quick communication when a vehicle is misplaced",
-      "Parking issues are resolved faster",
-      "Works without installing any app"
+      "Instant contact with the owner via QR scan",
+      "Faster resolution of parking issues",
+      "No app required",
+      "Simple and hassle-free system",
+      "Useful in emergency situations"
     ],
     "ctaTitle": "Start Using QR Tag Today",
     "ctaSubtitle": "Simple, secure and practical for daily vehicle safety.",
@@ -273,7 +276,7 @@
     "leadText": "For support, orders, business queries, or urgent issues, send us a message and our team will respond.",
     "phone": "+8801XXXXXXXXX",
     "whatsapp": "+8801XXXXXXXXX",
-    "email": "support@qrtag.com",
+    "email": "scanzybd@gmail.com",
     "address1": "Dhaka",
     "address2": "Bangladesh",
     "hours": "10 AM – 8 PM (Sat–Thu)",

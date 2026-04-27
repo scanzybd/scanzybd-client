@@ -1,7 +1,25 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { useNavigate } from "react-router-dom";
 import { ScanLine, Camera } from "lucide-react";
+
+const extractQrCode = (raw) => {
+  const text = String(raw || "").trim();
+  if (!text) return "";
+
+  // If scanner returns a URL, take the last non-empty path segment as code.
+  if (/^https?:\/\//i.test(text)) {
+    try {
+      const url = new URL(text);
+      const segments = url.pathname.split("/").filter(Boolean);
+      return decodeURIComponent(segments[segments.length - 1] || "");
+    } catch {
+      // fallback to non-URL handling below
+    }
+  }
+
+  return decodeURIComponent(text.split("/").filter(Boolean).pop() || text);
+};
 
 const ScanAssignPage = () => {
   const [scanning, setScanning] = useState(false);
@@ -29,15 +47,31 @@ const ScanAssignPage = () => {
     Html5Qrcode.getCameras().then((devices) => {
       if (!devices?.length) return;
 
-      const cameraId = devices[0].id;
+      // Prefer rear/environment camera for faster and more stable QR detection.
+      const preferred =
+        devices.find(
+          (d) =>
+            d.label?.toLowerCase().includes("back") ||
+            d.label?.toLowerCase().includes("rear") ||
+            d.label?.toLowerCase().includes("environment")
+        ) || devices[0];
+      const cameraId = preferred.id;
 
       scanner
         .start(
           cameraId,
-          { fps: 10, qrbox: { width: 250, height: 250 } },
+          {
+            fps: 20,
+            qrbox: { width: 220, height: 220 },
+            aspectRatio: 1,
+            disableFlip: true,
+            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+          },
           (decodedText) => {
             handleStop(scanner);
-            navigate(decodedText);
+            const qrCode = extractQrCode(decodedText);
+            if (!qrCode) return;
+            navigate(`/dashboard/assign-vehicle/${encodeURIComponent(qrCode)}`);
           }
         )
         .catch((err) => console.log(err));

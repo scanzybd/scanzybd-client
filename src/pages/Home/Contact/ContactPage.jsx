@@ -76,17 +76,13 @@ const ContactPage = () => {
               <Mail className={iconClass} aria-hidden />
               <span className={textHeading}>{t("contactPage.email")}</span>
             </li>
-            <li className="flex items-start gap-3">
-              <Phone className={iconClass} aria-hidden />
-              <span className={textHeading}>{t("contactPage.phone")}</span>
-            </li>
+            
             <li className="flex items-start gap-3">
               <MapPin className={iconClass} aria-hidden />
               <span className={textHeading}>
                 {t("contactPage.address1")}, {t("contactPage.address2")}
               </span>
             </li>
-            <li className={`text-sm ${textMuted}`}>WhatsApp: {t("contactPage.whatsapp")}</li>
             <li className={`text-sm ${textMuted}`}>{t("contactPage.hours")}</li>
           </ul>
         </div>

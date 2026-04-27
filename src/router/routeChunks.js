@@ -54,6 +54,8 @@ export const loadAssignVehiclebyId = () => import("../pages/Dashboard/Vehicle/As
 export const loadUserManagementPage = () => import("../pages/Dashboard/Users/UserManagementPage.jsx");
 export const loadAddUserPage = () => import("../pages/Dashboard/Users/AddUserPage.jsx");
 export const loadAddProviderPage = () => import("../pages/Dashboard/Users/AddProviderPage.jsx");
+export const loadReviewManagement = () => import("../pages/Dashboard/Reviews/ReviewManagement.jsx");
+export const loadContactInbox = () => import("../pages/Dashboard/Contact/ContactInbox.jsx");
 
 /** All route page chunks — prefetched in idle time so clicks feel instant */
 export const allRouteChunkLoaders = [
@@ -102,4 +104,6 @@ export const allRouteChunkLoaders = [
   loadUserManagementPage,
   loadAddUserPage,
   loadAddProviderPage,
+  loadReviewManagement,
+  loadContactInbox,
 ];

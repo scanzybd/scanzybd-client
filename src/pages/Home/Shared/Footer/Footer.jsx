@@ -1,5 +1,6 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, ArrowRight } from 'lucide-react';
+import { FaTiktok } from "react-icons/fa";
 import { Link } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 import footerLogo from "../../../../assets/logo/Logo Double Line.svg";
@@ -39,10 +40,8 @@ const Footer = () => {
 
   const socialLinks = [
     { icon: Facebook, label: 'Facebook', href: 'https://facebook.com' },
-    { icon: Twitter, label: 'Twitter', href: 'https://x.com' },
     { icon: Instagram, label: 'Instagram', href: 'https://youtube.com' },
-    { icon: Linkedin, label: 'LinkedIn', href: 'https://linkedin.com' },
-  ];
+    { icon: FaTiktok, label: 'TikTok', href: 'https://tiktok.com' },  ];
 
   return (
     <footer className="mt-16 w-full border-t-2 border-slate-200 bg-linear-to-b from-slate-100 via-white to-slate-100 pt-16 text-slate-800 transition-colors dark:border-slate-700 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 dark:text-slate-100 sm:mt-20 sm:pt-20">
@@ -171,10 +170,7 @@ const Footer = () => {
             <div>
               <h3 className="mb-6 text-lg font-semibold text-slate-900 dark:text-white">{t("footer.contact")}</h3>
               <div className="space-y-4">
-                <a href={`tel:${t("contactPage.phone")}`} className="group flex items-start gap-3 text-sm text-slate-600 transition hover:text-amber-600 dark:text-slate-400 dark:hover:text-yellow-400">
-                  <Phone className="mt-0.5 h-5 w-5 shrink-0 group-hover:text-yellow-400" />
-                  <span>{t("contactPage.phone")}</span>
-                </a>
+                
                 <a href={`mailto:${t("contactPage.email")}`} className="group flex items-start gap-3 text-sm text-slate-600 transition hover:text-amber-600 dark:text-slate-400 dark:hover:text-yellow-400">
                   <Mail className="mt-0.5 h-5 w-5 shrink-0 group-hover:text-yellow-400" />
                   <span>{t("contactPage.email")}</span>

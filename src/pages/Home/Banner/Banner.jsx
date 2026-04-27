@@ -25,12 +25,12 @@ const Banner = () => {
             <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 pb-10 pt-20 sm:px-6 sm:py-20 md:py-24 lg:px-8">
                 <div className="mx-auto w-full max-w-4xl space-y-5 text-center sm:space-y-8">
                     {/* Badge */}
-                    <div className="inline-flex max-w-[95vw] items-center justify-center gap-2 rounded-full border border-yellow-400/30 bg-yellow-500/20 px-3 py-2 backdrop-blur-sm sm:px-4">
+                    {/* <div className="inline-flex max-w-[95vw] items-center justify-center gap-2 rounded-full border border-yellow-400/30 bg-yellow-500/20 px-3 py-2 backdrop-blur-sm sm:px-4">
                         <div className="h-2 w-2 shrink-0 rounded-full bg-emerald-400"></div>
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-yellow-200 sm:text-sm">
                             {t("home.hero.badge")}
                         </span>
-                    </div>
+                    </div> */}
 
                     {/* Main Heading */}
                     <h1 className="text-balance text-[clamp(1.75rem,6vw+0.5rem,4.5rem)] font-bold leading-[1.1] text-white sm:text-5xl md:text-6xl lg:text-7xl">
@@ -55,7 +55,7 @@ const Banner = () => {
                     {/* CTA Buttons */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 sm:pt-8">
                         <Link
-                            to="/Products"
+                            to="/product"
                             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 sm:py-4 bg-linear-to-r from-yellow-400 to-amber-400 text-gray-900 font-semibold rounded-lg hover:from-yellow-500 hover:to-amber-500 transition transform hover:scale-105 shadow-lg"
                         >
                             {t("home.hero.primaryCta")}
@@ -70,9 +70,9 @@ const Banner = () => {
                     </div>
 
                     {/* Trust Indicator */}
-                    <div className="pt-6 sm:pt-8 text-xs sm:text-sm text-gray-400">
+                    {/* <div className="pt-6 sm:pt-8 text-xs sm:text-sm text-gray-400">
                         {t("home.hero.trust")}
-                    </div>
+                    </div> */}
                 </div>
             </div>
 

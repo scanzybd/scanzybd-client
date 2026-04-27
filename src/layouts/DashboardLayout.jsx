@@ -20,6 +20,7 @@ import {
     Search,
     Building2,
     CheckCircle2,
+    MessageSquareQuote,
 } from "lucide-react";
 import dashboardLogo from "../assets/logo/Logo Double Line.svg";
 import useAuth from "../hooks/useAuth";
@@ -137,6 +138,8 @@ const DashboardLayout = () => {
             items: [
                 { path: "/dashboard/all-qr", icon: Award, label: t("dashboard.menu.allQr") },
                 { path: "/dashboard/generate-qr", icon: FileText, label: t("dashboard.menu.generateQr") },
+                { path: "/dashboard/reviews", icon: MessageSquareQuote, label: t("dashboard.menu.reviews") },
+                { path: "/dashboard/contact-messages", icon: MessageSquareQuote, label: t("dashboard.menu.messages") },
             ],
         },
         {

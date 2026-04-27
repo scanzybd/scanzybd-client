@@ -32,7 +32,7 @@ const QrScanner = ({ onResult }) => {
       .start(
         cameraId,
         {
-          fps: 10,
+          fps: 20,
           qrbox: 250,
         },
         (decodedText) => {

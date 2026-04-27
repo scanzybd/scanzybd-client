@@ -4,7 +4,7 @@ import logoWordmark from "../../../../assets/logo/Logo-Solid Color.svg";
 /**
  * Navbar wordmark using the latest brand asset.
  */
-const ProFastLogo = ({
+const Logo = ({
   className = "",
 }) => {
   return (
@@ -19,4 +19,4 @@ const ProFastLogo = ({
   );
 };
 
-export default ProFastLogo;
+export default Logo;

@@ -63,6 +63,8 @@ const AssignVehiclebyId = lazyPage(chunks.loadAssignVehiclebyId);
 const UserManagementPageLazy = lazyImport(chunks.loadUserManagementPage);
 const AddUserPageLazy = lazyImport(chunks.loadAddUserPage);
 const AddProviderPageLazy = lazyImport(chunks.loadAddProviderPage);
+const ReviewManagement = lazyPage(chunks.loadReviewManagement);
+const ContactInbox = lazyPage(chunks.loadContactInbox);
 
 const router = createBrowserRouter([
   {
@@ -278,6 +280,22 @@ const router = createBrowserRouter([
       {
         path: "generate-qr",
         Component: GenerateQR,
+      },
+      {
+        path: "reviews",
+        element: (
+          <AdminRoute>
+            <ReviewManagement />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "contact-messages",
+        element: (
+          <AdminRoute>
+            <ContactInbox />
+          </AdminRoute>
+        ),
       },
       {
         path: "qr-scanner",

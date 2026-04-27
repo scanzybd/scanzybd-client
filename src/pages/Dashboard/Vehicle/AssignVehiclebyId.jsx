@@ -1,16 +1,30 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Link2, Car, QrCode } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const AssignVehiclebyId = () => {
   const { code } = useParams();
+  const navigate = useNavigate();
   const axiosSecure = useAxiosSecure();
 
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState("");
+  const [qrAssigned, setQrAssigned] = useState(false);
 
   useEffect(() => {
+    const loadQrStatus = async () => {
+      try {
+        if (!code) return;
+        const res = await axiosSecure.get(`/api/qr/code/${encodeURIComponent(code)}`);
+        const qr = res.data?.qr;
+        const assigned = qr?.status === "assigned" || qr?.isAssigned === true;
+        setQrAssigned(assigned);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
     const loadVehicles = async () => {
       try {
         const res = await axiosSecure.get("/api/vehicle");
@@ -23,8 +37,9 @@ const AssignVehiclebyId = () => {
       }
     };
 
+    loadQrStatus();
     loadVehicles();
-  }, [axiosSecure]);
+  }, [axiosSecure, code]);
 
   const handleAssign = async () => {
     try {
@@ -39,6 +54,7 @@ const AssignVehiclebyId = () => {
       });
 
       alert("Assigned successfully.");
+      navigate("/dashboard/scan-assign-vehicle");
     } catch (err) {
       console.log(err);
       alert("Assignment failed.");
@@ -70,6 +86,11 @@ const AssignVehiclebyId = () => {
             <p className="mt-1 break-all font-mono text-sm font-semibold text-slate-900">
               {code || "—"}
             </p>
+            {qrAssigned && (
+              <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                assigned
+              </p>
+            )}
           </div>
         </div>
 
