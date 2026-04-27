@@ -21,7 +21,7 @@ import {
     Building2,
     CheckCircle2,
 } from "lucide-react";
-import instituteLogo from "../assets/banner/banner.png";
+import dashboardLogo from "../assets/logo/Logo Double Line.svg";
 import useAuth from "../hooks/useAuth";
 import Swal from "sweetalert2";
 import { useState } from "react";
@@ -227,16 +227,15 @@ const DashboardLayout = () => {
                 }`}
             >
                 <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/6 px-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-emerald-600 p-0.5 shadow-lg shadow-emerald-900/40">
-                        <img
-                            src={instituteLogo}
-                            className="h-full w-full rounded-[10px] bg-white object-cover"
-                            alt=""
-                        />
-                    </div>
-                    <div>
+                    <img
+                        src={dashboardLogo}
+                        className="h-10 w-auto max-w-[132px] object-contain"
+                        alt={COMPANY_NAME}
+                        draggable={false}
+                    />
+                    <div className="min-w-0">
                         <p className="text-sm font-bold tracking-tight text-white">Dashboard</p>
-                        <p className="text-[10px] uppercase tracking-widest text-slate-500">
+                        <p className="truncate text-[10px] uppercase tracking-widest text-slate-500">
                             {COMPANY_TAGLINE}
                         </p>
                     </div>

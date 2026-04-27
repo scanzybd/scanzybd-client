@@ -4,8 +4,8 @@ import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 import { Bike, Car, Download, Eye, FileDown, Loader2, QrCode } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
-import qrBikeFrame from "../../../assets/qr-frame/QR UI-bike.png";
-import qrCarFrame from "../../../assets/qr-frame/QR UI-car.png";
+import qrBikeFrame from "../../../assets/qr-frame/QR UI-bike.svg";
+import qrCarFrame from "../../../assets/qr-frame/QR UI-car.svg";
 import {
   companyNameSlug,
 } from "../../../config/company";
@@ -23,8 +23,8 @@ const QR_TYPE_LAYOUT = {
 };
 
 const CARD_SIZE = {
-  bike: { width: 360, height: 180 },
-  car: { width: 300, height: 420 },
+  bike: { width: 335, height: 180 },
+  car: { width: 300, height: 410 },
 };
 
 const QR_FRAME_ASSET = {
@@ -33,18 +33,18 @@ const QR_FRAME_ASSET = {
 };
 
 const QR_OVERLAY_LAYOUT = {
-  bike: { top: "50%", left: "23.5%", size: "39%" },
+  bike: { top: "50%", left: "26%", size: "35%" },
   car: { top: "40%", left: "50%", size: "65%" },
 };
 
 const FRAME_ZOOM_LAYOUT = {
-  bike: 7.38,
-  car: 3.40,
+  bike: 1,
+  car: 1,
 };
 
 const FRAME_OFFSET_LAYOUT = {
-  bike: { x: "6.8%", y: "0.5%" },
-  car: { x: "3.5%", y: "3.8%" },
+  bike: { x: "0%", y: "0%" },
+  car: { x: "0%", y: "0%" },
 };
 
 const toPngOptions = {
@@ -206,7 +206,7 @@ function QrPrintSurface({ item, qrType }) {
 
   return (
     <div
-      className="overflow-hidden rounded-[24px] bg-white"
+      className="overflow-hidden bg-white"
       style={{ width: size.width, height: size.height }}
     >
       <PrintCardFrame item={item} qrType={qrType} />
@@ -617,7 +617,7 @@ const QRGenerator = () => {
                   key={item._id || item.code || index}
                   className="flex w-full max-w-[320px] flex-col items-center gap-3"
                 >
-                  <div className={`origin-top rounded-[24px] shadow-2xl ${cfg.ringClass}`}>
+                  <div className={`origin-top shadow-2xl ${cfg.ringClass}`}>
                     <div
                       ref={(el) => {
                         cardRefs.current[index] = el;

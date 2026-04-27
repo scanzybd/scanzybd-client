@@ -1,14 +1,13 @@
 import React from 'react';
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, ArrowRight, Download } from 'lucide-react';
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
+import footerLogo from "../../../../assets/logo/Logo Double Line.svg";
 import {
   BRAND_FULL,
-  COMPANY_NAME,
   COMPANY_FOOTER_TAGLINE,
   COMPANY_LEGAL_NAME,
   COMPANY_PRINT_ORG_LINE,
-  PRODUCT_NAME,
 } from '../../../../config/company';
 
 const Footer = () => {
@@ -83,12 +82,12 @@ const Footer = () => {
             
             {/* Brand Section */}
             <div className="lg:col-span-1">
-              <h2 className="mb-2 text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
-                {COMPANY_NAME}
-              </h2>
-              <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-400/90">
-                {PRODUCT_NAME}
-              </p>
+              <img
+                src={footerLogo}
+                alt={BRAND_FULL}
+                className="mb-4 h-10 w-auto object-contain sm:h-12"
+                draggable={false}
+              />
               <p className="mb-4 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
                 {COMPANY_FOOTER_TAGLINE}
               </p>

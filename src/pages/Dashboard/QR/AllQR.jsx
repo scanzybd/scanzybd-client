@@ -21,12 +21,12 @@ import {
 } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
-import qrBikeFrame from "../../../assets/qr-frame/QR UI-bike.png";
-import qrCarFrame from "../../../assets/qr-frame/QR UI-car.png";
+import qrBikeFrame from "../../../assets/qr-frame/QR UI-bike.svg";
+import qrCarFrame from "../../../assets/qr-frame/QR UI-car.svg";
 
 const CARD_SIZE = {
-  bike: { width: 360, height: 180 },
-  car: { width: 300, height: 420 },
+  bike: { width: 335, height: 180 },
+  car: { width: 300, height: 410 },
 };
 
 const QR_FRAME_ASSET = {
@@ -35,18 +35,18 @@ const QR_FRAME_ASSET = {
 };
 
 const QR_OVERLAY_LAYOUT = {
-  bike: { top: "50%", left: "23.5%", size: "39%" },
+  bike: { top: "50%", left: "26%", size: "35%" },
   car: { top: "40%", left: "50%", size: "65%" },
 };
 
 const FRAME_ZOOM_LAYOUT = {
-  bike: 7.38,
-  car: 3.4,
+  bike: 1,
+  car: 1,
 };
 
 const FRAME_OFFSET_LAYOUT = {
-  bike: { x: "6.8%", y: "0.5%" },
-  car: { x: "3.5%", y: "3.8%" },
+  bike: { x: "0%", y: "0%" },
+  car: { x: "0%", y: "0%" },
 };
 
 const LIST_PREVIEW_SCALE = {
@@ -86,7 +86,7 @@ function StickerFramePreview({ qrCode, qrType }) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-[24px] bg-white"
+      className="relative overflow-hidden bg-white"
       style={{ width: size.width, height: size.height }}
     >
       <img
