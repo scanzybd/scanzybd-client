@@ -1,23 +1,21 @@
-# Backend API (must match where `npm run dev` runs for server — default port 5000)
-VITE_API_BASE_URL=http://localhost:5000
-# VITE_API_BASE_URL=https://startup-server-eight.vercel.app
+; # Backend API (must match where `npm run dev` runs for server — default port 5000)
+; VITE_API_BASE_URL=http://localhost:5000
+; ;VITE_API_BASE_URL=https://startup-server-eight.vercel.app
 
-VITE_apiKey=your_firebase_api_key
-VITE_authDomain=your-project.firebaseapp.com
-VITE_projectId=your-project-id
-VITE_storageBucket=your-project.firebasestorage.app
-VITE_messagingSenderId=your_sender_id
-VITE_appId=your_app_id
+; VITE_apiKey=AIzaSyAIcCCr3Tfj87ufEhKhWdbiTPilSxVuMZ8
+; VITE_authDomain=qr-tag-239b8.firebaseapp.com
+; VITE_projectId=qr-tag-239b8
+; VITE_storageBucket=qr-tag-239b8.firebasestorage.app
+; VITE_messagingSenderId=1086253288448
+; VITE_appId=1:1086253288448:web:4e3d8eb62bc7cc973bdce5
 
-# Central branding (change company name / product in one place)
-VITE_COMPANY_NAME=NYSDTI
-VITE_PRODUCT_NAME=QR Tag
-# Optional: navbar logo text color (hex/rgb). Quote hex values — bare # is treated as a comment in .env.
-# VITE_LOGO_TEXT_COLOR="#422006"
-VITE_BRAND_FULL=ProFast QR Tag System
-VITE_SITE_TITLE=QR Tag
-VITE_COMPANY_LEGAL_NAME=ProFast Pvt. Ltd.
-VITE_COMPANY_TAGLINE=Control panel
-VITE_COMPANY_ORG_TITLE=NYSDTI
-VITE_COMPANY_PRINT_ORG_LINE=National Youth Skill Development Training Institute
-VITE_COMPANY_FOOTER_TAGLINE=Secure Vehicle Information Management
+; # Central branding (change company name / product in one place)
+; VITE_COMPANY_NAME=ScanzyBD
+; VITE_PRODUCT_NAME=ScanzyBD
+; VITE_BRAND_FULL=ScanzyBD QR Tag System
+; VITE_SITE_TITLE=ScanzyBD QR Tag
+; VITE_COMPANY_LEGAL_NAME=ScanzyBD
+; VITE_COMPANY_TAGLINE=Control panel
+; VITE_COMPANY_ORG_TITLE=ScanzyBD
+; VITE_COMPANY_PRINT_ORG_LINE=ScanzyBD
+; VITE_COMPANY_FOOTER_TAGLINE=Secure Vehicle Information Management
