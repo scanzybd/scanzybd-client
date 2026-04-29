@@ -305,36 +305,40 @@
   },
   "policies": {
     "termsTitle": "Terms of Use",
-    "termsBody": "Use responsibly. Service misuse is prohibited.",
+    "termsBody": "Use this service responsibly. Any misuse, illegal activity, or attempt to harm others through this system is strictly prohibited. We reserve the right to suspend or disable access if misuse is detected.",
     "privacyTitle": "Privacy Policy",
-    "privacyBody": "We do not publicly expose personal data.",
+    "privacyBody": "We do not publicly expose your personal data. Your information is used only to enable communication through the QR system and is kept secure.",
     "refundTitle": "Refund Policy",
-    "refundBody": "Refund applicable within 7 days (conditions apply).",
+    "refundBody": "You can request a refund within 7 days of receiving your order. Items must be unused and in original condition. Delivery charges may not be refundable.",
     "shippingTitle": "Shipping Information",
-    "shippingBody": "Delivery within 3-5 business days.",
+    "shippingBody": "We process and deliver orders within 3–5 business days. Delivery timelines may vary slightly depending on location and external factors.",
     "businessTitle": "Business Terms",
-    "businessBody": "Bulk and business partnerships available.",
+    "businessBody": "Looking for bulk purchase or partnership? We offer flexible pricing and business solutions.",
     "faqTitle": "FAQ",
     "faq": [
       {
-        "q": "Will phone numbers be publicly visible after scanning?",
-        "a": "No. A secure contact flow is used."
+        "q": "How does the QR Tag work?",
+        "a": "Scan the QR code using any smartphone camera. You’ll get an option to contact the vehicle owner instantly."
       },
       {
-        "q": "Is internet required?",
-        "a": "Yes. Internet is required to access the scanned link."
+        "q": "Do I need to install any app?",
+        "a": "No, no app is required. You can scan the QR code using any smartphone camera."
       },
       {
-        "q": "Does it work on all phones?",
-        "a": "Yes. It is compatible with modern smartphone cameras."
+        "q": "Is my personal information safe?",
+        "a": "Your data is not publicly displayed. It is only used when someone scans the QR to contact you."
+      },
+      {
+        "q": "What happens after I scan the QR?",
+        "a": "After scanning, you’ll get an option to call the vehicle owner directly. This ensures a secure and instant communication channel."
       }
     ]
   },
   "store": {
     "title": "Choose Your QR Tag Package",
     "subtitle": "Pick the right plan for your needs.",
-    "featured": "Featured products",
-    "featuredSubtitle": "Smart QR tags and bundles for bike and car safety.",
+    "featured": "Choose Your Smart QR Tag Package",
+    "featuredSubtitle": "Smart QR tags and bundles designed for quick vehicle contact and everyday safety.",
     "fullDetails": "Full page details",
     "addToCart": "Add to cart",
     "details": "Details",

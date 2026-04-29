@@ -35,7 +35,7 @@ const FooterStaticPage = () => {
     "help-center": { title: "Help Center", body: "For urgent issues, contact support." },
     faq: { title: t("policies.faqTitle"), body: "" },
     documentation: { title: "Documentation", body: "Documentation will be published here." },
-    community: { title: "Community", body: "Community announcements and updates." },
+    community: { title: "Community", body: "Stay connected with the ScanzyBD community—get announcements, updates, and real user experiences" },
   };
   const page = basicPages[key];
   const faqItems = t("policies.faq", { returnObjects: true });

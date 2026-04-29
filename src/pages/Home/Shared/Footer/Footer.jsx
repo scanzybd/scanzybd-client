@@ -20,21 +20,21 @@ const Footer = () => {
     { label: 'Contact', to: '/contact' },
     { label: 'Terms of Use', to: '/terms-of-use' },
     { label: 'Privacy Policy', to: '/privacy-policy' },
-    { label: 'Blog', to: '/blog' },
+    // { label: 'Blog', to: '/blog' },
   ];
 
   const companyLinks = [
     { label: 'Business Terms', to: '/business-terms' },
     { label: 'Refund Policy', to: '/refund-policy' },
     { label: 'Shipping Info', to: '/shipping-info' },
-    { label: 'Careers', to: '/careers' },
-    { label: 'Partners', to: '/partners' },
+    // { label: 'Careers', to: '/careers' },
+    // { label: 'Partners', to: '/partners' },
   ];
 
   const supportLinks = [
     { label: 'Help Center', to: '/help-center' },
     { label: 'FAQ', to: '/faq' },
-    { label: 'Documentation', to: '/documentation' },
+    // { label: 'Documentation', to: '/documentation' },
     { label: 'Community', to: '/community' },
   ];
 
