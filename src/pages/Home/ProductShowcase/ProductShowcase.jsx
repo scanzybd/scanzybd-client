@@ -162,11 +162,8 @@ const ProductShowcase = () => {
         <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
           <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
             <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
-              <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-amber-200/90 backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5" />
-                {t("store.title")}
-              </span>
-              <h1 className="max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+             
+              <h1 className="max-w-2xl text-2xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
                 {t("store.featured")}
               </h1>
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
@@ -208,14 +205,14 @@ const ProductShowcase = () => {
                     <p className="line-clamp-2 text-sm text-slate-300">
                       {spotlightProduct.description}
                     </p>
-                    <p className="text-2xl font-bold tabular-nums text-amber-300">
+                    <p className="text-xl font-bold tabular-nums text-amber-300 sm:text-2xl">
                       ৳ {Number(spotlightProduct.price).toLocaleString()}
                     </p>
                     <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
                       <button
                         type="button"
                         onClick={() => handleAddToCart(spotlightProduct)}
-                        className="btn flex-1 gap-2 rounded-xl border-0 bg-amber-500 text-sm font-semibold text-slate-900 hover:bg-amber-400"
+                        className="btn flex-1 gap-2 rounded-xl border-0 bg-yellow-500 text-sm font-semibold text-slate-900 hover:bg-yellow-600"
                       >
                         <ShoppingCart className="h-4 w-4" />
                         {t("store.addToCart")}
@@ -284,7 +281,7 @@ const ProductShowcase = () => {
                 />
                 <input
                   type="search"
-                  className="input input-bordered w-full rounded-xl border-slate-300 bg-slate-50 pl-10 pr-4 text-sm shadow-sm focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-600/15"
+                  className="input input-bordered w-full rounded-xl border-slate-300 bg-slate-50 pl-10 pr-4 text-sm shadow-sm focus:border-yellow-600 focus:outline-none focus:ring-2 focus:ring-amber-600/15"
                   placeholder="Search by name..."
                   value={searchTerm}
                   onChange={(e) => {
@@ -360,7 +357,7 @@ const ProductShowcase = () => {
                           </p>
                           <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-slate-100 pt-4">
                             <div>
-                              <p className="text-lg font-bold tabular-nums text-amber-700">
+                              <p className="text-base font-bold tabular-nums text-amber-700 sm:text-lg">
                                 ৳ {Number(product.price).toLocaleString()}
                               </p>
                               <p className="mt-0.5 text-[11px] text-slate-500">
@@ -379,7 +376,7 @@ const ProductShowcase = () => {
                           <button
                             type="button"
                             onClick={() => handleAddToCart(product)}
-                            className="btn mt-4 w-full gap-2 rounded-xl border-0 bg-amber-600 text-sm font-semibold text-white shadow-none hover:bg-amber-700"
+                            className="btn mt-4 w-full gap-2 rounded-xl border-0 bg-yellow-500 text-sm font-semibold text-white shadow-none hover:bg-yellow-600"
                           >
                             <ShoppingCart className="h-4 w-4" />
                             {t("store.addToCart")}
@@ -424,7 +421,7 @@ const ProductShowcase = () => {
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-5">
                 <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-lg font-bold text-slate-900">Your cart</h2>
+                  <h2 className="text-base font-bold text-slate-900 sm:text-lg">Your cart</h2>
                   <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-amber-500 px-2 text-sm font-bold text-slate-900">
                     {cartCount}
                   </span>
@@ -494,7 +491,7 @@ const ProductShowcase = () => {
                     <span>Est. discount (10%)</span>
                     <span className="tabular-nums">− ৳ {discount.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between border-t border-slate-200 pt-3 text-base font-bold text-slate-900">
+                  <div className="flex justify-between border-t border-slate-200 pt-3 text-sm font-bold text-slate-900 sm:text-base">
                     <span>Total</span>
                     <span className="tabular-nums text-amber-700">
                       ৳ {payable.toLocaleString()}

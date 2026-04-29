@@ -196,7 +196,7 @@ const ProductPage = () => {
                         <button
                           type="button"
                           onClick={() => handleAddToCart(product)}
-                          className="btn mt-4 w-full gap-2 rounded-xl border-0 bg-amber-600 text-sm font-semibold text-white shadow-none hover:bg-amber-700"
+                          className="btn mt-4 w-full gap-2 rounded-xl border-0 bg-yellow-500 text-sm font-semibold text-white shadow-none hover:bg-yellow-600"
                         >
                           <ShoppingCart className="h-4 w-4" />
                           {t("store.addToCart")}

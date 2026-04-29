@@ -45,7 +45,7 @@ const Navbar = () => {
       <li>
         <HashLink
           smooth
-          to="/Products"
+          to="/product"
           className={navLinkClass(location.pathname === '/Products')}
         >
           {t("nav.products")}
@@ -87,7 +87,7 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 border-b border-slate-200/90 bg-white/95 backdrop-blur-sm shadow-sm dark:border-slate-700/90 dark:bg-slate-950/95">
       <div className="app-container">
         <div className="navbar min-h-16 px-0">
-          <div className="navbar-start gap-1">
+          <div className="navbar-start min-w-0 flex-1 gap-1">
             <div className="dropdown">
               <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
                 ☰
@@ -101,7 +101,7 @@ const Navbar = () => {
               </ul>
             </div>
 
-            <Link to="/" className="btn btn-ghost px-2 text-lg sm:text-xl">
+            <Link to="/" className="btn btn-ghost shrink-0 px-1 text-lg sm:px-2 sm:text-xl">
               <Logo />
             </Link>
           </div>
@@ -112,9 +112,9 @@ const Navbar = () => {
             </ul>
           </div>
 
-          <div className="navbar-end gap-1 sm:gap-2 lg:gap-3">
+          <div className="navbar-end flex-none gap-0.5 sm:gap-2 lg:gap-3">
             <LanguageSwitcher className="hidden sm:flex" />
-            <div className="[&_svg]:text-slate-700 dark:[&_svg]:text-slate-200">
+            <div className="shrink-0 [&_svg]:text-slate-700 dark:[&_svg]:text-slate-200">
               <ThemeToggle />
             </div>
             <Link to="/user/my-cart" className="btn btn-ghost btn-circle relative">
@@ -131,14 +131,14 @@ const Navbar = () => {
               <>
                 <Link
                   to="/login"
-                  className="btn rounded-xl border-0 bg-amber-500 px-3 text-slate-900 shadow-sm hover:bg-amber-600 sm:px-5"
+                  className="btn h-10 min-h-10 rounded-xl border-0 bg-yellow-400 px-2 text-xs text-slate-900 shadow-sm hover:bg-yellow-500 sm:px-5 sm:text-sm"
                 >
                   {t("nav.signIn")}
                 </Link>
 
                 <Link
                   to="/register"
-                  className="btn hidden rounded-xl border-0 bg-amber-500 px-5 text-slate-900 shadow-sm hover:bg-amber-600 sm:inline-flex"
+                  className="btn hidden rounded-xl border-0 bg-yellow-400 px-5 text-slate-900 shadow-sm hover:bg-yellow-500 sm:inline-flex"
                 >
                   {t("nav.signUp")}
                 </Link>

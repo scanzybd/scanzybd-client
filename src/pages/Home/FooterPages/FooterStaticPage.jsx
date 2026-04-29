@@ -9,12 +9,12 @@ import {
 } from "../../../config/company";
 
 function P({ children }) {
-  return <p className="mb-4 text-slate-600 leading-relaxed">{children}</p>;
+  return <p className="mb-4 text-sm leading-relaxed text-slate-600 sm:text-base">{children}</p>;
 }
 
 function H3({ children }) {
   return (
-    <h3 className="mb-3 mt-8 text-lg font-semibold text-slate-900">{children}</h3>
+    <h3 className="mb-3 mt-8 text-base font-semibold text-slate-900 sm:text-lg">{children}</h3>
   );
 }
 
@@ -55,10 +55,10 @@ const FooterStaticPage = () => {
           <span className="text-slate-800">{page.title}</span>
         </nav>
         <article className="mx-auto max-w-3xl rounded-2xl border border-yellow-100 bg-white/90 p-6 shadow-sm sm:p-10">
-          <h1 className="mb-6 text-3xl font-bold tracking-tight text-yellow-950 sm:text-4xl">
+          <h1 className="mb-6 text-2xl font-bold tracking-tight text-yellow-950 sm:text-3xl lg:text-4xl">
             {page.title}
           </h1>
-          <div className="text-base">
+          <div className="text-sm sm:text-base">
             <P>{page.body}</P>
             {key === "faq" && Array.isArray(faqItems) && faqItems.map((item) => (
               <div key={item.q}>

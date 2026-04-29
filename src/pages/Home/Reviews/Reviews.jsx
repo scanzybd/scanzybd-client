@@ -29,12 +29,12 @@ const Reviews = () => {
   return (
     <div className="w-full bg-linear-to-b from-slate-50 via-white to-slate-50">
       {/* HERO SECTION */}
-      <section className="bg-linear-to-r from-yellow-400 to-amber-500 py-16 px-4">
+      <section className="bg-linear-to-r from-yellow-400 to-amber-500 px-4 py-12 sm:py-16">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="mb-4 text-2xl font-bold text-gray-900 sm:text-4xl lg:text-5xl">
             Trusted by Thousands
           </h1> 
-          <p className="text-gray-800 text-lg">
+          <p className="text-base text-gray-800 sm:text-lg">
             See what our customers say about {BRAND_FULL}
           </p>
         </div>
@@ -45,19 +45,19 @@ const Reviews = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20">
           {/* LEFT TEXT */}
           <div>
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+            <h2 className="mb-4 text-2xl font-bold text-slate-900 sm:text-3xl lg:text-4xl">
               We Make Tech{" "}
               <span className="bg-linear-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent">
                 for Privacy
               </span>
             </h2>
 
-            <p className="text-slate-600 mb-6">
+            <p className="mb-6 text-sm text-slate-600 sm:text-base">
               We are a customer-centric team dedicated to providing secure,
               innovative solutions for vehicle owners, students, and businesses.
             </p>
 
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-3 sm:gap-4">
   <Link
     to="/product"
     className="px-6 py-3 bg-yellow-400 text-gray-900 rounded-lg hover:bg-yellow-500 transition font-semibold inline-block"
@@ -90,7 +90,7 @@ const Reviews = () => {
                   >
                     <Icon className="text-white w-6 h-6" />
                   </div>
-                  <h3 className="text-2xl font-bold">{stat.value}</h3>
+                  <h3 className="text-xl font-bold sm:text-2xl">{stat.value}</h3>
                   <p className="text-sm text-slate-500">{stat.label}</p>
                 </div>
               );
@@ -105,7 +105,7 @@ const Reviews = () => {
               key={t._id}
               className="bg-white shadow-md rounded-xl p-6 hover:shadow-lg transition"
             >
-              <div className="text-yellow-400 mb-2">{"★".repeat(Math.max(1, Math.min(5, Number(t.stars) || 5)))}</div>
+              <div className="mb-2 text-yellow-400">{"★".repeat(Math.max(1, Math.min(5, Number(t.stars) || 5)))}</div>
               <p className="text-sm text-slate-600 mb-4">"{t.text}"</p>
               <div className="flex items-center gap-2 text-sm font-medium">
                 <span>{t.avatar || "👤"}</span>

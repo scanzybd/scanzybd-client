@@ -54,10 +54,10 @@ const ContactPage = () => {
     <div className={`min-h-screen ${shellPage}`}>
       {/* Hero */}
       <div className="border-b border-slate-200 bg-linear-to-br from-slate-100 via-white to-slate-50 py-14 text-center dark:border-slate-800 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
-        <h1 className={`text-3xl font-bold tracking-tight sm:text-4xl ${textHeading}`}>
+        <h1 className={`text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl ${textHeading}`}>
           {t("contactPage.heading")}
         </h1>
-        <p className={`mt-2 text-lg ${textMuted}`}>
+        <p className={`mt-2 text-base sm:text-lg ${textMuted}`}>
           {t("contactPage.subheading")}
         </p>
       </div>
@@ -65,7 +65,7 @@ const ContactPage = () => {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-2 md:gap-12">
         {/* Info */}
         <div className="space-y-6">
-          <h2 className={`text-2xl font-bold ${textHeading}`}>{t("contactPage.leadTitle")}</h2>
+          <h2 className={`text-xl font-bold sm:text-2xl ${textHeading}`}>{t("contactPage.leadTitle")}</h2>
 
           <p className={textMuted}>
             {t("contactPage.leadText")}

@@ -108,10 +108,10 @@ const OfferShowcase = () => {
             {/* Header Section */}
             <div className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-linear-to-r from-yellow-400 to-amber-500">
                 <div className="max-w-4xl mx-auto text-center">
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+                    <h1 className="mb-4 text-2xl font-bold text-white sm:text-4xl md:text-5xl">
                         Flexible Plans for Every Business
                     </h1>
-                    <p className="text-lg sm:text-xl text-gray-800 mb-8">
+                    <p className="mb-8 text-base text-gray-800 sm:text-lg md:text-xl">
                         Choose the perfect plan to transform your business with our QR-based smart solutions
                     </p>
 
@@ -182,7 +182,7 @@ const OfferShowcase = () => {
                                             }`} />
                                         </div>
                                         <div>
-                                            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
+                                            <h2 className="text-xl font-bold text-slate-900 sm:text-2xl lg:text-3xl">
                                                 {plan.title}
                                             </h2>
                                             <p className="text-sm text-slate-600">{plan.subtitle}</p>
@@ -197,7 +197,7 @@ const OfferShowcase = () => {
                                     {/* Price */}
                                     <div className="mb-8 p-6 rounded-xl bg-slate-50 border border-slate-200">
                                         <div className="flex items-baseline gap-1 mb-2">
-                                            <span className="text-4xl sm:text-5xl font-bold text-slate-900">
+                                            <span className="text-3xl font-bold text-slate-900 sm:text-4xl lg:text-5xl">
                                                 ₹{price.toLocaleString()}
                                             </span>
                                             <span className="text-slate-600 font-medium">{billingText}</span>
@@ -267,7 +267,7 @@ const OfferShowcase = () => {
 
                 {/* FAQ Section */}
                 <div className="mt-16 sm:mt-20">
-                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-8">
+                    <h3 className="mb-8 text-xl font-bold text-center text-slate-900 sm:text-2xl lg:text-3xl">
                         Frequently Asked Questions
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

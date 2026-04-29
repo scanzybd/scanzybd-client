@@ -18,36 +18,36 @@ const About = () => {
                         <span className="text-sm font-semibold">{t("aboutPage.badge")}</span>
                     </div> */}
 
-                    <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl lg:text-5xl">
                         {t("aboutPage.title")}
                     </h1>
-                    <p className="mx-auto mt-4 max-w-3xl text-lg text-slate-600 dark:text-slate-300">
+                    <p className="mx-auto mt-4 max-w-3xl text-base text-slate-600 dark:text-slate-300 sm:text-lg">
                         {t("aboutPage.intro")}
                     </p>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t("aboutPage.missionTitle")}</h2>
-                        <p className="mt-2 text-slate-600 dark:text-slate-300">{t("aboutPage.mission")}</p>
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 sm:text-xl">{t("aboutPage.missionTitle")}</h2>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 sm:text-base">{t("aboutPage.mission")}</p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t("aboutPage.visionTitle")}</h2>
-                        <p className="mt-2 text-slate-600 dark:text-slate-300">{t("aboutPage.vision")}</p>
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 sm:text-xl">{t("aboutPage.visionTitle")}</h2>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 sm:text-base">{t("aboutPage.vision")}</p>
                     </div>
                 </div>
 
                 <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t("aboutPage.storyTitle")}</h2>
-                    <p className="mt-2 text-slate-600 dark:text-slate-300">{t("aboutPage.story")}</p>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 sm:text-xl">{t("aboutPage.storyTitle")}</h2>
+                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 sm:text-base">{t("aboutPage.story")}</p>
                 </div>
 
                 <div className="mt-8 rounded-2xl bg-linear-to-br from-amber-300 to-amber-400 p-6 text-slate-900 shadow-sm">
-                    <h2 className="text-2xl font-bold">{t("aboutPage.whyTitle")}</h2>
-                    <p className="mt-2">{t("aboutPage.whyIntro")}</p>
+                    <h2 className="text-xl font-bold sm:text-2xl">{t("aboutPage.whyTitle")}</h2>
+                    <p className="mt-2 text-sm sm:text-base">{t("aboutPage.whyIntro")}</p>
                     <ul className="mt-4 space-y-2">
                         {points.map((point) => (
-                            <li key={point} className="flex items-start gap-2">
+                            <li key={point} className="flex items-start gap-2 text-sm sm:text-base">
                                 <CheckCircle2 className="mt-0.5 h-5 w-5" />
                                 <span>{point}</span>
                             </li>
@@ -56,11 +56,11 @@ const About = () => {
                 </div>
 
                 <div className="mt-10 text-center">
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("aboutPage.ctaTitle")}</h3>
-                    <p className="mx-auto mt-2 max-w-2xl text-slate-600 dark:text-slate-300">{t("aboutPage.ctaSubtitle")}</p>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">{t("aboutPage.ctaTitle")}</h3>
+                    <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-300 sm:text-base">{t("aboutPage.ctaSubtitle")}</p>
                     <Link
                         to="/Products"
-                        className="mt-5 inline-flex items-center rounded-xl bg-amber-500 px-6 py-3 font-semibold text-slate-900 hover:bg-amber-600"
+                        className="mt-5 inline-flex items-center rounded-xl bg-amber-400 px-6 py-3 font-semibold text-slate-900 hover:bg-amber-500"
                     >
                         {t("aboutPage.ctaButton")}
                     </Link>
