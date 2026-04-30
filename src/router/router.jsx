@@ -46,7 +46,10 @@ const AllOrders = lazyPage(chunks.loadAllOrders);
 const CancelledOrders = lazyPage(chunks.loadCancelledOrders);
 const PendingOrders = lazyPage(chunks.loadPendingOrders);
 const OrderReports = lazyPage(chunks.loadOrderReports);
-const CompletedOrders = lazyPage(chunks.loadCompletedOrders);
+const ConfirmedOrder = lazyPage(chunks.loadConfirmedOrder);
+const ShippedOrders = lazyPage(chunks.loadShippedOrders);
+const DeliveredOrders = lazyPage(chunks.loadDeliveredOrders);
+const ReturnedOrders = lazyPage(chunks.loadReturnedOrders);
 const AllProducts = lazyPage(chunks.loadAllProducts);
 const AddProductsLazy = lazyImport(chunks.loadAddProducts);
 const AllQR = lazyPage(chunks.loadAllQR);
@@ -255,7 +258,19 @@ const router = createBrowserRouter([
       },
       {
         path: "completed-orders",
-        Component: CompletedOrders,
+        Component: ConfirmedOrder,
+      },
+      {
+        path: "shipped-orders",
+        Component: ShippedOrders,
+      },
+      {
+        path: "delivered-orders",
+        Component: DeliveredOrders,
+      },
+      {
+        path: "returned-orders",
+        Component: ReturnedOrders,
       },
       {
         path: "cancelled-orders",

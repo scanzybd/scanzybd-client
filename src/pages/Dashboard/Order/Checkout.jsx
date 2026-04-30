@@ -20,6 +20,10 @@ const emptyVehicleForm = () => ({
   model: "",
   plate: "",
   ownerPhone: "",
+  ownerContactVisible: true,
+  emergencyPhone: "",
+  emergencyContactVisible: false,
+  driverContactVisible: true,
   addDriver: false,
   driverName: "",
   driverPhone: "",
@@ -42,11 +46,17 @@ const Checkout = () => {
   const [shipping, setShipping] = useState({
     fullName: "",
     phone: "",
-    line1: "",
-    line2: "",
-    city: "",
+    addressLine: "",
+    division: "",
     district: "",
-    postalCode: "",
+    upazila: "",
+    union: "",
+  });
+  const [locationTree, setLocationTree] = useState({
+    divisions: [],
+    districts: {},
+    upazilas: {},
+    unions: {},
   });
 
   /** One checkout row per physical tag (quantity expanded). */
@@ -77,6 +87,28 @@ const Checkout = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
 
+  useEffect(() => {
+    let active = true;
+    const loadLocations = async () => {
+      try {
+        const res = await axiosSecure.get("/api/locations");
+        if (!active) return;
+        setLocationTree({
+          divisions: Array.isArray(res?.data?.divisions) ? res.data.divisions : [],
+          districts: res?.data?.districts || {},
+          upazilas: res?.data?.upazilas || {},
+          unions: res?.data?.unions || {},
+        });
+      } catch (error) {
+        console.error("Failed to load locations", error);
+      }
+    };
+    loadLocations();
+    return () => {
+      active = false;
+    };
+  }, [axiosSecure]);
+
   const total = useMemo(() => {
     return cartItems.reduce(
       (sum, item) =>
@@ -101,6 +133,10 @@ const Checkout = () => {
         model: src.model,
         plate: src.plate,
         ownerPhone: src.ownerPhone,
+        ownerContactVisible: src.ownerContactVisible,
+        emergencyPhone: src.emergencyPhone,
+        emergencyContactVisible: src.emergencyContactVisible,
+        driverContactVisible: src.driverContactVisible,
         addDriver: src.addDriver,
         driverName: src.driverName,
         driverPhone: src.driverPhone,
@@ -113,16 +149,55 @@ const Checkout = () => {
     if (
       !shipping.fullName?.trim() ||
       !shipping.phone?.trim() ||
-      !shipping.line1?.trim() ||
-      !shipping.city?.trim()
+      !shipping.division ||
+      !shipping.district ||
+      !shipping.upazila ||
+      !shipping.union
     ) {
       alert(
-        "Fill delivery details: full name, phone, address, and city."
+        "Fill delivery details: full name, phone, division, district, upazila, and union."
       );
+      return false;
+    }
+    if (!/^\d{11}$/.test(shipping.phone.trim())) {
+      alert("Delivery address phone must be exactly 11 digits.");
       return false;
     }
     return true;
   };
+  const divisionOptions = useMemo(
+    () => (Array.isArray(locationTree.divisions) ? locationTree.divisions : []),
+    [locationTree.divisions]
+  );
+  const districtOptions = useMemo(
+    () => locationTree.districts?.[shipping.division] || [],
+    [locationTree.districts, shipping.division]
+  );
+  const upazilaOptions = useMemo(
+    () => locationTree.upazilas?.[shipping.district] || [],
+    [locationTree.upazilas, shipping.district]
+  );
+  const unionOptions = useMemo(
+    () => locationTree.unions?.[shipping.upazila] || [],
+    [locationTree.unions, shipping.upazila]
+  );
+  const selectedDivision = useMemo(
+    () => divisionOptions.find((x) => String(x.value) === String(shipping.division)),
+    [divisionOptions, shipping.division]
+  );
+  const selectedDistrict = useMemo(
+    () => districtOptions.find((x) => String(x.value) === String(shipping.district)),
+    [districtOptions, shipping.district]
+  );
+  const selectedUpazila = useMemo(
+    () => upazilaOptions.find((x) => String(x.value) === String(shipping.upazila)),
+    [upazilaOptions, shipping.upazila]
+  );
+  const selectedUnion = useMemo(
+    () => unionOptions.find((x) => String(x.value) === String(shipping.union)),
+    [unionOptions, shipping.union]
+  );
+
 
   const validateVehicles = () => {
     for (let i = 0; i < vehicles.length; i++) {
@@ -133,6 +208,14 @@ const Checkout = () => {
       }
       if (!v.ownerPhone?.trim()) {
         alert(`Tag ${i + 1}: add owner phone.`);
+        return false;
+      }
+      if (!v.emergencyPhone?.trim()) {
+        alert(`Tag ${i + 1}: add emergency contact phone.`);
+        return false;
+      }
+      if (!/^\d{11}$/.test(v.emergencyPhone.trim())) {
+        alert(`Tag ${i + 1}: emergency contact phone must be 11 digits.`);
         return false;
       }
       if (v.addDriver) {
@@ -201,6 +284,10 @@ const Checkout = () => {
           model: v.model.trim(),
           plate: v.plate.trim(),
           ownerPhone: v.ownerPhone.trim(),
+          ownerContactVisible: Boolean(v.ownerContactVisible),
+          emergencyPhone: v.emergencyPhone.trim(),
+          emergencyContactVisible: Boolean(v.emergencyContactVisible),
+          driverContactVisible: Boolean(v.driverContactVisible),
           ...(driver ? { driver } : {}),
         };
       });
@@ -214,11 +301,15 @@ const Checkout = () => {
           shippingAddress: {
             fullName: shipping.fullName.trim(),
             phone: shipping.phone.trim(),
-            line1: shipping.line1.trim(),
-            line2: shipping.line2.trim(),
-            city: shipping.city.trim(),
-            district: shipping.district.trim(),
-            postalCode: shipping.postalCode.trim(),
+            line1:
+              shipping.addressLine.trim() ||
+              `${selectedUnion?.title || ""}, ${selectedUpazila?.title || ""}`
+                .replace(/^,\s*|,\s*$/g, "")
+                .trim(),
+            line2: "",
+            city: (selectedDistrict?.title || "").trim(),
+            district: (selectedDivision?.title || "").trim(),
+            postalCode: "",
           },
         },
         {
@@ -415,80 +506,124 @@ const Checkout = () => {
                     className={fieldInput}
                     value={shipping.phone}
                     onChange={(e) =>
-                      setShipping((s) => ({ ...s, phone: e.target.value }))
+                      setShipping((s) => ({
+                        ...s,
+                        phone: e.target.value.replace(/\D/g, "").slice(0, 11),
+                      }))
                     }
                     placeholder="01XXXXXXXXX"
                     inputMode="tel"
                     autoComplete="tel"
+                    maxLength={11}
                   />
                 </label>
                 <label className="block sm:col-span-2">
                   <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
-                    Address line
+                    Address line (optional)
                   </span>
                   <input
                     className={fieldInput}
-                    value={shipping.line1}
+                    value={shipping.addressLine}
                     onChange={(e) =>
-                      setShipping((s) => ({ ...s, line1: e.target.value }))
+                      setShipping((s) => ({ ...s, addressLine: e.target.value }))
                     }
-                    placeholder="House / road / area"
+                    placeholder="House / Road / Area"
                     autoComplete="street-address"
                   />
                 </label>
                 <label className="block sm:col-span-2">
                   <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
-                    Address line 2 (optional)
+                    Division
                   </span>
-                  <input
+                  <select
                     className={fieldInput}
-                    value={shipping.line2}
+                    value={shipping.division}
                     onChange={(e) =>
-                      setShipping((s) => ({ ...s, line2: e.target.value }))
+                      setShipping((s) => ({
+                        ...s,
+                        division: e.target.value,
+                        district: "",
+                        upazila: "",
+                        union: "",
+                      }))
                     }
-                    placeholder="Apartment, floor, landmark"
-                  />
-                </label>
-                <label className="block">
-                  <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
-                    City
-                  </span>
-                  <input
-                    className={fieldInput}
-                    value={shipping.city}
-                    onChange={(e) =>
-                      setShipping((s) => ({ ...s, city: e.target.value }))
-                    }
-                    placeholder="City"
-                    autoComplete="address-level2"
-                  />
-                </label>
-                <label className="block">
-                  <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
-                    District (optional)
-                  </span>
-                  <input
-                    className={fieldInput}
-                    value={shipping.district}
-                    onChange={(e) =>
-                      setShipping((s) => ({ ...s, district: e.target.value }))
-                    }
-                    placeholder="District"
-                  />
+                  >
+                    <option value="">Select division</option>
+                    {divisionOptions.map((division) => (
+                      <option key={division.value} value={division.value}>
+                        {division.title}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="block sm:col-span-2">
                   <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
-                    Postal code (optional)
+                    District
                   </span>
-                  <input
+                  <select
                     className={fieldInput}
-                    value={shipping.postalCode}
+                    value={shipping.district}
                     onChange={(e) =>
-                      setShipping((s) => ({ ...s, postalCode: e.target.value }))
+                      setShipping((s) => ({
+                        ...s,
+                        district: e.target.value,
+                        upazila: "",
+                        union: "",
+                      }))
                     }
-                    placeholder="Postal code"
-                    autoComplete="postal-code"
-                  />
+                    disabled={!shipping.division}
+                  >
+                    <option value="">Select district</option>
+                    {districtOptions.map((district) => (
+                      <option key={district.value} value={district.value}>
+                        {district.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
+                    Upazila
+                  </span>
+                  <select
+                    className={fieldInput}
+                    value={shipping.upazila}
+                    onChange={(e) =>
+                      setShipping((s) => ({
+                        ...s,
+                        upazila: e.target.value,
+                        union: "",
+                      }))
+                    }
+                    disabled={!shipping.district}
+                  >
+                    <option value="">Select upazila</option>
+                    {upazilaOptions.map((upazila) => (
+                      <option key={upazila.value} value={upazila.value}>
+                        {upazila.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
+                    Union
+                  </span>
+                  <select
+                    className={fieldInput}
+                    value={shipping.union}
+                    onChange={(e) =>
+                      setShipping((s) => ({ ...s, union: e.target.value }))
+                    }
+                    disabled={!shipping.upazila}
+                  >
+                    <option value="">Select union</option>
+                    {unionOptions.map((unionName) => (
+                      <option key={unionName.value} value={unionName.value}>
+                        {unionName.title}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               </div>
             </div>
@@ -578,7 +713,7 @@ const Checkout = () => {
                       </label>
                       <label className="block">
                         <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
-                          Plate number
+                          Registration No (Number Plate)
                         </span>
                         <input
                           className={`${fieldInput} font-mono`}
@@ -586,7 +721,7 @@ const Checkout = () => {
                           onChange={(e) =>
                             updateVehicle(index, { plate: e.target.value })
                           }
-                          placeholder="Registration"
+                          placeholder="Dhaka Metro 00-0000"
                         />
                       </label>
                       <label className="block sm:col-span-2">
@@ -601,7 +736,79 @@ const Checkout = () => {
                           }
                           placeholder="01XXXXXXXXX"
                           inputMode="tel"
+                          maxLength={11}
                         />
+                      </label>
+                      <label className="block sm:col-span-2">
+                        <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
+                          Emergency contact phone
+                        </span>
+                        <input
+                          className={fieldInput}
+                          value={v.emergencyPhone}
+                          onChange={(e) =>
+                            updateVehicle(index, {
+                              emergencyPhone: e.target.value.replace(/\D/g, "").slice(0, 11),
+                            })
+                          }
+                          placeholder="01XXXXXXXXX"
+                          inputMode="tel"
+                          maxLength={11}
+                        />
+                      </label>
+                      <label className="block sm:col-span-2">
+                        <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
+                          Owner contact permission
+                        </span>
+                        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                          <input
+                            type="checkbox"
+                            className="checkbox checkbox-sm"
+                            checked={Boolean(v.ownerContactVisible)}
+                            onChange={(e) =>
+                              updateVehicle(index, {
+                                ownerContactVisible: e.target.checked,
+                              })
+                            }
+                          />
+                          Show owner contact on public QR page
+                        </label>
+                      </label>
+                      <label className="block sm:col-span-2">
+                        <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
+                          Emergency contact permission
+                        </span>
+                        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                          <input
+                            type="checkbox"
+                            className="checkbox checkbox-sm"
+                            checked={Boolean(v.emergencyContactVisible)}
+                            onChange={(e) =>
+                              updateVehicle(index, {
+                                emergencyContactVisible: e.target.checked,
+                              })
+                            }
+                          />
+                          Allow public QR page to show emergency contact
+                        </label>
+                      </label>
+                      <label className="block sm:col-span-2">
+                        <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
+                          Driver contact permission
+                        </span>
+                        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                          <input
+                            type="checkbox"
+                            className="checkbox checkbox-sm"
+                            checked={Boolean(v.driverContactVisible)}
+                            onChange={(e) =>
+                              updateVehicle(index, {
+                                driverContactVisible: e.target.checked,
+                              })
+                            }
+                          />
+                          Show driver contact on public QR page
+                        </label>
                       </label>
                     </div>
 

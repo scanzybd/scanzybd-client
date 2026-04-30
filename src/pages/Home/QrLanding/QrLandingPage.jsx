@@ -137,27 +137,31 @@ const QrLandingPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-8">
       <div className="mx-auto w-full max-w-md space-y-4">
-        <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 text-white shadow-lg">
+        <div className="rounded-3xl bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 p-6 text-white shadow-lg">
           <p className="text-xs uppercase tracking-wide text-slate-300">Emergency access</p>
           <h1 className="mt-2 text-2xl font-bold">Vehicle Contact</h1>
           <p className="mt-2 inline-flex rounded-full bg-white/10 px-3 py-1 text-xs text-slate-200">
-            QR ID: {code}
+            {vehicle?.plate || "N/A"}
           </p>
         </div>
 
-        <div className="rounded-3xl border border-amber-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-3 text-sm font-semibold text-slate-800">Owner Contact</h2>
-          <p className="mb-4 text-xs text-slate-500">Use this number to reach the vehicle owner.</p>
+        {vehicle.ownerPhone && vehicle.ownerContactVisible ? (
+          <div className="rounded-3xl border border-amber-200 bg-white p-5 shadow-sm">
+            <h2 className="mb-3 text-sm font-semibold text-slate-800">Owner Contact</h2>
+            <p className="mb-4 text-xs text-slate-500">Use this number to reach the vehicle owner.</p>
 
-          <a
-            href={`tel:${vehicle.ownerPhone}`}
-            className="block rounded-xl bg-amber-400 py-3 text-center text-sm font-semibold text-slate-900 transition hover:bg-amber-300"
-          >
-            📞 Call Owner
-          </a>
-        </div>
+            <a
+              href={`tel:${vehicle.ownerPhone}`}
+              className="block rounded-xl bg-amber-400 py-3 text-center text-sm font-semibold text-slate-900 transition hover:bg-amber-300"
+            >
+              📞 Call Owner
+            </a>
+          </div>
+        ) : null}
 
-        {vehicle.driver ? (
+        
+
+        {vehicle.driver && vehicle.driverContactVisible ? (
           <div className="rounded-3xl border border-blue-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 text-sm font-semibold text-slate-800">Driver Contact</h2>
             <p className="mb-4 text-xs text-slate-500">
@@ -171,11 +175,25 @@ const QrLandingPage = () => {
               📞 Call Driver
             </a>
           </div>
-        ) : (
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 text-center text-sm text-slate-500 shadow-sm">
-            No driver assigned
+        ) : null}
+
+{vehicle.emergencyPhone && vehicle.emergencyContactVisible ? (
+          <div className="rounded-3xl border border-red-200 bg-white p-5 shadow-sm">
+            <h2 className="mb-3 text-sm font-semibold text-slate-800">Emergency Contact</h2>
+            <p className="mb-4 text-xs text-slate-500">
+              For urgent situations, call this emergency number.
+            </p>
+
+            <a
+              href={`tel:${vehicle.emergencyPhone}`}
+              className="block rounded-xl bg-red-600 py-3 text-center text-sm font-semibold text-white transition hover:bg-red-500"
+            >
+            Call Emergency
+            </a>
           </div>
-        )}
+        ) : null}
+
+
       </div>
     </div>
   );

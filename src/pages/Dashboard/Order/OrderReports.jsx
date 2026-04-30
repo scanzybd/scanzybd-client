@@ -25,7 +25,10 @@ const OrderReports = () => {
   );
   const paidOrders = orders.filter((o) => o?.paymentStatus === "paid").length;
   const unpaidOrders = orders.filter((o) => o?.paymentStatus !== "paid").length;
-  const completedOrders = orders.filter((o) => o?.status === "completed").length;
+  const completedOrders = orders.filter((o) => ["confirmed", "paid"].includes(o?.status)).length;
+  const shippedOrders = orders.filter((o) => o?.status === "shipped").length;
+  const deliveredOrders = orders.filter((o) => o?.status === "delivered").length;
+  const returnedOrders = orders.filter((o) => o?.status === "returned").length;
   const cancelledOrders = orders.filter((o) => o?.status === "cancelled").length;
   const pendingOrders = orders.filter((o) => o?.status === "pending").length;
 
@@ -39,6 +42,9 @@ const OrderReports = () => {
     { label: "Paid Orders", value: paidOrders, valueClass: "text-emerald-600" },
     { label: "Unpaid Orders", value: unpaidOrders, valueClass: "text-rose-600" },
     { label: "Completed", value: completedOrders, valueClass: "text-emerald-600" },
+    { label: "Shipped", value: shippedOrders, valueClass: "text-sky-600" },
+    { label: "Delivered", value: deliveredOrders, valueClass: "text-teal-600" },
+    { label: "Returned", value: returnedOrders, valueClass: "text-orange-600" },
     { label: "Pending", value: pendingOrders, valueClass: "text-amber-600" },
     { label: "Cancelled", value: cancelledOrders, valueClass: "text-rose-600" },
   ];

@@ -1,10 +1,22 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import SmartLoader from "./SmartLoader";
 
-const OrderTable = ({ title, orders = [], isLoading = false }) => {
+const OrderTable = ({
+  title,
+  orders = [],
+  isLoading = false,
+  statusOptions = [],
+  summaryCards = [],
+  onStatusUpdate,
+  statusUpdatingId = "",
+}) => {
   const statusStyles = {
     pending: "bg-amber-100 text-amber-700 border-amber-200",
     paid: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    confirmed: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    shipped: "bg-sky-100 text-sky-700 border-sky-200",
+    delivered: "bg-teal-100 text-teal-700 border-teal-200",
+    returned: "bg-orange-100 text-orange-700 border-orange-200",
     cancelled: "bg-rose-100 text-rose-700 border-rose-200",
     completed: "bg-emerald-100 text-emerald-700 border-emerald-200",
   };
@@ -20,6 +32,12 @@ const OrderTable = ({ title, orders = [], isLoading = false }) => {
   }
 
   const safeOrders = Array.isArray(orders) ? orders : [];
+  const hasStatusEditor = Array.isArray(statusOptions) && statusOptions.length > 0 && typeof onStatusUpdate === "function";
+  const [statusSelection, setStatusSelection] = useState({});
+  const normalizedOptions = useMemo(
+    () => statusOptions.map((s) => String(s || "").toLowerCase()).filter(Boolean),
+    [statusOptions]
+  );
   const totalOrders = safeOrders.length;
   const totalRevenue = safeOrders.reduce(
     (sum, order) => sum + Number(order?.totalAmount || 0),
@@ -30,6 +48,18 @@ const OrderTable = ({ title, orders = [], isLoading = false }) => {
   ).length;
   const pendingOrders = safeOrders.filter(
     (order) => order?.status === "pending"
+  ).length;
+  const confirmedOrders = safeOrders.filter(
+    (order) => ["confirmed", "paid"].includes(String(order?.status || "").toLowerCase())
+  ).length;
+  const shippedOrders = safeOrders.filter(
+    (order) => String(order?.status || "").toLowerCase() === "shipped"
+  ).length;
+  const deliveredOrders = safeOrders.filter(
+    (order) => String(order?.status || "").toLowerCase() === "delivered"
+  ).length;
+  const returnedOrders = safeOrders.filter(
+    (order) => String(order?.status || "").toLowerCase() === "returned"
   ).length;
 
   const getStatusClass = (status) =>
@@ -46,6 +76,23 @@ const OrderTable = ({ title, orders = [], isLoading = false }) => {
     if (Number.isNaN(date.getTime())) return "N/A";
     return date.toLocaleDateString();
   };
+
+  const selectedOrCurrentStatus = (order) =>
+    statusSelection[order?._id] || String(order?.status || "").toLowerCase();
+
+  const defaultSummaryCards = [
+    { label: "Total Orders", value: totalOrders, valueClass: "text-slate-900" },
+    { label: "Revenue", value: `৳ ${totalRevenue.toLocaleString()}`, valueClass: "text-slate-900" },
+    { label: "Paid", value: paidOrders, valueClass: "text-emerald-600" },
+    { label: "Pending", value: pendingOrders, valueClass: "text-amber-600" },
+    { label: "Confirmed", value: confirmedOrders, valueClass: "text-emerald-600" },
+    { label: "Shipped", value: shippedOrders, valueClass: "text-sky-600" },
+    { label: "Delivered", value: deliveredOrders, valueClass: "text-teal-600" },
+    { label: "Returned", value: returnedOrders, valueClass: "text-orange-600" },
+  ];
+
+  const cardsToRender =
+    Array.isArray(summaryCards) && summaryCards.length > 0 ? summaryCards : defaultSummaryCards;
 
   if (!Array.isArray(orders) || orders.length === 0) {
     return (
@@ -65,23 +112,15 @@ const OrderTable = ({ title, orders = [], isLoading = false }) => {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Total Orders</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{totalOrders}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Revenue</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">৳ {totalRevenue.toLocaleString()}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Paid</p>
-          <p className="mt-1 text-2xl font-bold text-emerald-600">{paidOrders}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Pending</p>
-          <p className="mt-1 text-2xl font-bold text-amber-600">{pendingOrders}</p>
-        </div>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
+        {cardsToRender.map((card) => (
+          <div key={card.label} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-xs uppercase tracking-wide text-slate-500">{card.label}</p>
+            <p className={`mt-1 text-2xl font-bold ${card.valueClass || "text-slate-900"}`}>
+              {card.value}
+            </p>
+          </div>
+        ))}
       </div>
 
       <div className="space-y-3">
@@ -127,6 +166,39 @@ const OrderTable = ({ title, orders = [], isLoading = false }) => {
                 </span>
               </div>
             </div>
+
+            {hasStatusEditor && (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <select
+                  className="select select-bordered select-sm w-full max-w-[220px]"
+                  value={selectedOrCurrentStatus(order)}
+                  onChange={(e) =>
+                    setStatusSelection((prev) => ({
+                      ...prev,
+                      [order._id]: e.target.value,
+                    }))
+                  }
+                >
+                  {normalizedOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={() => onStatusUpdate(order, selectedOrCurrentStatus(order))}
+                  disabled={
+                    statusUpdatingId === order?._id ||
+                    !normalizedOptions.includes(selectedOrCurrentStatus(order))
+                  }
+                >
+                  {statusUpdatingId === order?._id ? "Updating..." : "Update Status"}
+                </button>
+              </div>
+            )}
           </article>
         ))}
       </div>

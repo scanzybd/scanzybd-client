@@ -37,7 +37,10 @@ export const loadAllOrders = () => import("../pages/Dashboard/Order/AllOrders.js
 export const loadCancelledOrders = () => import("../pages/Dashboard/Order/CancelledOrders.jsx");
 export const loadPendingOrders = () => import("../pages/Dashboard/Order/PendingOrders.jsx");
 export const loadOrderReports = () => import("../pages/Dashboard/Order/OrderReports.jsx");
-export const loadCompletedOrders = () => import("../pages/Dashboard/Order/CompletedOrders.jsx");
+export const loadConfirmedOrder = () => import("../pages/Dashboard/Order/ConfirmedOrder.jsx");
+export const loadShippedOrders = () => import("../pages/Dashboard/Order/ShippedOrders.jsx");
+export const loadDeliveredOrders = () => import("../pages/Dashboard/Order/DeliveredOrders.jsx");
+export const loadReturnedOrders = () => import("../pages/Dashboard/Order/ReturnedOrders.jsx");
 export const loadAllProducts = () => import("../pages/Dashboard/Product/AllProducts.jsx");
 export const loadAddProducts = () => import("../pages/Dashboard/Product/AddProducts.jsx");
 export const loadAllQR = () => import("../pages/Dashboard/QR/AllQR.jsx");
@@ -87,7 +90,10 @@ export const allRouteChunkLoaders = [
   loadCancelledOrders,
   loadPendingOrders,
   loadOrderReports,
-  loadCompletedOrders,
+  loadConfirmedOrder,
+  loadShippedOrders,
+  loadDeliveredOrders,
+  loadReturnedOrders,
   loadAllProducts,
   loadAddProducts,
   loadAllQR,

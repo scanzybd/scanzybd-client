@@ -2,18 +2,18 @@ import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import OrderTable from "../../../components/OrderTable";
 
-const CompletedOrders = () => {
+const DeliveredOrders = () => {
   const axiosSecure = useAxiosSecure();
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["completed-orders"],
+    queryKey: ["delivered-orders"],
     queryFn: async () => {
-      const res = await axiosSecure.get("/api/order/completed");
+      const res = await axiosSecure.get("/api/order/delivered");
       return res.data;
     },
   });
 
-  return <OrderTable title="Completed Orders" orders={orders} isLoading={isLoading} />;
+  return <OrderTable title="Delivered Orders" orders={orders} isLoading={isLoading} />;
 };
 
-export default CompletedOrders;
+export default DeliveredOrders;

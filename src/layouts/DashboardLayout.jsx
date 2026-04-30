@@ -121,7 +121,10 @@ const DashboardLayout = () => {
             category: t("dashboard.menu.orders"),
             items: [
                 { path: "/dashboard/all-orders", icon: GraduationCap, label: t("dashboard.menu.orderList") },
-                { path: "/dashboard/completed-orders", icon: UserPlus, label: t("dashboard.menu.completed") },
+                { path: "/dashboard/completed-orders", icon: UserPlus, label: "Confirmed" },
+                { path: "/dashboard/shipped-orders", icon: Clock, label: "Shipped" },
+                { path: "/dashboard/delivered-orders", icon: CheckCircle2, label: "Delivered" },
+                { path: "/dashboard/returned-orders", icon: XCircle, label: "Returned" },
                 { path: "/dashboard/pending-orders", icon: Clock, label: t("dashboard.menu.pending") },
                 { path: "/dashboard/cancelled-orders", icon: XCircle, label: t("dashboard.menu.cancelled") },
                 { path: "/dashboard/order-reports", icon: ClipboardList, label: t("dashboard.menu.reports") },
@@ -187,7 +190,7 @@ const DashboardLayout = () => {
                 {
                     path: "/dashboard/completed-orders",
                     icon: CheckCircle2,
-                    label: t("dashboard.menu.completed"),
+                    label: "Confirmed",
                 },
             ],
         },

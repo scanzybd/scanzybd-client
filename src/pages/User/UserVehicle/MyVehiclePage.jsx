@@ -12,6 +12,34 @@ import {
   textMuted,
 } from "../../../lib/uiClasses";
 
+const ContactToggle = ({ label, checked, onClick, disabled = false, tone = "green" }) => {
+  const onColor =
+    tone === "blue" ? "from-blue-500 to-blue-700" : tone === "red" ? "from-red-500 to-red-700" : "from-emerald-500 to-emerald-700";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`relative h-8 w-[88px] rounded-full border-2 px-2 text-xs font-bold tracking-wide shadow-inner transition ${
+        checked
+          ? `border-white/20 bg-linear-to-r ${onColor} text-white`
+          : "border-slate-300 bg-linear-to-r from-slate-200 to-slate-300 text-slate-700"
+      } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
+      title={`${label} ${checked ? "ON" : "OFF"}`}
+    >
+      <span
+        className={`absolute top-0.5 h-6 w-6 rounded-full border border-slate-300 bg-slate-100 shadow transition-all ${
+          checked ? "right-1" : "left-1"
+        }`}
+      />
+      <span className={`absolute top-1/2 -translate-y-1/2 ${checked ? "left-2.5" : "right-2.5"}`}>
+        {checked ? "ON" : "OFF"}
+      </span>
+    </button>
+  );
+};
+
 const MyVehiclePage = () => {
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
@@ -23,6 +51,9 @@ const MyVehiclePage = () => {
   const [roleLoading, setRoleLoading] = useState(true);
 
   const [qrMap, setQrMap] = useState({});
+  const [toggleSaving, setToggleSaving] = useState({});
+  const [inlineEditor, setInlineEditor] = useState({});
+  const [uiError, setUiError] = useState("");
 
   // ---------------- LOAD USER ----------------
   useEffect(() => {
@@ -84,13 +115,24 @@ const MyVehiclePage = () => {
   // ---------------- UPDATE ----------------
   const handleUpdate = async () => {
     try {
-      await axiosSecure.post(`/api/vehicle/update/${editVehicle._id}`, {
+      const payload = {
         vehicleName: editVehicle.vehicleName,
         model: editVehicle.model,
         plate: editVehicle.plate,
         ownerPhone: editVehicle.ownerPhone,
-        driver: editVehicle.driver,
+        emergencyPhone: editVehicle.emergencyPhone,
         qrData: editVehicle.qrData,
+      };
+
+      const driverName = editVehicle?.driver?.name?.trim?.() || "";
+      const driverPhone = editVehicle?.driver?.phone?.trim?.() || "";
+      payload.driver =
+        driverName && driverPhone
+          ? { name: driverName, phone: driverPhone }
+          : null;
+
+      await axiosSecure.post(`/api/vehicle/update/${editVehicle._id}`, {
+        ...payload,
       });
 
       alert("✅ Vehicle updated");
@@ -117,6 +159,99 @@ const MyVehiclePage = () => {
     }
   };
 
+  const handleToggleVisibility = async (vehicle, key) => {
+    const needsOwner = key === "ownerContactVisible" && !String(vehicle.ownerPhone || "").trim();
+    const needsEmergency = key === "emergencyContactVisible" && !String(vehicle.emergencyPhone || "").trim();
+    const needsDriver =
+      key === "driverContactVisible" &&
+      (!vehicle?.driver?.name || !String(vehicle?.driver?.phone || "").trim());
+
+    if (!vehicle?.[key] && (needsOwner || needsEmergency || needsDriver)) {
+      setInlineEditor((prev) => ({
+        ...prev,
+        [vehicle._id]: {
+          target: key,
+          ownerPhone: vehicle?.ownerPhone || "",
+          emergencyPhone: vehicle?.emergencyPhone || "",
+          driverName: vehicle?.driver?.name || "",
+          driverPhone: vehicle?.driver?.phone || "",
+        },
+      }));
+      setUiError("Contact missing. নিচে field fill করে Save দিন।");
+      return;
+    }
+
+    const pendingKey = `${vehicle._id}:${key}`;
+    if (toggleSaving[pendingKey]) return;
+    const previous = Boolean(vehicle?.[key]);
+    const nextValue = !previous;
+
+    setToggleSaving((prev) => ({ ...prev, [pendingKey]: true }));
+    setVehicles((prev) =>
+      prev.map((v) => (v._id === vehicle._id ? { ...v, [key]: nextValue } : v))
+    );
+
+    try {
+      await axiosSecure.post(`/api/vehicle/update/${vehicle._id}`, {
+        [key]: nextValue,
+      });
+    } catch (err) {
+      console.log(err);
+      setVehicles((prev) =>
+        prev.map((v) => (v._id === vehicle._id ? { ...v, [key]: previous } : v))
+      );
+      setUiError(err?.response?.data?.message || "Visibility update failed.");
+    } finally {
+      setToggleSaving((prev) => ({ ...prev, [pendingKey]: false }));
+    }
+  };
+
+  const closeInlineEditor = (vehicleId) => {
+    setInlineEditor((prev) => {
+      const next = { ...prev };
+      delete next[vehicleId];
+      return next;
+    });
+  };
+
+  const saveInlineContact = async (vehicle) => {
+    const row = inlineEditor[vehicle._id];
+    if (!row) return;
+
+    const payload = {};
+    if (row.target === "ownerContactVisible") {
+      if (!/^\d{11}$/.test(String(row.ownerPhone || ""))) {
+        setUiError("Owner phone must be 11 digits.");
+        return;
+      }
+      payload.ownerPhone = row.ownerPhone;
+    }
+    if (row.target === "emergencyContactVisible") {
+      if (!/^\d{11}$/.test(String(row.emergencyPhone || ""))) {
+        setUiError("Emergency phone must be 11 digits.");
+        return;
+      }
+      payload.emergencyPhone = row.emergencyPhone;
+    }
+    if (row.target === "driverContactVisible") {
+      if (!row.driverName?.trim() || !/^\d{11}$/.test(String(row.driverPhone || ""))) {
+        setUiError("Driver name and 11-digit driver phone required.");
+        return;
+      }
+      payload.driver = { name: row.driverName.trim(), phone: row.driverPhone };
+    }
+
+    try {
+      await axiosSecure.post(`/api/vehicle/update/${vehicle._id}`, payload);
+      await loadVehicles();
+      closeInlineEditor(vehicle._id);
+      setUiError("");
+    } catch (err) {
+      console.log(err);
+      setUiError(err?.response?.data?.message || "Contact save failed.");
+    }
+  };
+
   if (roleLoading) {
     return <SmartLoader fullPage label="Checking role permissions..." />;
   }
@@ -124,6 +259,11 @@ const MyVehiclePage = () => {
   return (
     <div className={`flex min-h-screen justify-center p-5 ${shellPage}`}>
       <div className="w-full max-w-md space-y-4">
+        {uiError ? (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+            {uiError}
+          </div>
+        ) : null}
 
         {/* HEADER */}
         <div className="text-center">
@@ -145,7 +285,7 @@ const MyVehiclePage = () => {
             return (
               <div
                 key={v._id}
-                className={`flex items-center justify-between gap-4 p-4 ${cardSurfaceSm}`}
+                className={`flex flex-col gap-4 p-4 md:flex-row md:items-start md:justify-between ${cardSurfaceSm}`}
               >
 
                 {/* LEFT SIDE */}
@@ -161,9 +301,7 @@ const MyVehiclePage = () => {
                       {v.driver.name} ({v.driver.phone})
                     </p>
                   ) : (
-                    <p className={`text-xs ${textMuted}`}>
-                      No driver assigned
-                    </p>
+                    <p className={`text-xs ${textMuted}`}>No driver assigned</p>
                   )}
 
                   <p className={`text-xs ${textMuted}`}>
@@ -172,53 +310,181 @@ const MyVehiclePage = () => {
                       {v.qrData ? "Assigned" : "Not assigned"}
                     </span>
                   </p>
+
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                        Owner contact
+                      </p>
+                      <ContactToggle
+                        label="Owner contact"
+                        checked={Boolean(v.ownerContactVisible)}
+                        onClick={() => handleToggleVisibility(v, "ownerContactVisible")}
+                        disabled={Boolean(toggleSaving[`${v._id}:ownerContactVisible`])}
+                        tone="green"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                        Driver contact
+                      </p>
+                      <ContactToggle
+                        label="Driver contact"
+                        checked={Boolean(v.driverContactVisible)}
+                        onClick={() => handleToggleVisibility(v, "driverContactVisible")}
+                        disabled={Boolean(toggleSaving[`${v._id}:driverContactVisible`])}
+                        tone="blue"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                        Emergency contact
+                      </p>
+                      <ContactToggle
+                        label="Emergency contact"
+                        checked={Boolean(v.emergencyContactVisible)}
+                        onClick={() => handleToggleVisibility(v, "emergencyContactVisible")}
+                        disabled={Boolean(toggleSaving[`${v._id}:emergencyContactVisible`])}
+                        tone="red"
+                      />
+                    </div>
+                  </div>
+
+                  {inlineEditor[v._id] ? (
+                    <div className="mt-2 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        Add required contact
+                      </p>
+
+                      {inlineEditor[v._id].target === "ownerContactVisible" ? (
+                        <input
+                          className={fieldInput}
+                          placeholder="Owner phone (11 digit)"
+                          value={inlineEditor[v._id].ownerPhone}
+                          onChange={(e) =>
+                            setInlineEditor((prev) => ({
+                              ...prev,
+                              [v._id]: {
+                                ...prev[v._id],
+                                ownerPhone: e.target.value.replace(/\D/g, "").slice(0, 11),
+                              },
+                            }))
+                          }
+                        />
+                      ) : null}
+
+                      {inlineEditor[v._id].target === "emergencyContactVisible" ? (
+                        <input
+                          className={fieldInput}
+                          placeholder="Emergency phone (11 digit)"
+                          value={inlineEditor[v._id].emergencyPhone}
+                          onChange={(e) =>
+                            setInlineEditor((prev) => ({
+                              ...prev,
+                              [v._id]: {
+                                ...prev[v._id],
+                                emergencyPhone: e.target.value.replace(/\D/g, "").slice(0, 11),
+                              },
+                            }))
+                          }
+                        />
+                      ) : null}
+
+                      {inlineEditor[v._id].target === "driverContactVisible" ? (
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <input
+                            className={fieldInput}
+                            placeholder="Driver name"
+                            value={inlineEditor[v._id].driverName}
+                            onChange={(e) =>
+                              setInlineEditor((prev) => ({
+                                ...prev,
+                                [v._id]: { ...prev[v._id], driverName: e.target.value },
+                              }))
+                            }
+                          />
+                          <input
+                            className={fieldInput}
+                            placeholder="Driver phone (11 digit)"
+                            value={inlineEditor[v._id].driverPhone}
+                            onChange={(e) =>
+                              setInlineEditor((prev) => ({
+                                ...prev,
+                                [v._id]: {
+                                  ...prev[v._id],
+                                  driverPhone: e.target.value.replace(/\D/g, "").slice(0, 11),
+                                },
+                              }))
+                            }
+                          />
+                        </div>
+                      ) : null}
+
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => saveInlineContact(v)}
+                          className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => closeInlineEditor(v._id)}
+                          className="rounded-md bg-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
 
-                {/* RIGHT SIDE - QR IMAGE */}
-              <div className="flex flex-col items-center min-w-[110px]">
-  {qr?.qrCode ? (
-    <>
-      <img
-        src={qr.qrCode}
-        alt="QR"
-        className="w-[90px] h-[90px] rounded"
-      />
-      <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-        {qr.code}
-      </p>
-    </>
-  ) : v.qrData ? (
-    <img
-      src={`https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${v.qrData}`}
-      alt="QR"
-      className="w-[90px] h-[90px] rounded"
-    />
-  ) : (
-    <p className={`text-xs ${textMuted}`}>No QR</p>
-  )}
-</div>
+                <div className="flex w-full items-center justify-between gap-3 md:w-auto md:flex-col md:items-center">
+                  {/* RIGHT SIDE - QR IMAGE */}
+                  <div className="flex flex-col items-center min-w-[96px]">
+                    {qr?.qrCode ? (
+                      <>
+                        <img
+                          src={qr.qrCode}
+                          alt="QR"
+                          className="h-[86px] w-[86px] rounded"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+                          {qr.code}
+                        </p>
+                      </>
+                    ) : v.qrData ? (
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${v.qrData}`}
+                        alt="QR"
+                        className="h-[86px] w-[86px] rounded"
+                      />
+                    ) : (
+                      <p className={`text-xs ${textMuted}`}>No QR</p>
+                    )}
+                  </div>
 
-                {/* ACTIONS */}
-                <div className="flex flex-col gap-1">
-                
-
-                  <button
-                    type="button"
-                    onClick={() => setEditVehicle(v)}
-                    className="rounded-lg bg-amber-600 px-2 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-600"
-                  >
-                    Edit
-                  </button>
-
-                  {role === "admin" && (
+                  {/* ACTIONS */}
+                  <div className="flex flex-col gap-1.5">
                     <button
                       type="button"
-                      onClick={() => handleDelete(v._id)}
-                      className="rounded-lg bg-rose-600 px-2 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
+                      onClick={() => setEditVehicle(v)}
+                      className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-600"
                     >
-                      Delete
+                      Edit
                     </button>
-                  )}
+
+                    {role === "admin" && (
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(v._id)}
+                        className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
 
               </div>
@@ -260,29 +526,106 @@ const MyVehiclePage = () => {
             >
               <h2 className={`text-center font-bold ${textHeading}`}>Edit Vehicle</h2>
 
-              <input
-                value={editVehicle.vehicleName}
-                onChange={(e) =>
-                  setEditVehicle({ ...editVehicle, vehicleName: e.target.value })
-                }
-                className={fieldInput}
-              />
+              <label className="space-y-1">
+                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  Vehicle name
+                </span>
+                <input
+                  value={editVehicle.vehicleName}
+                  onChange={(e) =>
+                    setEditVehicle({ ...editVehicle, vehicleName: e.target.value })
+                  }
+                  className={fieldInput}
+                />
+              </label>
 
-              <input
-                value={editVehicle.model}
-                onChange={(e) =>
-                  setEditVehicle({ ...editVehicle, model: e.target.value })
-                }
-                className={fieldInput}
-              />
+              <label className="space-y-1">
+                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  Model
+                </span>
+                <input
+                  value={editVehicle.model}
+                  onChange={(e) =>
+                    setEditVehicle({ ...editVehicle, model: e.target.value })
+                  }
+                  className={fieldInput}
+                />
+              </label>
 
-              <input
-                value={editVehicle.plate}
-                onChange={(e) =>
-                  setEditVehicle({ ...editVehicle, plate: e.target.value })
-                }
-                className={fieldInput}
-              />
+              <label className="space-y-1">
+                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  Plate
+                </span>
+                <input
+                  value={editVehicle.plate}
+                  onChange={(e) =>
+                    setEditVehicle({ ...editVehicle, plate: e.target.value })
+                  }
+                  className={fieldInput}
+                />
+              </label>
+
+              <label className="space-y-1">
+                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  Owner phone
+                </span>
+                <input
+                  value={editVehicle.ownerPhone || ""}
+                  onChange={(e) =>
+                    setEditVehicle({ ...editVehicle, ownerPhone: e.target.value })
+                  }
+                  placeholder="Owner phone"
+                  className={fieldInput}
+                />
+              </label>
+
+              <label className="space-y-1">
+                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  Emergency phone
+                </span>
+                <input
+                  value={editVehicle.emergencyPhone || ""}
+                  onChange={(e) =>
+                    setEditVehicle({ ...editVehicle, emergencyPhone: e.target.value })
+                  }
+                  placeholder="Emergency phone"
+                  className={fieldInput}
+                />
+              </label>
+
+              <label className="space-y-1">
+                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  Driver name
+                </span>
+                <input
+                  value={editVehicle?.driver?.name || ""}
+                  onChange={(e) =>
+                    setEditVehicle({
+                      ...editVehicle,
+                      driver: { ...(editVehicle?.driver || {}), name: e.target.value },
+                    })
+                  }
+                  placeholder="Driver name"
+                  className={fieldInput}
+                />
+              </label>
+
+              <label className="space-y-1">
+                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  Driver phone
+                </span>
+                <input
+                  value={editVehicle?.driver?.phone || ""}
+                  onChange={(e) =>
+                    setEditVehicle({
+                      ...editVehicle,
+                      driver: { ...(editVehicle?.driver || {}), phone: e.target.value },
+                    })
+                  }
+                  placeholder="Driver phone"
+                  className={fieldInput}
+                />
+              </label>
 
               <div className="flex gap-2">
                 <button
