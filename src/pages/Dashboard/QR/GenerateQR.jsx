@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
@@ -48,7 +48,7 @@ const FRAME_OFFSET_LAYOUT = {
 };
 
 const toPngOptions = {
-  pixelRatio: 3,
+  pixelRatio: 2,
   backgroundColor: "#ffffff",
   cacheBust: true,
 };
@@ -63,6 +63,9 @@ const STICKER_SIZE_MM = {
   car: { w: 63.5, h: 88.9 }, // 2.5 x 3.5 inch
 };
 const STICKER_MARGIN_MM = 1;
+const QR_TEXT_GAP_MM = 1.4;
+const QR_TEXT_FONT_SIZE_PT = 8;
+const QR_TEXT_BLOCK_MM = 4.2;
 const PDF_LAYOUT_OPTIONS = [
   { value: "p", label: "Portrait" },
   { value: "l", label: "Landscape" },
@@ -133,7 +136,8 @@ function placeStickerOnPage(
   stickerMm,
   cursor,
   pageSize,
-  pageLayout
+  pageLayout,
+  codeText
 ) {
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
@@ -147,7 +151,9 @@ function placeStickerOnPage(
     rowHeight = 0;
   }
 
-  if (y + stickerMm.h > pageH - margin) {
+  const blockHeight = stickerMm.h + QR_TEXT_BLOCK_MM;
+
+  if (y + blockHeight > pageH - margin) {
     pdf.addPage(pageSize, pageLayout);
     x = margin;
     y = margin;
@@ -164,7 +170,15 @@ function placeStickerOnPage(
     innerW,
     innerH
   );
-  rowHeight = Math.max(rowHeight, stickerMm.h);
+  pdf.setFont("courier", "normal");
+  pdf.setFontSize(QR_TEXT_FONT_SIZE_PT);
+  pdf.text(
+    codeText || "QR",
+    x + stickerMm.w / 2,
+    y + stickerMm.h + QR_TEXT_GAP_MM,
+    { align: "center", baseline: "top" }
+  );
+  rowHeight = Math.max(rowHeight, blockHeight);
 
   return { x: x + stickerMm.w + gap, y, rowHeight };
 }
@@ -231,8 +245,13 @@ const QRGenerator = () => {
   const [error, setError] = useState(null);
 
   const cardRefs = useRef({});
+  const captureCacheRef = useRef(new Map());
 
   const typeKeys = Object.keys(QR_TYPE_LAYOUT);
+
+  useEffect(() => {
+    captureCacheRef.current.clear();
+  }, [qrList, selectedType]);
 
   const generateQR = async () => {
     const raw = document.getElementById("qr-count")?.value;
@@ -260,9 +279,16 @@ const QRGenerator = () => {
   };
 
   const captureNodePng = async (index) => {
+    const item = qrList[index];
+    const cacheKey = item?._id || item?.code || `${selectedType}-${index}`;
+    if (captureCacheRef.current.has(cacheKey)) {
+      return captureCacheRef.current.get(cacheKey);
+    }
     const node = cardRefs.current[index];
     if (!node) throw new Error("Card not ready");
-    return toPng(node, toPngOptions);
+    const imageData = await toPng(node, toPngOptions);
+    captureCacheRef.current.set(cacheKey, imageData);
+    return imageData;
   };
 
   /** Single tag — one A4 page, centered, print-ready. */
@@ -295,6 +321,7 @@ const QRGenerator = () => {
       const y = (pageH - sticker.h) / 2;
       const innerW = Math.max(1, sticker.w - STICKER_MARGIN_MM * 2);
       const innerH = Math.max(1, sticker.h - STICKER_MARGIN_MM * 2);
+      const qrCodeLabel = code ? `QR - ${code}` : "QR";
       pdf.addImage(
         imgData,
         "PNG",
@@ -303,6 +330,12 @@ const QRGenerator = () => {
         innerW,
         innerH
       );
+      pdf.setFont("courier", "normal");
+      pdf.setFontSize(QR_TEXT_FONT_SIZE_PT);
+      pdf.text(qrCodeLabel, x + sticker.w / 2, y + sticker.h + QR_TEXT_GAP_MM, {
+        align: "center",
+        baseline: "top",
+      });
       pdf.save(`${companyNameSlug()}-QR-${type}-${code}-${pdfPageLabel}.pdf`);
     } catch (e) {
       console.error(e);
@@ -354,13 +387,15 @@ const QRGenerator = () => {
       const item = qrList[i];
       const type = item?.qrType || selectedType;
       const sticker = getStickerSizeMm(type);
+      const qrCodeLabel = item?.code ? `QR - ${item.code}` : "QR";
       cursor = placeStickerOnPage(
         pdf,
         imgData,
         sticker,
         cursor,
         pdfFormat,
-        selectedPdfLayout
+        selectedPdfLayout,
+        qrCodeLabel
       );
     }
 

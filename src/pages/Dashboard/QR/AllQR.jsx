@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toPng } from "html-to-image";
@@ -70,9 +70,12 @@ const PAGE_LAYOUT_MM = {
 };
 
 const STICKER_MARGIN_MM = 1;
+const QR_TEXT_GAP_MM = 1.4;
+const QR_TEXT_FONT_SIZE_PT = 8;
+const QR_TEXT_BLOCK_MM = 4.2;
 
 const toPngOptions = {
-  pixelRatio: 2,
+  pixelRatio: 1.8,
   backgroundColor: "#ffffff",
   cacheBust: true,
 };
@@ -118,7 +121,7 @@ function getStickerSizeMm(type) {
   return STICKER_SIZE_MM[type] || STICKER_SIZE_MM.bike;
 }
 
-function placeStickerOnPage(pdf, imgData, stickerMm, cursor) {
+function placeStickerOnPage(pdf, imgData, stickerMm, cursor, codeText) {
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
   const { margin, gap } = PAGE_LAYOUT_MM;
@@ -130,7 +133,9 @@ function placeStickerOnPage(pdf, imgData, stickerMm, cursor) {
     rowHeight = 0;
   }
 
-  if (y + stickerMm.h > pageH - margin) {
+  const blockHeight = stickerMm.h + QR_TEXT_BLOCK_MM;
+
+  if (y + blockHeight > pageH - margin) {
     pdf.addPage("letter", "p");
     x = margin;
     y = margin;
@@ -147,7 +152,15 @@ function placeStickerOnPage(pdf, imgData, stickerMm, cursor) {
     innerW,
     innerH
   );
-  rowHeight = Math.max(rowHeight, stickerMm.h);
+  pdf.setFont("courier", "normal");
+  pdf.setFontSize(QR_TEXT_FONT_SIZE_PT);
+  pdf.text(
+    codeText || "QR",
+    x + stickerMm.w / 2,
+    y + stickerMm.h + QR_TEXT_GAP_MM,
+    { align: "center", baseline: "top" }
+  );
+  rowHeight = Math.max(rowHeight, blockHeight);
   return { x: x + stickerMm.w + gap, y, rowHeight };
 }
 
@@ -193,7 +206,8 @@ const AllQR = () => {
   const [filterQrType, setFilterQrType] = useState("");
   const [isPreviewingFiltered, setIsPreviewingFiltered] = useState(false);
   const [isDownloadingFiltered, setIsDownloadingFiltered] = useState(false);
-  const cardRefs = React.useRef({});
+  const cardRefs = useRef({});
+  const captureCacheRef = useRef(new Map());
 
   const maxDay = daysInMonth(filterYear || String(new Date().getFullYear()), filterMonth);
 
@@ -223,6 +237,10 @@ const AllQR = () => {
 
   const qrCodes = Array.isArray(data?.data) ? data.data : [];
 
+  useEffect(() => {
+    captureCacheRef.current.clear();
+  }, [qrCodes]);
+
   const resetFilters = () => {
     setFilterYear("");
     setFilterMonth("");
@@ -231,9 +249,16 @@ const AllQR = () => {
   };
 
   const captureNodePng = async (index) => {
+    const item = qrCodes[index];
+    const cacheKey = item?._id || item?.code || `qr-${index}`;
+    if (captureCacheRef.current.has(cacheKey)) {
+      return captureCacheRef.current.get(cacheKey);
+    }
     const node = cardRefs.current[index];
     if (!node) throw new Error("Card not ready");
-    return toPng(node, toPngOptions);
+    const imageData = await toPng(node, toPngOptions);
+    captureCacheRef.current.set(cacheKey, imageData);
+    return imageData;
   };
 
   const buildFilteredPdf = async () => {
@@ -248,7 +273,8 @@ const AllQR = () => {
       const imgData = await captureNodePng(i);
       const item = qrCodes[i];
       const sticker = getStickerSizeMm(item?.qrType || "bike");
-      cursor = placeStickerOnPage(pdf, imgData, sticker, cursor);
+      const qrCodeLabel = item?.code ? `QR - ${item.code}` : "QR";
+      cursor = placeStickerOnPage(pdf, imgData, sticker, cursor, qrCodeLabel);
     }
     return pdf;
   };

@@ -250,15 +250,15 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
           <section className="order-1 space-y-6 lg:col-span-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-slate-600">
-                <span className="font-semibold text-slate-900">
-                  {isLoading ? "…" : catalogProducts.length}
-                </span>{" "}
+                {/* <span className="font-semibold text-slate-900">
+                   {isLoading ? "…" : catalogProducts.length}
+                      </span>{" "} */}
                 {/* {catalogProducts.length === 1 ? "product" : "products"}
                 {searchTerm || filterPrice !== "all" ? " (filtered)" : ""}
                 {spotlightProduct && (
                   <span className="ml-1 text-slate-400">(spotlight above)</span>
                 )} */}
-                {hasMoreCatalog && !showAllCatalog && (
+                 {hasMoreCatalog && !showAllCatalog && (
                   <span className="ml-1 block text-slate-400 sm:inline">
                     — showing first {CATALOG_PAGE_SIZE}
                   </span>
@@ -334,7 +334,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
               </div>
             ) : (
               <>
-                <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-2">
+                <ul className="grid grid-cols-1 gap-5 sm:grid-cols- sm:gap-6 xl:grid-cols-2">
                   {visibleCatalogProducts.map((product) => (
                     <li key={product._id}>
                       <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-slate-50 dark:bg-slate-900 dark:border-slate-700 shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md">

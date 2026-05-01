@@ -1,5 +1,9 @@
 {
   "projects": {
-    "default": "qr-tag-239b8"
-  }
+    "default": "scanzybd-2acfe",
+    "prod": "scanzybd-2acfe"
+  },
+  "targets": {},
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
 }
