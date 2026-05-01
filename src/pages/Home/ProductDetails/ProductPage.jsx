@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ShoppingCart,
@@ -30,6 +30,7 @@ const ProductPage = () => {
   const { addToCart, cartItems, removeFromCart } = useCart();
   const axiosSecure = useAxiosSecure();
   const navigate = useNavigate();
+  const { id } = useParams();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPrice, setFilterPrice] = useState("all");
@@ -47,6 +48,19 @@ const ProductPage = () => {
     },
     retry: 2,
     staleTime: 60_000,
+  });
+
+  const {
+    data: selectedProduct,
+    isLoading: selectedLoading,
+  } = useQuery({
+    queryKey: ["product-details", id],
+    queryFn: async () => {
+      const res = await axiosSecure.get(`/api/products/${id}`);
+      return res.data?.data ?? null;
+    },
+    enabled: Boolean(id),
+    retry: 1,
   });
 
   const filteredProducts = useMemo(() => {
@@ -98,7 +112,64 @@ const ProductPage = () => {
   const payable = totalPrice - discount;
   const cartCount = cartItems.reduce((n, i) => n + (i.quantity || 1), 0);
 
-  if (isLoading) return <SmartLoader fullPage label="Loading products..." />;
+  if (isLoading || selectedLoading) return <SmartLoader fullPage label="Loading products..." />;
+
+  if (id && selectedProduct) {
+    return (
+      <div className="min-h-screen w-full bg-linear-to-b from-slate-100 via-slate-50 to-slate-100">
+        {notification && (
+          <div className="fixed inset-x-0 top-0 z-100 flex justify-center px-3 pt-4 sm:left-auto sm:right-4 sm:top-4 sm:justify-end sm:px-0">
+            <div
+              role="status"
+              className="max-w-md rounded-xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-lg sm:max-w-sm"
+            >
+              {notification.message}
+            </div>
+          </div>
+        )}
+        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+          <button
+            type="button"
+            onClick={() => navigate("/Products")}
+            className="btn mb-5 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+          >
+            Back to products
+          </button>
+          <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="grid gap-0 md:grid-cols-2">
+              <div className="bg-slate-100">
+                <img
+                  src={selectedProduct.image || productFallback}
+                  alt={selectedProduct.title || "Product"}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="p-6 sm:p-8">
+                <h1 className="text-2xl font-bold text-slate-900">{selectedProduct.title}</h1>
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                  {selectedProduct.description}
+                </p>
+                <p className="mt-5 text-3xl font-bold text-amber-700">
+                  ৳ {Number(selectedProduct.price).toLocaleString()}
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Validity: {selectedProduct.validityDays ?? 365} days
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleAddToCart(selectedProduct)}
+                  className="btn mt-6 w-full gap-2 rounded-xl border-0 bg-yellow-500 text-sm font-semibold text-white hover:bg-yellow-600"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  {t("store.addToCart")}
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-linear-to-b from-slate-100 via-slate-50 to-slate-100">
@@ -166,7 +237,7 @@ const ProductPage = () => {
                 </p>
               </div>
             ) : (
-              <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-2">
+              <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
                 {filteredProducts.map((product) => (
                   <li key={product._id}>
                     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-slate-50 shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md">
@@ -200,6 +271,13 @@ const ProductPage = () => {
                         >
                           <ShoppingCart className="h-4 w-4" />
                           {t("store.addToCart")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/Products/${product._id}`)}
+                          className="btn mt-2 w-full rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          {t("store.details")}
                         </button>
                       </div>
                     </article>

@@ -136,12 +136,12 @@ const Navbar = () => {
                   {t("nav.signIn")}
                 </Link>
 
-                <Link
+                {/* <Link
                   to="/register"
                   className="btn hidden rounded-xl border-0 bg-yellow-400 px-5 text-slate-900 shadow-sm hover:bg-yellow-500 sm:inline-flex"
                 >
                   {t("nav.signUp")}
-                </Link>
+                </Link> */}
               </>
             )}
 

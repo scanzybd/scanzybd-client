@@ -11,32 +11,55 @@ import {
   textHeading,
   textMuted,
 } from "../../../lib/uiClasses";
+import { Pencil, Trash2 } from "lucide-react";
+import Switch from "react-switch";
+
+/** Solid hex for react-switch (tailwind slate-200 → slate-300 track) */
+const CONTACT_OFF_HEX = "#d1d9e3";
+
+const CONTACT_ON_HEX = {
+  green: "#059669",
+  blue: "#2563eb",
+  red: "#dc2626",
+};
+
+const switchIconBase =
+  "flex h-full w-full items-center text-[8px] font-bold uppercase tracking-wide text-white";
 
 const ContactToggle = ({ label, checked, onClick, disabled = false, tone = "green" }) => {
-  const onColor =
-    tone === "blue" ? "from-blue-500 to-blue-700" : tone === "red" ? "from-red-500 to-red-700" : "from-emerald-500 to-emerald-700";
+  const onHex = CONTACT_ON_HEX[tone] ?? CONTACT_ON_HEX.green;
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Switch
+      checked={checked}
+      onChange={() => {
+        if (!disabled) onClick();
+      }}
       disabled={disabled}
-      className={`relative h-8 w-[88px] rounded-full border-2 px-2 text-xs font-bold tracking-wide shadow-inner transition ${
-        checked
-          ? `border-white/20 bg-linear-to-r ${onColor} text-white`
-          : "border-slate-300 bg-linear-to-r from-slate-200 to-slate-300 text-slate-700"
-      } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
+      onColor={onHex}
+      offColor={CONTACT_OFF_HEX}
+      onHandleColor="#f1f5f9"
+      offHandleColor="#f1f5f9"
+      height={20}
+      width={44}
+      borderRadius={10}
+      handleDiameter={16}
+      uncheckedIcon={
+        <div className={`${switchIconBase} justify-end pr-1`}>
+          OFF
+        </div>
+      }
+      checkedIcon={
+        <div className={`${switchIconBase} justify-start pl-1`}>
+          ON
+        </div>
+      }
+      boxShadow="0 1px 2px rgba(15, 23, 42, 0.12)"
+      activeBoxShadow="0 0 0 2px rgba(59, 130, 246, 0.35)"
+      className={`shrink-0 align-middle ${disabled ? "opacity-60" : ""}`}
+      aria-label={label}
       title={`${label} ${checked ? "ON" : "OFF"}`}
-    >
-      <span
-        className={`absolute top-0.5 h-6 w-6 rounded-full border border-slate-300 bg-slate-100 shadow transition-all ${
-          checked ? "right-1" : "left-1"
-        }`}
-      />
-      <span className={`absolute top-1/2 -translate-y-1/2 ${checked ? "left-2.5" : "right-2.5"}`}>
-        {checked ? "ON" : "OFF"}
-      </span>
-    </button>
+    />
   );
 };
 
@@ -441,6 +464,46 @@ const MyVehiclePage = () => {
                 </div>
 
                 <div className="flex w-full items-center justify-between gap-3 md:w-auto md:flex-col md:items-center">
+
+{/* ACTIONS */}
+<div className="flex gap-2">
+
+  {/* EDIT */}
+  <button
+    type="button"
+    onClick={() => setEditVehicle(v)}
+    className="flex items-center justify-center rounded-lg  p-2
+    bg-white text-slate-700
+    hover:bg-slate-100 hover:border-amber-600 hover:text-amber-700
+    dark:bg-slate-800 dark:text-slate-50 dark:border-slate-400
+    dark:hover:bg-amber-500 dark:hover:text-slate-900 dark:hover:border-amber-300
+    transition"
+    title="Edit"
+  >
+    <Pencil className="h-4 w-4" />
+  </button>
+
+  {/* DELETE */}
+  {role === "admin" && (
+    <button
+      type="button"
+      onClick={() => handleDelete(v._id)}
+      className={`
+        flex items-center justify-center rounded-lg p-2
+        bg-white text-rose-700
+        hover:bg-rose-50 hover:border-rose-600 hover:text-rose-800
+        dark:bg-slate-900 dark:text-rose-300 dark:border-slate-400
+        dark:hover:bg-rose-600 dark:hover:text-white dark:hover:border-rose-500
+        transition
+      `}
+      title="Delete"
+    >
+      <Trash2 className="h-4 w-4" />
+    </button>
+  )}
+ 
+
+</div>
                   {/* RIGHT SIDE - QR IMAGE */}
                   <div className="flex flex-col items-center min-w-[96px]">
                     {qr?.qrCode ? (
@@ -465,26 +528,7 @@ const MyVehiclePage = () => {
                     )}
                   </div>
 
-                  {/* ACTIONS */}
-                  <div className="flex flex-col gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setEditVehicle(v)}
-                      className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-600"
-                    >
-                      Edit
-                    </button>
-
-                    {role === "admin" && (
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(v._id)}
-                        className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
+                
                 </div>
 
               </div>

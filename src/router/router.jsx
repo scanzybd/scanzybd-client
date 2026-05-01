@@ -93,7 +93,7 @@ const router = createBrowserRouter([
       },
       {
         path: "Products/:id",
-        element: <Navigate to="/product" replace />,
+        Component: ProductPage,
       },
       {
         path: "Products",

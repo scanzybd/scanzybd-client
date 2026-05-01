@@ -137,8 +137,10 @@ const ProductShowcase = () => {
   const cartCount = cartItems.reduce((n, i) => n + (i.quantity || 1), 0);
 
   return (
-    <div className="min-h-screen w-full bg-linear-to-b from-slate-100 via-slate-50 to-slate-100">
-      {notification && (
+<div className="min-h-screen w-full bg-linear-to-b 
+from-slate-100 via-slate-50 to-slate-100
+dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        {notification && (
         <div className="fixed inset-x-0 top-0 z-100 flex justify-center px-3 pt-4 sm:left-auto sm:right-4 sm:top-4 sm:justify-end sm:px-0">
           <div
             role="status"
@@ -151,7 +153,7 @@ const ProductShowcase = () => {
         </div>
       )}
 
-      <header className="relative overflow-hidden border-b border-slate-200/80 bg-slate-900">
+      <header className="relative overflow-hidden border-b border-slate-200/80 dark:border-slate-700/80 bg-slate-900">
         <div
           className="pointer-events-none absolute inset-0 opacity-40"
           style={{
@@ -219,7 +221,7 @@ const ProductShowcase = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => navigate("/product")}
+                        onClick={() => navigate(`/Products/${spotlightProduct._id}`)}
                         className="btn flex-1 rounded-xl border border-white/25 bg-transparent text-sm font-semibold text-white hover:bg-white/10"
                       >
                         {t("store.details")}
@@ -230,7 +232,7 @@ const ProductShowcase = () => {
                 </article>
               )}
               {!spotlightLoading && !spotlightProduct && (
-                <div className="flex min-h-[200px] w-full max-w-md flex-col items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5 px-6 py-10 text-center">
+                <div className="flex min-h-[200px] w-full max-w-md flex-col items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5 dark:bg-slate-900 dark:border-slate-700  px-6 py-10 text-center">
                   <Package className="mb-2 h-10 w-10 text-slate-500" />
                   <p className="text-sm text-slate-400">
                     Set <code className="rounded bg-black/30 px-1.5 py-0.5 text-xs">FEATURED_PRODUCT_ID</code> in
@@ -251,11 +253,11 @@ const ProductShowcase = () => {
                 <span className="font-semibold text-slate-900">
                   {isLoading ? "…" : catalogProducts.length}
                 </span>{" "}
-                {catalogProducts.length === 1 ? "product" : "products"}
+                {/* {catalogProducts.length === 1 ? "product" : "products"}
                 {searchTerm || filterPrice !== "all" ? " (filtered)" : ""}
                 {spotlightProduct && (
                   <span className="ml-1 text-slate-400">(spotlight above)</span>
-                )}
+                )} */}
                 {hasMoreCatalog && !showAllCatalog && (
                   <span className="ml-1 block text-slate-400 sm:inline">
                     — showing first {CATALOG_PAGE_SIZE}
@@ -281,7 +283,8 @@ const ProductShowcase = () => {
                 />
                 <input
                   type="search"
-                  className="input input-bordered w-full rounded-xl border-slate-300 bg-slate-50 pl-10 pr-4 text-sm shadow-sm focus:border-yellow-600 focus:outline-none focus:ring-2 focus:ring-amber-600/15"
+                  className="input input-bordered w-full rounded-xl border-slate-300 bg-slate-50 pl-10 pr-4  dark:bg-slate-800 dark:border-slate-700 dark:text-white
+  text-sm shadow-sm focus:border-yellow-600 focus:outline-none focus:ring-2 focus:ring-amber-600/15"
                   placeholder="Search by name..."
                   value={searchTerm}
                   onChange={(e) => {
@@ -294,7 +297,7 @@ const ProductShowcase = () => {
               <div className="relative sm:w-52">
                 <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:hidden" />
                 <select
-                  className="select select-bordered w-full rounded-xl border-slate-300 bg-slate-50 text-sm shadow-sm focus:border-amber-600 sm:pl-3"
+                  className="select select-bordered w-full rounded-xl border-slate-300 bg-slate-50 text-sm shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:border-amber-600 sm:pl-3"
                   value={filterPrice}
                   onChange={(e) => {
                     setFilterPrice(e.target.value);
@@ -334,7 +337,7 @@ const ProductShowcase = () => {
                 <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-2">
                   {visibleCatalogProducts.map((product) => (
                     <li key={product._id}>
-                      <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-slate-50 shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md">
+                      <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-slate-50 dark:bg-slate-900 dark:border-slate-700 shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md">
                         <div className="relative aspect-4/3 overflow-hidden bg-slate-200">
                           <img
                             src={product.image || productFallback}
@@ -349,10 +352,10 @@ const ProductShowcase = () => {
                           )}
                         </div>
                         <div className="flex flex-1 flex-col p-4 sm:p-5">
-                          <h3 className="line-clamp-2 text-base font-semibold leading-snug text-slate-900 sm:text-lg">
+                          <h3 className="line-clamp-2 text-base font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-lg">
                             {product.title}
                           </h3>
-                          <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600">
+                          <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                             {product.description}
                           </p>
                           <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-slate-100 pt-4">
@@ -381,6 +384,13 @@ const ProductShowcase = () => {
                             <ShoppingCart className="h-4 w-4" />
                             {t("store.addToCart")}
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/Products/${product._id}`)}
+                            className="btn mt-2 w-full rounded-xl border border-slate-300 bg-white dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:hover:bg-slate-700 hover:bg-slate-50"
+                          >
+                            {t("store.details")}
+                          </button>
                         </div>
                       </article>
                     </li>
@@ -392,7 +402,7 @@ const ProductShowcase = () => {
                       <button
                         type="button"
                         onClick={() => setShowAllCatalog(true)}
-                        className="btn gap-2 rounded-xl border-2 border-amber-600/40 bg-amber-100/60 px-8 text-base font-semibold text-amber-900 shadow-sm hover:bg-amber-100"
+                        className="btn gap-2 rounded-xl border-2 border-amber-600/40 bg-amber-100/60 px-8 text-base font-semibold text-amber-900 dark:bg-amber-900/30 dark:text-amber-200 shadow-sm hover:bg-amber-100"
                       >
                         {t("store.more")}
                         <span className="text-sm font-normal opacity-80">
@@ -404,7 +414,7 @@ const ProductShowcase = () => {
                       <button
                         type="button"
                         onClick={() => setShowAllCatalog(false)}
-                        className="btn btn-ghost gap-2 rounded-xl text-slate-600 hover:bg-slate-100"
+                        className="btn btn-ghost gap-2 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                       >
                         <ChevronUp className="h-4 w-4" aria-hidden />
                         {t("store.showLess")}
@@ -418,10 +428,10 @@ const ProductShowcase = () => {
 
           {cartItems.length > 0 && (
             <aside className="order-2 lg:sticky lg:top-20 lg:col-span-4 lg:self-start">
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-5">
+              <div className="overflow-hidden rounded-2xl border border-slate-200 dark:bg-slate-900 dark:border-slate-700 bg-white shadow-sm">
+              <div className="border-b border-slate-100 bg-slate-50/80 dark:bg-slate-800 dark:border-slate-700 px-4 py-4 sm:px-5">
                 <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-base font-bold text-slate-900 sm:text-lg">Your cart</h2>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white sm:text-lg">Your cart</h2>
                   <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-amber-500 px-2 text-sm font-bold text-slate-900">
                     {cartCount}
                   </span>
@@ -442,7 +452,7 @@ const ProductShowcase = () => {
                     {cartItems.map((item) => (
                       <li
                         key={item._id}
-                        className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-2.5"
+                        className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50/50 dark:bg-slate-800 dark:border-slate-700 p-2.5"
                       >
                         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-slate-200">
                           <img
@@ -452,10 +462,10 @@ const ProductShowcase = () => {
                           />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="line-clamp-2 text-sm font-medium text-slate-900">
+                          <p className="line-clamp-2 text-sm font-medium text-slate-900 dark:text-slate-100">
                             {item.title}
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
                             ৳ {item.price}
                             {item.quantity > 1 && (
                               <span className="text-slate-400">
@@ -468,7 +478,7 @@ const ProductShowcase = () => {
                         <button
                           type="button"
                           onClick={() => handleRemove(item._id)}
-                          className="btn btn-ghost btn-square btn-sm shrink-0 text-rose-600 hover:bg-rose-50"
+                          className="btn btn-ghost btn-square btn-sm shrink-0 text-rose-600  hover:bg-rose-50 dark:hover:bg-rose-900/30"
                           aria-label="Remove"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -480,10 +490,10 @@ const ProductShowcase = () => {
               </div>
 
               {cartItems.length > 0 && (
-                <div className="space-y-3 border-t border-slate-100 bg-slate-50/50 px-4 py-4 sm:px-5">
-                  <div className="flex justify-between text-sm text-slate-600">
+                <div className="space-y-3 border-t border-slate-100 bg-slate-50/50 dark:bg-slate-800 dark:border-slate-700 px-4 py-4 sm:px-5">
+                  <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                     <span>Subtotal</span>
-                    <span className="font-medium tabular-nums text-slate-900">
+                    <span className="font-medium tabular-nums text-slate-900 dark:text-white">
                       ৳ {totalPrice.toLocaleString()}
                     </span>
                   </div>
@@ -491,7 +501,7 @@ const ProductShowcase = () => {
                     <span>Est. discount (10%)</span>
                     <span className="tabular-nums">− ৳ {discount.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between border-t border-slate-200 pt-3 text-sm font-bold text-slate-900 sm:text-base">
+                  <div className="flex justify-between border-t border-slate-200 pt-3 text-sm font-bold text-slate-900 sm:text-base dark:text-white">
                     <span>Total</span>
                     <span className="tabular-nums text-amber-700">
                       ৳ {payable.toLocaleString()}
@@ -508,7 +518,7 @@ const ProductShowcase = () => {
                   <button
                     type="button"
                     onClick={() => navigate("/user/my-cart")}
-                    className="btn btn-ghost btn-block btn-sm rounded-xl text-slate-600"
+                    className="btn btn-ghost  btn-block btn-sm rounded-xl text-slate-600 dark:text-slate-300"
                   >
                     View full cart
                   </button>
