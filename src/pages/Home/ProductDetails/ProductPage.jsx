@@ -24,6 +24,43 @@ function normalizeProductList(raw) {
   return [];
 }
 
+const HIDDEN_DETAIL_KEYS = new Set([
+  "_id",
+  "id",
+  "originalprice",
+  "specifications",
+  "createdby",
+  "createdat",
+  "updatedat",
+  "__v",
+  "v",
+]);
+
+function toLabel(key) {
+  return key
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function formatDetailValue(key, value) {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (Array.isArray(value)) {
+    if (value.length === 0) return null;
+    return value.map((item) => (typeof item === "object" ? JSON.stringify(item) : String(item))).join(", ");
+  }
+  if (typeof value === "object") return JSON.stringify(value);
+  if (typeof value === "number" && key.toLowerCase().includes("price")) {
+    return `৳ ${value.toLocaleString()}`;
+  }
+  if (key.endsWith("At")) {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) return date.toLocaleString();
+  }
+  return String(value);
+}
+
 const ProductPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -111,6 +148,21 @@ const ProductPage = () => {
   const discount = totalPrice > 0 ? Math.round(totalPrice * 0.1) : 0;
   const payable = totalPrice - discount;
   const cartCount = cartItems.reduce((n, i) => n + (i.quantity || 1), 0);
+  const productDetails = useMemo(() => {
+    if (!selectedProduct) return [];
+
+    return Object.entries(selectedProduct)
+      .filter(([key]) => {
+        if (["title", "description", "image", "price", "validityDays"].includes(key)) return false;
+        return !HIDDEN_DETAIL_KEYS.has(String(key).toLowerCase());
+      })
+      .map(([key, value]) => ({
+        key,
+        label: toLabel(key),
+        value: formatDetailValue(key, value),
+      }))
+      .filter((item) => item.value !== null);
+  }, [selectedProduct]);
 
   if (isLoading || selectedLoading) return <SmartLoader fullPage label="Loading products..." />;
 
@@ -137,24 +189,44 @@ const ProductPage = () => {
           </button>
           <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="grid gap-0 md:grid-cols-2">
-              <div className="bg-slate-100">
+              <div className="aspect-4/3 bg-slate-100 md:aspect-auto">
                 <img
                   src={selectedProduct.image || productFallback}
                   alt={selectedProduct.title || "Product"}
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="p-6 sm:p-8">
-                <h1 className="text-2xl font-bold text-slate-900">{selectedProduct.title}</h1>
-                <p className="mt-3 text-sm leading-relaxed text-slate-600">
+              <div className="p-4 sm:p-6 lg:p-8">
+                <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">{selectedProduct.title}</h1>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600 sm:mt-3">
                   {selectedProduct.description}
                 </p>
-                <p className="mt-5 text-3xl font-bold text-amber-700">
-                  ৳ {Number(selectedProduct.price).toLocaleString()}
-                </p>
-                <p className="mt-2 text-sm text-slate-500">
-                  Validity: {selectedProduct.validityDays ?? 365} days
-                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-5">
+                  <p className="rounded-full bg-amber-50 px-3 py-1 text-2xl font-bold text-amber-700 sm:text-3xl">
+                    ৳ {Number(selectedProduct.price).toLocaleString()}
+                  </p>
+                  <p className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 sm:text-sm">
+                    Validity: {selectedProduct.validityDays ?? 365} days
+                  </p>
+                </div>
+                {productDetails.length > 0 && (
+                  <div className="mt-5 rounded-xl border border-slate-200 p-3 sm:p-4">
+                    <h2 className="text-sm font-semibold text-slate-800">All details</h2>
+                    <dl className="mt-3 space-y-2">
+                      {productDetails.map((item) => (
+                        <div
+                          key={item.key}
+                          className="border-b border-slate-200 px-1 py-2 last:border-b-0"
+                        >
+                          <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                            {item.label}
+                          </dt>
+                          <dd className="mt-1 wrap-break-word text-sm text-slate-700">{item.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => handleAddToCart(selectedProduct)}

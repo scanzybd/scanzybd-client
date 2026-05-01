@@ -8,6 +8,7 @@ import useAuth from '../../../../hooks/useAuth';
 import useCart from '../../../../hooks/useCart';
 import ThemeToggle from '../../../../components/ThemeToggle';
 import LanguageSwitcher from '../../../../components/LanguageSwitcher';
+import Swal from "sweetalert2";
 
 /** Neutral nav with soft amber accents for both themes */
 const navLinkClass = (active) =>
@@ -25,9 +26,39 @@ const Navbar = () => {
   const { logOut, user, userRole, loading } = useAuth();
   const { cartItems } = useCart();
 
-  const handleLogOut = () => {
-    logOut();
-    navigate("/");
+  const handleLogOut = async () => {
+    const result = await Swal.fire({
+      title: "Logout?",
+      text: "Are you sure you want to logout?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes",
+      cancelButtonText: "No",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+      focusCancel: true,
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await logOut();
+      navigate("/");
+      await Swal.fire({
+        icon: "success",
+        title: "Logged out",
+        text: "You have been logged out successfully.",
+        timer: 1400,
+        showConfirmButton: false,
+      });
+    } catch {
+      await Swal.fire({
+        icon: "error",
+        title: "Logout failed",
+        text: "Please try again.",
+      });
+    }
   };
 
   const navItems = (
@@ -70,16 +101,8 @@ const Navbar = () => {
         </HashLink>
       </li>
 
-      {user && (userRole === "admin" || userRole === "provider") && (
-        <li>
-          <Link
-            to="/dashboard"
-            className={navLinkClass(location.pathname === '/dashboard')}
-          >
-            {t("nav.dashboard")}
-          </Link>
-        </li>
-      )}
+      
+    
     </>
   );
 
@@ -149,20 +172,13 @@ const Navbar = () => {
               <span className="loading loading-spinner loading-sm text-slate-700 dark:text-slate-300" />
             )}
 
-            {user && !loading && (
-              <Link
-                to={userRole === "admin" || userRole === "provider" ? "/dashboard" : "/user/user-profile"}
-                className="btn hidden rounded-xl border border-slate-300 bg-white px-4 text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 md:inline-flex"
-              >
-                {userRole === "admin" || userRole === "provider" ? t("nav.dashboard") : t("user.menu.myAccount")}
-              </Link>
-            )}
+            
 
             {user && !loading && (
               <div className="dropdown dropdown-end">
                 <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-                  <div className="flex w-10 items-center justify-center rounded-full bg-amber-500 font-bold text-slate-900 shadow-sm ring-2 ring-amber-600/20 dark:text-slate-950">
-                    {user?.displayName?.charAt(0).toUpperCase() || 'U'}
+                  <div className="flex w-10 items-center justify-center rounded-full bg-yellow-500 font-bold text-slate-900 shadow-sm ring-2 ring-amber-600/20 dark:text-slate-950">
+                    {user?.displayName?.charAt(0).toUpperCase() || '👤'}
                   </div>
                 </div>
 
@@ -208,7 +224,7 @@ const Navbar = () => {
                   <hr className="my-2" />
 
                   <li>
-                    <button onClick={handleLogOut} className="text-red-500">
+                    <button onClick={handleLogOut} className="text-red-500 font-bold">
                       {t("user.menu.logout")}
                     </button>
                   </li>

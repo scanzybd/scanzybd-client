@@ -13,13 +13,13 @@ const SocialLogin = () => {
 
         } catch (error) {
             console.log(error);
-            alert("Google login failed");
         }
     };
 
     return (
         <div className="mb-4">
             <button
+                type="button"
                 onClick={handleGoogleSignIn}
                 className="btn bg-white text-black border-[#e5e5e5] w-full"
             >

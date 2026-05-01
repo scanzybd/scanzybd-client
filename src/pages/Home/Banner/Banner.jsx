@@ -4,7 +4,7 @@ import bannerImage from '../../../assets/banner/Banner.png';
 
 const Banner = () => {
   return (
-    <div className="relative w-full overflow-hidden bg-yellow-400 h-[calc(100vh-70px)]">
+    <div className="relative  w-full overflow-hidden bg-yellow-400 sm:h-[calc(100vh-70px)]">
       <video
         src={bannerVideo}
         autoPlay
@@ -13,7 +13,7 @@ const Banner = () => {
         playsInline
         preload="metadata"
         poster={bannerImage} // 👈 এইটাই main
-        className="block h-full w-full object-cover"
+        className="mx-auto block h-full w-fit sm:w-full object-cover"
       />
     </div>
   );
