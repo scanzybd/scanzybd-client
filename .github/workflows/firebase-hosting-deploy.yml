@@ -28,5 +28,5 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_QR_TAG_239B8 }}
-          projectId: qr-tag-239b8
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SCANZYBD_2ACFE }}
+          projectId: scanzybd-2acfe
