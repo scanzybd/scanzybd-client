@@ -9,6 +9,14 @@ import qrCarFrame from "../../../assets/qr-frame/QR UI-car.svg";
 import {
   companyNameSlug,
 } from "../../../config/company";
+import {
+  CARD_SIZE,
+  computeSinglePageStickerOrigin,
+  drawStickerWithLabelBelow,
+  getStickerSizeMm,
+  PDF_PAGE_INSET_BATCH,
+  placeStickerOnPage as placeStickerOnPdfPage,
+} from "./qrStickerPdf";
 
 /** Visual layout only — labels come from i18n (`dashboard.qr.generate.types.*`). */
 const QR_TYPE_LAYOUT = {
@@ -20,11 +28,6 @@ const QR_TYPE_LAYOUT = {
     Icon: Car,
     ringClass: "ring-2 ring-blue-700/90",
   },
-};
-
-const CARD_SIZE = {
-  bike: { width: 335, height: 180 },
-  car: { width: 300, height: 410 },
 };
 
 const QR_FRAME_ASSET = {
@@ -53,19 +56,6 @@ const toPngOptions = {
   cacheBust: true,
 };
 
-const PAGE_LAYOUT_MM = {
-  margin: 0,
-  gap: 0,
-};
-
-const STICKER_SIZE_MM = {
-  bike: { w: 76.2, h: 38.1 }, // 3 x 1.5 inch
-  car: { w: 63.5, h: 88.9 }, // 2.5 x 3.5 inch
-};
-const STICKER_MARGIN_MM = 1;
-const QR_TEXT_GAP_MM = 1.4;
-const QR_TEXT_FONT_SIZE_PT = 8;
-const QR_TEXT_BLOCK_MM = 4.2;
 const PDF_LAYOUT_OPTIONS = [
   { value: "p", label: "Portrait" },
   { value: "l", label: "Landscape" },
@@ -115,72 +105,11 @@ const PDF_PAGE_SIZE_OPTIONS = [
   "custom",
 ];
 
-function getStickerSizeMm(type) {
-  return STICKER_SIZE_MM[type] || STICKER_SIZE_MM.bike;
-}
-
 function getPdfFormat(pageSize, customWidthMm, customHeightMm) {
   if (pageSize !== "custom") return pageSize;
   const width = Math.max(20, Number(customWidthMm) || 210);
   const height = Math.max(20, Number(customHeightMm) || 297);
   return [width, height];
-}
-
-/**
- * Place one sticker on current page; add new page automatically if needed.
- * Returns next cursor position.
- */
-function placeStickerOnPage(
-  pdf,
-  imgData,
-  stickerMm,
-  cursor,
-  pageSize,
-  pageLayout,
-  codeText
-) {
-  const pageW = pdf.internal.pageSize.getWidth();
-  const pageH = pdf.internal.pageSize.getHeight();
-  const { margin, gap } = PAGE_LAYOUT_MM;
-
-  let { x, y, rowHeight } = cursor;
-
-  if (x + stickerMm.w > pageW - margin) {
-    x = margin;
-    y += rowHeight + gap;
-    rowHeight = 0;
-  }
-
-  const blockHeight = stickerMm.h + QR_TEXT_BLOCK_MM;
-
-  if (y + blockHeight > pageH - margin) {
-    pdf.addPage(pageSize, pageLayout);
-    x = margin;
-    y = margin;
-    rowHeight = 0;
-  }
-
-  const innerW = Math.max(1, stickerMm.w - STICKER_MARGIN_MM * 2);
-  const innerH = Math.max(1, stickerMm.h - STICKER_MARGIN_MM * 2);
-  pdf.addImage(
-    imgData,
-    "PNG",
-    x + STICKER_MARGIN_MM,
-    y + STICKER_MARGIN_MM,
-    innerW,
-    innerH
-  );
-  pdf.setFont("courier", "normal");
-  pdf.setFontSize(QR_TEXT_FONT_SIZE_PT);
-  pdf.text(
-    codeText || "QR",
-    x + stickerMm.w / 2,
-    y + stickerMm.h + QR_TEXT_GAP_MM,
-    { align: "center", baseline: "top" }
-  );
-  rowHeight = Math.max(rowHeight, blockHeight);
-
-  return { x: x + stickerMm.w + gap, y, rowHeight };
 }
 
 function PrintCardFrame({ item, qrType }) {
@@ -317,25 +246,14 @@ const QRGenerator = () => {
       });
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
-      const x = (pageW - sticker.w) / 2;
-      const y = (pageH - sticker.h) / 2;
-      const innerW = Math.max(1, sticker.w - STICKER_MARGIN_MM * 2);
-      const innerH = Math.max(1, sticker.h - STICKER_MARGIN_MM * 2);
-      const qrCodeLabel = code ? `QR - ${code}` : "QR";
-      pdf.addImage(
-        imgData,
-        "PNG",
-        x + STICKER_MARGIN_MM,
-        y + STICKER_MARGIN_MM,
-        innerW,
-        innerH
+      const { x, y } = computeSinglePageStickerOrigin(
+        pageW,
+        pageH,
+        sticker,
+        PDF_PAGE_INSET_BATCH
       );
-      pdf.setFont("courier", "normal");
-      pdf.setFontSize(QR_TEXT_FONT_SIZE_PT);
-      pdf.text(qrCodeLabel, x + sticker.w / 2, y + sticker.h + QR_TEXT_GAP_MM, {
-        align: "center",
-        baseline: "top",
-      });
+      const qrCodeLabel = code ? `QR - ${code}` : "QR";
+      drawStickerWithLabelBelow(pdf, imgData, x, y, sticker, type, qrCodeLabel);
       pdf.save(`${companyNameSlug()}-QR-${type}-${code}-${pdfPageLabel}.pdf`);
     } catch (e) {
       console.error(e);
@@ -377,8 +295,8 @@ const QRGenerator = () => {
       format: pdfFormat,
     });
     let cursor = {
-      x: PAGE_LAYOUT_MM.margin,
-      y: PAGE_LAYOUT_MM.margin,
+      x: PDF_PAGE_INSET_BATCH.left,
+      y: PDF_PAGE_INSET_BATCH.top,
       rowHeight: 0,
     };
 
@@ -388,14 +306,16 @@ const QRGenerator = () => {
       const type = item?.qrType || selectedType;
       const sticker = getStickerSizeMm(type);
       const qrCodeLabel = item?.code ? `QR - ${item.code}` : "QR";
-      cursor = placeStickerOnPage(
+      cursor = placeStickerOnPdfPage(
         pdf,
         imgData,
         sticker,
         cursor,
         pdfFormat,
         selectedPdfLayout,
-        qrCodeLabel
+        qrCodeLabel,
+        type,
+        PDF_PAGE_INSET_BATCH
       );
     }
 

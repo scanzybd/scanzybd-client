@@ -23,11 +23,12 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
 import qrBikeFrame from "../../../assets/qr-frame/QR UI-bike.svg";
 import qrCarFrame from "../../../assets/qr-frame/QR UI-car.svg";
-
-const CARD_SIZE = {
-  bike: { width: 335, height: 180 },
-  car: { width: 300, height: 410 },
-};
+import {
+  CARD_SIZE,
+  getStickerSizeMm,
+  PDF_PAGE_INSET_ALL_QR,
+  placeStickerOnPage as placeStickerOnPdfPage,
+} from "./qrStickerPdf";
 
 const QR_FRAME_ASSET = {
   bike: qrBikeFrame,
@@ -58,21 +59,6 @@ const LIST_PREVIEW_HEIGHT = {
   bike: 124,
   car: 190,
 };
-
-const STICKER_SIZE_MM = {
-  bike: { w: 76.2, h: 38.1 },
-  car: { w: 63.5, h: 88.9 },
-};
-
-const PAGE_LAYOUT_MM = {
-  margin: 5, // Keep away from page edge to avoid print crop.
-  gap: 1,
-};
-
-const STICKER_MARGIN_MM = 1;
-const QR_TEXT_GAP_MM = 1.4;
-const QR_TEXT_FONT_SIZE_PT = 8;
-const QR_TEXT_BLOCK_MM = 4.2;
 
 const toPngOptions = {
   pixelRatio: 1.8,
@@ -115,53 +101,6 @@ function StickerFramePreview({ qrCode, qrType }) {
       />
     </div>
   );
-}
-
-function getStickerSizeMm(type) {
-  return STICKER_SIZE_MM[type] || STICKER_SIZE_MM.bike;
-}
-
-function placeStickerOnPage(pdf, imgData, stickerMm, cursor, codeText) {
-  const pageW = pdf.internal.pageSize.getWidth();
-  const pageH = pdf.internal.pageSize.getHeight();
-  const { margin, gap } = PAGE_LAYOUT_MM;
-  let { x, y, rowHeight } = cursor;
-
-  if (x + stickerMm.w > pageW - margin) {
-    x = margin;
-    y += rowHeight + gap;
-    rowHeight = 0;
-  }
-
-  const blockHeight = stickerMm.h + QR_TEXT_BLOCK_MM;
-
-  if (y + blockHeight > pageH - margin) {
-    pdf.addPage("letter", "p");
-    x = margin;
-    y = margin;
-    rowHeight = 0;
-  }
-
-  const innerW = Math.max(1, stickerMm.w - STICKER_MARGIN_MM * 2);
-  const innerH = Math.max(1, stickerMm.h - STICKER_MARGIN_MM * 2);
-  pdf.addImage(
-    imgData,
-    "PNG",
-    x + STICKER_MARGIN_MM,
-    y + STICKER_MARGIN_MM,
-    innerW,
-    innerH
-  );
-  pdf.setFont("courier", "normal");
-  pdf.setFontSize(QR_TEXT_FONT_SIZE_PT);
-  pdf.text(
-    codeText || "QR",
-    x + stickerMm.w / 2,
-    y + stickerMm.h + QR_TEXT_GAP_MM,
-    { align: "center", baseline: "top" }
-  );
-  rowHeight = Math.max(rowHeight, blockHeight);
-  return { x: x + stickerMm.w + gap, y, rowHeight };
 }
 
 function daysInMonth(yearStr, monthStr) {
@@ -264,17 +203,28 @@ const AllQR = () => {
   const buildFilteredPdf = async () => {
     const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "letter" });
     let cursor = {
-      x: PAGE_LAYOUT_MM.margin,
-      y: PAGE_LAYOUT_MM.margin,
+      x: PDF_PAGE_INSET_ALL_QR.left,
+      y: PDF_PAGE_INSET_ALL_QR.top,
       rowHeight: 0,
     };
 
     for (let i = 0; i < qrCodes.length; i++) {
       const imgData = await captureNodePng(i);
       const item = qrCodes[i];
-      const sticker = getStickerSizeMm(item?.qrType || "bike");
+      const type = item?.qrType || "bike";
+      const sticker = getStickerSizeMm(type);
       const qrCodeLabel = item?.code ? `QR - ${item.code}` : "QR";
-      cursor = placeStickerOnPage(pdf, imgData, sticker, cursor, qrCodeLabel);
+      cursor = placeStickerOnPdfPage(
+        pdf,
+        imgData,
+        sticker,
+        cursor,
+        "letter",
+        "p",
+        qrCodeLabel,
+        type,
+        PDF_PAGE_INSET_ALL_QR
+      );
     }
     return pdf;
   };
