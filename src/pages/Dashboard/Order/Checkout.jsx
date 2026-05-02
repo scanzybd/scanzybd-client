@@ -23,7 +23,7 @@ const emptyVehicleForm = () => ({
   ownerContactVisible: true,
   emergencyPhone: "",
   emergencyContactVisible: false,
-  driverContactVisible: true,
+  driverContactVisible: false,
   addDriver: false,
   driverName: "",
   driverPhone: "",
