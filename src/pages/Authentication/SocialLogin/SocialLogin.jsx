@@ -8,9 +8,11 @@ const SocialLogin = () => {
 
     const handleGoogleSignIn = async () => {
         try {
-            await signInGoogle();
-            navigate("/");
-
+            const res = await signInGoogle();
+            const role = String(res?.data?.user?.role || "").toLowerCase();
+            const destination =
+                role === "admin" || role === "provider" ? "/dashboard" : "/";
+            navigate(destination, { replace: true });
         } catch (error) {
             console.log(error);
         }

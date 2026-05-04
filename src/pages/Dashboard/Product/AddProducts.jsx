@@ -6,9 +6,10 @@ const productTypes = [
   "Car Tag",
   "Bike Tag",
   "Helmet Tag",
-  "Pack of 1",
-  "Pack of 2",
-  "Starter Pack",
+  "Truck Tag",
+  "Van Tag",
+  "Bus Tag",
+  "Cycle Tag",
 ];
 
 /** Same encoding rules as server — direct to ImgBB if server upload fails */
@@ -454,6 +455,7 @@ const AddProducts = () => {
           {form.image && (
             <img
               src={form.image}
+              alt={form.title || "Product Image"}
               className="w-full h-44 object-cover rounded"
             />
           )}
@@ -467,21 +469,70 @@ const AddProducts = () => {
           </h3>
 
           <p className="text-gray-600 text-sm">
-            {form.packInfo}
+            {form.packInfo || "Package Info"}
           </p>
 
           <p className="text-gray-500 mt-2">
-            {form.description}
+            {form.description || "No description provided."}
           </p>
 
-          <p className="text-green-600 font-bold mt-3">
-            ৳ {form.price || 0}
-          </p>
+          <div className="flex flex-wrap gap-2 my-2">
+            <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs">
+              Validity: {form.validityDays || "365"} days
+            </span>
+            <span className="px-2 py-1 bg-gray-100 rounded text-xs">
+              In Stock: {form.inStock ? "Yes" : "No"}
+            </span>
+            <span className="px-2 py-1 bg-yellow-50 text-yellow-800 rounded text-xs">
+              Rating: {form.rating || "0"}
+            </span>
+            <span className="px-2 py-1 bg-purple-50 text-purple-800 rounded text-xs">
+              Reviews: {form.reviews || "0"}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-2">
+            <span className="text-gray-500 text-xs">
+              <b>Material:</b> {form.specifications?.material || "-"}
+            </span>
+            <span className="text-gray-500 text-xs">
+              <b>Dimensions:</b> {form.specifications?.dimensions || "-"}
+            </span>
+            <span className="text-gray-500 text-xs">
+              <b>Weight:</b> {form.specifications?.weight || "-"}
+            </span>
+            <span className="text-gray-500 text-xs">
+              <b>Battery:</b> {form.specifications?.battery || "-"}
+            </span>
+            <span className="text-gray-500 text-xs">
+              <b>Waterproof:</b> {form.specifications?.waterproof || "-"}
+            </span>
+          </div>
+
+          {Array.isArray(form.features) && form.features.filter(Boolean).length > 0 && (
+            <ul className="list-disc pl-6 mt-2 text-xs text-gray-700">
+              {form.features.filter(Boolean).map((feature, idx) => (
+                <li key={idx}>{feature}</li>
+              ))}
+            </ul>
+          )}
+
+          <div className="flex items-center gap-4 mt-4">
+            <p className="text-green-600 font-bold text-lg">
+              ৳ {form.price || 0}
+            </p>
+            {form.originalPrice && (
+              <span className="text-gray-400 line-through text-sm">
+                ৳ {form.originalPrice}
+              </span>
+            )}
+          </div>
 
           <button className="mt-4 w-full bg-yellow-400 py-2 rounded-lg">
             Add to Cart (Preview)
           </button>
         </div>
+  
 
       </div>
     </div>

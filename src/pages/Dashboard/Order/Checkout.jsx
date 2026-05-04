@@ -56,7 +56,6 @@ const Checkout = () => {
     divisions: [],
     districts: {},
     upazilas: {},
-    unions: {},
   });
 
   /** One checkout row per physical tag (quantity expanded). */
@@ -97,7 +96,6 @@ const Checkout = () => {
           divisions: Array.isArray(res?.data?.divisions) ? res.data.divisions : [],
           districts: res?.data?.districts || {},
           upazilas: res?.data?.upazilas || {},
-          unions: res?.data?.unions || {},
         });
       } catch (error) {
         console.error("Failed to load locations", error);
@@ -152,7 +150,7 @@ const Checkout = () => {
       !shipping.division ||
       !shipping.district ||
       !shipping.upazila ||
-      !shipping.union
+      !shipping.union?.trim()
     ) {
       alert(
         "Fill delivery details: full name, phone, division, district, upazila, and union."
@@ -177,10 +175,6 @@ const Checkout = () => {
     () => locationTree.upazilas?.[shipping.district] || [],
     [locationTree.upazilas, shipping.district]
   );
-  const unionOptions = useMemo(
-    () => locationTree.unions?.[shipping.upazila] || [],
-    [locationTree.unions, shipping.upazila]
-  );
   const selectedDivision = useMemo(
     () => divisionOptions.find((x) => String(x.value) === String(shipping.division)),
     [divisionOptions, shipping.division]
@@ -193,12 +187,6 @@ const Checkout = () => {
     () => upazilaOptions.find((x) => String(x.value) === String(shipping.upazila)),
     [upazilaOptions, shipping.upazila]
   );
-  const selectedUnion = useMemo(
-    () => unionOptions.find((x) => String(x.value) === String(shipping.union)),
-    [unionOptions, shipping.union]
-  );
-
-
   const validateVehicles = () => {
     for (let i = 0; i < vehicles.length; i++) {
       const v = vehicles[i];
@@ -303,7 +291,7 @@ const Checkout = () => {
             phone: shipping.phone.trim(),
             line1:
               shipping.addressLine.trim() ||
-              `${selectedUnion?.title || ""}, ${selectedUpazila?.title || ""}`
+              `${shipping.union.trim()}, ${selectedUpazila?.title || ""}`
                 .replace(/^,\s*|,\s*$/g, "")
                 .trim(),
             line2: "",
@@ -605,25 +593,21 @@ const Checkout = () => {
                     ))}
                   </select>
                 </label>
-                <label className="block">
+                <label className="block sm:col-span-2">
                   <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
-                    Union
+                    Union / ward
                   </span>
-                  <select
+                  <input
+                    type="text"
                     className={fieldInput}
                     value={shipping.union}
                     onChange={(e) =>
                       setShipping((s) => ({ ...s, union: e.target.value }))
                     }
                     disabled={!shipping.upazila}
-                  >
-                    <option value="">Select union</option>
-                    {unionOptions.map((unionName) => (
-                      <option key={unionName.value} value={unionName.value}>
-                        {unionName.title}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Type union or ward name"
+                    autoComplete="address-level4"
+                  />
                 </label>
               </div>
             </div>

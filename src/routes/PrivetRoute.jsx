@@ -16,8 +16,12 @@ const PrivateRoute = ({ children, allowedRoles = [] }) => {
         return <Navigate to="/login" replace state={{ from: location }}></Navigate>
     }
 
-    // Check role-based access if roles are specified
-    if (allowedRoles.length > 0 && (!userRole || !allowedRoles.includes(userRole))) {
+    // Check role-based access if roles are specified (normalize — layout uses lowercase)
+    const roleKey =
+        userRole != null && String(userRole).trim() !== ""
+            ? String(userRole).trim().toLowerCase()
+            : null;
+    if (allowedRoles.length > 0 && (!roleKey || !allowedRoles.includes(roleKey))) {
         return <Navigate to="/" replace></Navigate>
     }
 

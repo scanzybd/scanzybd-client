@@ -28,7 +28,6 @@ const HIDDEN_DETAIL_KEYS = new Set([
   "_id",
   "id",
   "originalprice",
-  "specifications",
   "createdby",
   "createdat",
   "updatedat",
@@ -43,18 +42,95 @@ function toLabel(key) {
     .replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value) && !(value instanceof Date);
+}
+
+/** Parse JSON object strings (e.g. specifications from API) without throwing. */
+function tryParseJsonObjectString(str) {
+  if (typeof str !== "string") return null;
+  const s = str.trim();
+  if (!s.startsWith("{") || !s.endsWith("}")) return null;
+  try {
+    const parsed = JSON.parse(s);
+    return isPlainObject(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Render spec-style objects as "Label: value" lines (used for specifications, etc.). */
+function formatSpecObject(obj) {
+  const lines = Object.entries(obj)
+    .filter(([, v]) => v !== null && v !== undefined && v !== "")
+    .map(([k, v]) => {
+      const label = toLabel(k);
+      let display;
+      if (isPlainObject(v)) {
+        const nested = formatSpecObject(v);
+        display = nested ?? JSON.stringify(v);
+      } else if (typeof v === "string") {
+        const parsed = tryParseJsonObjectString(v);
+        display = parsed ? formatSpecObject(parsed) ?? String(v) : formatDetailValue(k, v);
+      } else {
+        display = formatDetailValue(k, v);
+      }
+      if (display === null || display === "") return null;
+      return `${label}: ${display}`;
+    })
+    .filter(Boolean);
+  return lines.length ? lines.join("\n") : null;
+}
+
+function isFeaturesKey(key) {
+  return String(key).toLowerCase() === "features";
+}
+
 function formatDetailValue(key, value) {
   if (value === null || value === undefined || value === "") return null;
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (Array.isArray(value)) {
     if (value.length === 0) return null;
-    return value.map((item) => (typeof item === "object" ? JSON.stringify(item) : String(item))).join(", ");
+    const items = value
+      .map((item) => (typeof item === "object" ? JSON.stringify(item) : String(item)))
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (items.length === 0) return null;
+    const sep = isFeaturesKey(key) ? "\n" : ", ";
+    return items.join(sep);
   }
-  if (typeof value === "object") return JSON.stringify(value);
+  if (value instanceof Date) {
+    const t = value.getTime();
+    return Number.isNaN(t) ? null : value.toLocaleString();
+  }
+  if (isPlainObject(value)) {
+    return formatSpecObject(value) ?? JSON.stringify(value);
+  }
   if (typeof value === "number" && key.toLowerCase().includes("price")) {
     return `৳ ${value.toLocaleString()}`;
   }
-  if (key.endsWith("At")) {
+  if (typeof value === "string") {
+    if (isFeaturesKey(key)) {
+      const t = value.trim();
+      if (t.startsWith("[") && t.endsWith("]")) {
+        try {
+          const arr = JSON.parse(t);
+          if (Array.isArray(arr)) return formatDetailValue(key, arr);
+        } catch {
+          /* fall through */
+        }
+      }
+    }
+    const parsedObj = tryParseJsonObjectString(value);
+    if (parsedObj) {
+      return formatSpecObject(parsedObj) ?? value;
+    }
+    if (key.endsWith("At")) {
+      const date = new Date(value);
+      if (!Number.isNaN(date.getTime())) return date.toLocaleString();
+    }
+  }
+  if (key.endsWith("At") && typeof value !== "string") {
     const date = new Date(value);
     if (!Number.isNaN(date.getTime())) return date.toLocaleString();
   }
@@ -189,6 +265,7 @@ const ProductPage = () => {
           </button>
           <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="grid gap-0 md:grid-cols-2">
+              {/* Main Info & Image */}
               <div className="aspect-4/3 bg-slate-100 md:aspect-auto">
                 <img
                   src={selectedProduct.image || productFallback}
@@ -205,28 +282,66 @@ const ProductPage = () => {
                   <p className="rounded-full bg-amber-50 px-3 py-1 text-2xl font-bold text-amber-700 sm:text-3xl">
                     ৳ {Number(selectedProduct.price).toLocaleString()}
                   </p>
-                  <p className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 sm:text-sm">
+                 
+                  {selectedProduct.originalPrice && (
+                    <span className="ml-2 line-through text-base text-slate-500">
+                      ৳ {Number(selectedProduct.originalPrice).toLocaleString()}
+                    </span>
+                  )}
+                   <p className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 sm:text-sm">
                     Validity: {selectedProduct.validityDays ?? 365} days
                   </p>
+                  {selectedProduct.type && (
+                    <span className="ml-2 rounded bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-800">
+                      {selectedProduct.type}
+                    </span>
+                  )}
+                  {selectedProduct.inStock === false && (
+                    <span className="ml-2 rounded bg-rose-200 px-2 py-0.5 text-xs font-medium text-rose-700">
+                      Out of Stock
+                    </span>
+                  )}
+                  {selectedProduct.rating && (
+                    <span className="ml-2 rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                      ★ {selectedProduct.rating}
+                      {selectedProduct.reviews ? ` (${selectedProduct.reviews} reviews)` : ""}
+                    </span>
+                  )}
                 </div>
+
+             
+
+              
+                {/* Show all other details (not hidden, as per logic in productDetails) */}
                 {productDetails.length > 0 && (
                   <div className="mt-5 rounded-xl border border-slate-200 p-3 sm:p-4">
-                    <h2 className="text-sm font-semibold text-slate-800">All details</h2>
-                    <dl className="mt-3 space-y-2">
+                    <h2 className="text-sm font-semibold text-slate-800">Details</h2>
+                   
+                    {/* Features List */}
+                    <dl className="space-y-0">
                       {productDetails.map((item) => (
                         <div
                           key={item.key}
-                          className="border-b border-slate-200 px-1 py-2 last:border-b-0"
+                          className="flex flex-row items-baseline border-b border-slate-200 px-1 py-2 last:border-b-0"
                         >
-                          <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                          <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500 w-36 flex-shrink-0">
                             {item.label}
                           </dt>
-                          <dd className="mt-1 wrap-break-word text-sm text-slate-700">{item.value}</dd>
+                          <dd className="ml-2 text-sm text-slate-700 whitespace-pre-line">{item.value}</dd>
                         </div>
+                      
                       ))}
                     </dl>
+                    
                   </div>
+                  
                 )}
+           
+           
+
+
+                 
+                
                 <button
                   type="button"
                   onClick={() => handleAddToCart(selectedProduct)}
@@ -238,6 +353,7 @@ const ProductPage = () => {
               </div>
             </div>
           </article>
+    
         </div>
       </div>
     );

@@ -1,13 +1,15 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
+const s = (v) => (typeof v === "string" ? v.trim() : v);
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_apiKey,
-  authDomain: import.meta.env.VITE_authDomain,
-  projectId: import.meta.env.VITE_projectId,
-  storageBucket: import.meta.env.VITE_storageBucket,
-  messagingSenderId: import.meta.env.VITE_messagingSenderId,
-  appId: import.meta.env.VITE_appId,
+  apiKey: s(import.meta.env.VITE_apiKey),
+  authDomain: s(import.meta.env.VITE_authDomain),
+  projectId: s(import.meta.env.VITE_projectId),
+  storageBucket: s(import.meta.env.VITE_storageBucket),
+  messagingSenderId: s(import.meta.env.VITE_messagingSenderId),
+  appId: s(import.meta.env.VITE_appId),
 };
 
 const app = initializeApp(firebaseConfig);

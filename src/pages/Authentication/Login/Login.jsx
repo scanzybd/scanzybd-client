@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router";
 import SocialLogin from "../SocialLogin/SocialLogin";
 import useAuth from "../../../hooks/useAuth";
 import { PRODUCT_NAME } from "../../../config/company";
+import { API_BASE_URL } from "../../../config/api";
 
 const Login = () => {
     const {
@@ -26,18 +27,21 @@ const onSubmit = async (data) => {
 
             const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-if (cart.length > 0) {
-    await fetch("http://localhost:5000/api/cart/sync", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${res.data.token}`,
-        },
-        body: JSON.stringify({ cart }),
-    });
-
-    localStorage.removeItem("cart");
-}
+            if (cart.length > 0) {
+                try {
+                    await fetch(`${API_BASE_URL}/api/cart/sync`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${res.data.token}`,
+                        },
+                        body: JSON.stringify({ cart }),
+                    });
+                    localStorage.removeItem("cart");
+                } catch {
+                    /* do not block login if cart sync fails (wrong API URL / offline) */
+                }
+            }
 
             navigate(destination, { replace: true });
 

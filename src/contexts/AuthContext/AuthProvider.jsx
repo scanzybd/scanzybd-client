@@ -11,6 +11,12 @@ import { auth } from '../../firebase/firebase.init';
 
 const googleProvider = new GoogleAuthProvider();
 
+/** Match `PrivateRoute` / layout checks — API or legacy DB may send mixed case. */
+const normalizeRole = (raw) => {
+    if (raw == null || String(raw).trim() === "") return null;
+    return String(raw).trim().toLowerCase();
+};
+
 const AuthProvider = ({ children }) => {
     const queryClient = useQueryClient();
     const [user, setUser] = useState(null);
@@ -28,8 +34,9 @@ const AuthProvider = ({ children }) => {
         if (res.data?.token && res.data?.expiresAt != null) {
             setAppJwt(res.data.token, res.data.expiresAt);
         }
-        setUser(res.data?.user ?? null);
-        setUserRole(res.data?.user?.role ?? null);
+        const u = res.data?.user ?? null;
+        setUser(u ? { ...u, role: normalizeRole(u.role) } : null);
+        setUserRole(normalizeRole(u?.role));
         setLoading(false);
         return res;
     };
@@ -48,8 +55,9 @@ const AuthProvider = ({ children }) => {
         if (res.data?.token && res.data?.expiresAt != null) {
             setAppJwt(res.data.token, res.data.expiresAt);
         }
-        setUser(res.data?.user ?? null);
-        setUserRole(res.data?.user?.role ?? null);
+        const u = res.data?.user ?? null;
+        setUser(u ? { ...u, role: normalizeRole(u.role) } : null);
+        setUserRole(normalizeRole(u?.role));
         setLoading(false);
         return res;
     };
@@ -103,11 +111,9 @@ const AuthProvider = ({ children }) => {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const raw = response.data?.role;
-            const role =
-                raw != null && String(raw).trim() !== ""
-                    ? String(raw).trim()
-                    : null;
-            setUser(response.data ?? null);
+            const role = normalizeRole(raw);
+            const payload = response.data ?? null;
+            setUser(payload ? { ...payload, role } : null);
             setUserRole(role);
         } catch {
             setUser(null);
