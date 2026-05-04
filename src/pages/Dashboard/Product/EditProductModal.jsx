@@ -3,12 +3,13 @@ import { X } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const productTypes = [
-  "Car Tag",
+"Car Tag",
   "Bike Tag",
   "Helmet Tag",
-  "Pack of 1",
-  "Pack of 2",
-  "Starter Pack",
+  "Truck Tag",
+  "Van Tag",
+  "Bus Tag",
+  "Cycle Tag",
 ];
 
 async function uploadToImgbbDirect(dataUrl, apiKey) {

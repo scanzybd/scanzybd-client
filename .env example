@@ -1,19 +1,18 @@
-# Backend API (must match where `npm run dev` runs for server — default port 5000)
-VITE_API_BASE_URL=http://localhost:5000
-;VITE_API_BASE_URL=https://scanzybd-server.onrender.com
-VITE_apiKey=AIzaSyAlQFEg8Qxp542f-Qg1MQLqrRKgFBwRVFE
-VITE_authDomain=scanzybd-2acfe.firebaseapp.com
-VITE_projectId=scanzybd-2acfe
-VITE_storageBucket=scanzybd-2acfe.firebasestorage.app
-VITE_messagingSenderId=897610345377
-VITE_appId=1:897610345377:web:409e536a2c82f6f6d839e0
-# Central branding (change company name / product in one place)
-VITE_COMPANY_NAME=ScanzyBD
-VITE_PRODUCT_NAME=ScanzyBD
-VITE_BRAND_FULL=ScanzyBD
-VITE_SITE_TITLE=ScanzyBD
-VITE_COMPANY_LEGAL_NAME=ScanzyBD
-VITE_COMPANY_TAGLINE=Smart QR for Smarter Vehicles
-VITE_COMPANY_ORG_TITLE=ScanzyBD
-VITE_COMPANY_PRINT_ORG_LINE=ScanzyBD
-VITE_COMPANY_FOOTER_TAGLINE=Smart QR for Smarter Vehicles
+# # Backend API (must match where `npm run dev` runs for server — default port 5000)
+# VITE_API_BASE_URL=https://scanzybd-server.onrender.com
+# VITE_apiKey=AIzaSyAlQFEg8Qxp542f-Qg1MQLqrRKgFBwRVFE
+# VITE_authDomain=scanzybd-2acfe.firebaseapp.com
+# VITE_projectId=scanzybd-2acfe
+# VITE_storageBucket=scanzybd-2acfe.firebasestorage.app
+# VITE_messagingSenderId=897610345377
+# VITE_appId=1:897610345377:web:409e536a2c82f6f6d839e0
+# # Central branding (change company name / product in one place)
+# VITE_COMPANY_NAME=ScanzyBD
+# VITE_PRODUCT_NAME=ScanzyBD
+# VITE_BRAND_FULL=ScanzyBD
+# VITE_SITE_TITLE=ScanzyBD
+# VITE_COMPANY_LEGAL_NAME=ScanzyBD
+# VITE_COMPANY_TAGLINE=Smart QR for Smarter Vehicles
+# VITE_COMPANY_ORG_TITLE=ScanzyBD
+# VITE_COMPANY_PRINT_ORG_LINE=ScanzyBD
+# VITE_COMPANY_FOOTER_TAGLINE=Smart QR for Smarter Vehicles

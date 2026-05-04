@@ -345,9 +345,9 @@
     "more": "More",
     "showLess": "Show less",
     "allPrices": "All prices",
-    "under300": "Under ৳300",
-    "between300500": "৳300 – ৳500",
-    "above500": "Above ৳500"
+    "under300": "Under 300",
+    "between300500": "300 – 500",
+    "above500": "Above 500"
   },
   "labels": {
     "checkout": "Checkout",

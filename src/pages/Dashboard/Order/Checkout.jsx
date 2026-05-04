@@ -569,7 +569,7 @@ const Checkout = () => {
                     ))}
                   </select>
                 </label>
-                <label className="block">
+                <label className="block sm:col-span-2">
                   <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
                     Upazila
                   </span>

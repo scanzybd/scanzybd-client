@@ -39,7 +39,7 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { icon: Facebook, label: 'Facebook', href: 'https://www.facebook.com/people/Scanzybd/61589104403859/?rdid=coosJR9pQ9TYxmvu&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F18Wm7KVz1i%2F' },
+    { icon: Facebook, label: 'Facebook', href: 'https://www.facebook.com/people/Scanzybd/61589104403859/?rdid=coosJR9pQ9TYxmvu&share_url=https%3A%2F%2Fok.com%2Fshare%2F18Wm7KVz1i%2F' },
     { icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/scanzybdofficial?igsh=MWU5YjQ4M29lZTBpeQ%3D%3D' },
     { icon: FaTiktok, label: 'TikTok', href: 'https://tiktok.com' },  ];
 
