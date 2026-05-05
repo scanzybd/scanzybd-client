@@ -60,6 +60,56 @@ const LIST_PREVIEW_HEIGHT = {
   car: 190,
 };
 
+const PAGE_FORMATS = [
+  { label: "A0", value: "a0", w: 841, h: 1189 },
+  { label: "A1", value: "a1", w: 594, h: 841 },
+  { label: "A2", value: "a2", w: 420, h: 594 },
+  { label: "A3", value: "a3", w: 297, h: 420 },
+  { label: "A4", value: "a4", w: 210, h: 297 },
+  { label: "A5", value: "a5", w: 148, h: 210 },
+  { label: "A6", value: "a6", w: 105, h: 148 },
+  { label: "A7", value: "a7", w: 74, h: 105 },
+  { label: "A8", value: "a8", w: 52, h: 74 },
+  { label: "A9", value: "a9", w: 37, h: 52 },
+  { label: "A10", value: "a10", w: 26, h: 37 },
+  { label: "B0", value: "b0", w: 1000, h: 1414 },
+  { label: "B1", value: "b1", w: 707, h: 1000 },
+  { label: "B2", value: "b2", w: 500, h: 707 },
+  { label: "B3", value: "b3", w: 353, h: 500 },
+  { label: "B4", value: "b4", w: 250, h: 353 },
+  { label: "B5", value: "b5", w: 176, h: 250 },
+  { label: "B6", value: "b6", w: 125, h: 176 },
+  { label: "B7", value: "b7", w: 88, h: 125 },
+  { label: "B8", value: "b8", w: 62, h: 88 },
+  { label: "B9", value: "b9", w: 44, h: 62 },
+  { label: "B10", value: "b10", w: 31, h: 44 },
+  { label: "C0", value: "c0", w: 917, h: 1297 },
+  { label: "C1", value: "c1", w: 648, h: 917 },
+  { label: "C2", value: "c2", w: 458, h: 648 },
+  { label: "C3", value: "c3", w: 324, h: 458 },
+  { label: "C4", value: "c4", w: 229, h: 324 },
+  { label: "C5", value: "c5", w: 162, h: 229 },
+  { label: "C6", value: "c6", w: 114, h: 162 },
+  { label: "C7", value: "c7", w: 81, h: 114 },
+  { label: "C8", value: "c8", w: 57, h: 81 },
+  { label: "C9", value: "c9", w: 40, h: 57 },
+  { label: "C10", value: "c10", w: 28, h: 40 },
+  { label: "DL", value: "dl", w: 110, h: 220 },
+  { label: "Letter", value: "letter", w: 216, h: 279 },
+  { label: "Government-Letter", value: "government-letter", w: 203, h: 267 },
+  { label: "Legal", value: "legal", w: 216, h: 356 },
+  { label: "Junior-Legal", value: "junior-legal", w: 127, h: 203 },
+  { label: "Ledger", value: "ledger", w: 432, h: 279 },
+  { label: "Tabloid", value: "tabloid", w: 279, h: 432 },
+  { label: "Credit Card", value: "credit-card", w: 54, h: 86 },
+  { label: "Custom", value: "custom", w: 148, h: 210 }, // default values for Custom
+];
+
+const PAGE_ORIENTATIONS = [
+  { label: "Portrait", value: "p" },
+  { label: "Landscape", value: "l" },
+];
+
 const toPngOptions = {
   pixelRatio: 1.8,
   backgroundColor: "#ffffff",
@@ -139,6 +189,12 @@ const AllQR = () => {
     return out;
   }, [t]);
 
+  // PDF options state
+  const [pdfPageFormat, setPdfPageFormat] = useState("letter");
+  const [pdfPageOrientation, setPdfPageOrientation] = useState("p");
+  const [pdfCustomWidth, setPdfCustomWidth] = useState(148); // mm
+  const [pdfCustomHeight, setPdfCustomHeight] = useState(210); // mm
+
   const [filterYear, setFilterYear] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
   const [filterDay, setFilterDay] = useState("");
@@ -200,11 +256,66 @@ const AllQR = () => {
     return imageData;
   };
 
+  // Helper to compute jsPDF format props
+  const getJsPdfFormatProps = () => {
+    let formatObj = PAGE_FORMATS.find((f) => f.value === pdfPageFormat);
+    let format, width, height;
+    if (!formatObj || pdfPageFormat === "custom") {
+      // Use custom
+      format = [Number(pdfCustomWidth), Number(pdfCustomHeight)];
+      width = Number(pdfCustomWidth);
+      height = Number(pdfCustomHeight);
+    } else {
+      format = pdfPageFormat;
+      width = formatObj.w;
+      height = formatObj.h;
+    }
+    // orientation
+    let orientation = pdfPageOrientation;
+
+    // Flip width/height based on orientation for custom
+    if (Array.isArray(format)) {
+      if (orientation === "l") {
+        return {
+          jsPdfOpts: { orientation, unit: "mm", format: [height, width] },
+          actualW: height,
+          actualH: width,
+          formatLabel: "custom",
+        };
+      } else {
+        return {
+          jsPdfOpts: { orientation, unit: "mm", format: [width, height] },
+          actualW: width,
+          actualH: height,
+          formatLabel: "custom",
+        };
+      }
+    } else {
+      const w = orientation === "l" ? height : width;
+      const h = orientation === "l" ? width : height;
+      return {
+        jsPdfOpts: { orientation, unit: "mm", format },
+        actualW: w,
+        actualH: h,
+        formatLabel: format,
+      };
+    }
+  };
+
+  // Dynamically create insets for different formats
+  const getPdfInsets = () => {
+    // Use more insets for smaller page to avoid edge-cut, could be made a prop or customized
+    return PDF_PAGE_INSET_ALL_QR || { left: 10, right: 10, top: 10, bottom: 10 };
+  };
+
   const buildFilteredPdf = async () => {
-    const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "letter" });
+    const { jsPdfOpts, actualW, actualH, formatLabel } = getJsPdfFormatProps();
+    const insets = getPdfInsets();
+
+    const pdf = new jsPDF(jsPdfOpts);
     let cursor = {
-      x: PDF_PAGE_INSET_ALL_QR.left,
-      y: PDF_PAGE_INSET_ALL_QR.top,
+      x: insets.left,
+      y: insets.top,
       rowHeight: 0,
     };
 
@@ -219,11 +330,12 @@ const AllQR = () => {
         imgData,
         sticker,
         cursor,
-        "letter",
-        "p",
+        formatLabel,
+        pdfPageOrientation,
         qrCodeLabel,
         type,
-        PDF_PAGE_INSET_ALL_QR
+        insets,
+        { pageWidth: actualW, pageHeight: actualH }
       );
     }
     return pdf;
@@ -373,6 +485,7 @@ const AllQR = () => {
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Filter className="h-4 w-4 text-slate-400" />
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -466,6 +579,70 @@ const AllQR = () => {
             <RotateCcw className="h-4 w-4" />
             {t("dashboard.qr.all.reset")}
           </button>
+        </div>
+
+        {/* PDF settings: page size, custom size, orientation */}
+        <div className="flex flex-wrap gap-4 mt-5 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 items-end">
+          <div>
+            <label className="label label-text text-xs font-medium text-slate-600 mb-1">
+              Page Size
+            </label>
+            <select
+              className="select select-bordered w-full rounded-xl border-slate-200 bg-white focus:border-indigo-500"
+              value={pdfPageFormat}
+              onChange={(e) => setPdfPageFormat(e.target.value)}
+              style={{minWidth: 120}}
+            >
+              {PAGE_FORMATS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          {pdfPageFormat === "custom" && (
+            <>
+              <div>
+                <label className="label label-text text-xs font-medium text-slate-600 mb-1">
+                  Custom Width (mm)
+                </label>
+                <input
+                  type="number"
+                  min={30}
+                  max={800}
+                  className="input input-bordered w-24 rounded-xl border-slate-200 bg-white focus:border-indigo-500"
+                  value={pdfCustomWidth}
+                  onChange={e => setPdfCustomWidth(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="label label-text text-xs font-medium text-slate-600 mb-1">
+                  Custom Height (mm)
+                </label>
+                <input
+                  type="number"
+                  min={30}
+                  max={800}
+                  className="input input-bordered w-24 rounded-xl border-slate-200 bg-white focus:border-indigo-500"
+                  value={pdfCustomHeight}
+                  onChange={e => setPdfCustomHeight(e.target.value)}
+                />
+              </div>
+            </>
+          )}
+          <div>
+            <label className="label label-text text-xs font-medium text-slate-600 mb-1">
+              Orientation
+            </label>
+            <select
+              className="select select-bordered w-full rounded-xl border-slate-200 bg-white focus:border-indigo-500"
+              value={pdfPageOrientation}
+              onChange={e => setPdfPageOrientation(e.target.value)}
+              style={{minWidth: 120}}
+            >
+              {PAGE_ORIENTATIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
           <button
             type="button"
             className="btn gap-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-60"
@@ -477,7 +654,7 @@ const AllQR = () => {
             ) : (
               <Eye className="h-4 w-4" />
             )}
-            Preview Filtered PDF
+            Preview PDF
           </button>
           <button
             type="button"
@@ -490,7 +667,7 @@ const AllQR = () => {
             ) : (
               <FileDown className="h-4 w-4" />
             )}
-            Download Filtered PDF
+            Download PDF
           </button>
         </div>
 
