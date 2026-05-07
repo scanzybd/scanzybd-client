@@ -61,7 +61,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-slate-100 px-4 transition-colors dark:bg-slate-950">
+    <div className="flex min-h-screen w-full items-center justify-center bg-yellow-400 px-4 transition-colors dark:bg-slate-950">
       <div className="w-full max-w-sm">
         <div className="card bg-base-100 shadow-xl">
           <div className="space-y-1 px-6 pt-6 text-center">

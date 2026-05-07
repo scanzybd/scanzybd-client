@@ -67,7 +67,7 @@ const ResetPassword = () => {
 
   if (!email || !code) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-slate-100 px-4 transition-colors dark:bg-slate-950">
+      <div className="flex min-h-screen w-full items-center justify-center bg-yellow-400 px-4 transition-colors dark:bg-slate-950">
         <div className="card w-full max-w-sm bg-base-100 shadow-2xl">
           <div className="card-body text-center">
             <h1 className="text-xl font-bold">{t("auth.reset.invalidTitle")}</h1>
