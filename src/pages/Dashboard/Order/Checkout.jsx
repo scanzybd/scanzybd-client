@@ -68,6 +68,8 @@ const Checkout = () => {
           key: `${item._id}__${i}`,
           productId: String(item._id),
           title: item.title || item.name || "Product",
+          // Add type property if present from item, fallback empty string otherwise
+          type: item.type || ""
         });
       }
     }
@@ -191,7 +193,7 @@ const Checkout = () => {
     for (let i = 0; i < vehicles.length; i++) {
       const v = vehicles[i];
       if (!v.vehicleName?.trim() || !v.model?.trim() || !v.plate?.trim()) {
-        alert(`Tag ${i + 1}: add vehicle name, model, and plate.`);
+        alert(`Tag ${i + 1}: add vehicle name, model, and ${slots[i]?.type === "Cycle Tag" ? "chassis no." : "plate"}.`);
         return false;
       }
       if (!v.ownerPhone?.trim()) {
@@ -206,7 +208,11 @@ const Checkout = () => {
         alert(`Tag ${i + 1}: emergency contact phone must be 11 digits.`);
         return false;
       }
-      if (v.addDriver) {
+      // Only require/add driver info for non cycle tags
+      if (
+        slots[i]?.type?.toLowerCase() !== "cycle tag" &&
+        v.addDriver
+      ) {
         if (!v.driverName?.trim() || !v.driverPhone?.trim()) {
           alert(`Tag ${i + 1}: add driver name and phone, or turn off driver.`);
           return false;
@@ -257,8 +263,9 @@ const Checkout = () => {
 
       const tagAssignments = slots.map((slot, i) => {
         const v = vehicles[i];
+        const isCycleTag = (slot.type || "").toLowerCase() === "cycle tag";
         const driver =
-          v.addDriver && v.driverName?.trim() && v.driverPhone?.trim()
+          !isCycleTag && v.addDriver && v.driverName?.trim() && v.driverPhone?.trim()
             ? {
                 name: v.driverName.trim(),
                 phone: v.driverPhone.trim(),
@@ -275,7 +282,7 @@ const Checkout = () => {
           ownerContactVisible: Boolean(v.ownerContactVisible),
           emergencyPhone: v.emergencyPhone.trim(),
           emergencyContactVisible: Boolean(v.emergencyContactVisible),
-          driverContactVisible: Boolean(v.driverContactVisible),
+          driverContactVisible: !isCycleTag && Boolean(v.driverContactVisible),
           ...(driver ? { driver } : {}),
         };
       });
@@ -505,20 +512,7 @@ const Checkout = () => {
                     maxLength={11}
                   />
                 </label>
-                <label className="block sm:col-span-2">
-                  <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
-                    Address line (optional)
-                  </span>
-                  <input
-                    className={fieldInput}
-                    value={shipping.addressLine}
-                    onChange={(e) =>
-                      setShipping((s) => ({ ...s, addressLine: e.target.value }))
-                    }
-                    placeholder="House / Road / Area"
-                    autoComplete="street-address"
-                  />
-                </label>
+               
                 <label className="block sm:col-span-2">
                   <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
                     Division
@@ -609,6 +603,20 @@ const Checkout = () => {
                     autoComplete="address-level4"
                   />
                 </label>
+                <label className="block sm:col-span-2">
+                  <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
+                    Address line (optional)
+                  </span>
+                  <input
+                    className={fieldInput}
+                    value={shipping.addressLine}
+                    onChange={(e) =>
+                      setShipping((s) => ({ ...s, addressLine: e.target.value }))
+                    }
+                    placeholder="House / Road / Area"
+                    autoComplete="street-address"
+                  />
+                </label>
               </div>
             </div>
 
@@ -647,6 +655,8 @@ const Checkout = () => {
 
               {slots.map((slot, index) => {
                 const v = vehicles[index] || emptyVehicleForm();
+                // type could be undefined or empty string; defensively check
+                const isCycleTag = (slot.type || "").toLowerCase() === "cycle tag";
                 return (
                   <div key={slot.key} className={`p-5 ${cardSurface}`}>
                     <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
@@ -697,7 +707,7 @@ const Checkout = () => {
                       </label>
                       <label className="block">
                         <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
-                          Registration No (Number Plate)
+                          {isCycleTag ? "Chassis No." : "Registration No (Number Plate)"}
                         </span>
                         <input
                           className={`${fieldInput} font-mono`}
@@ -705,7 +715,7 @@ const Checkout = () => {
                           onChange={(e) =>
                             updateVehicle(index, { plate: e.target.value })
                           }
-                          placeholder="Dhaka Metro 00-0000"
+                          placeholder={isCycleTag ? "Chassis No." : "Dhaka Metro 00-0000"}
                         />
                       </label>
                       <label className="block sm:col-span-2">
@@ -755,7 +765,7 @@ const Checkout = () => {
                               })
                             }
                           />
-                          Show owner contact on public QR page
+                          Show owner contact on page
                         </label>
                       </label>
                       <label className="block sm:col-span-2">
@@ -773,70 +783,76 @@ const Checkout = () => {
                               })
                             }
                           />
-                          Allow public QR page to show emergency contact
+                          Allow page to show emergency contact
                         </label>
                       </label>
-                      <label className="block sm:col-span-2">
-                        <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
-                          Driver contact permission
-                        </span>
-                        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                          <input
-                            type="checkbox"
-                            className="checkbox checkbox-sm"
-                            checked={Boolean(v.driverContactVisible)}
-                            onChange={(e) =>
-                              updateVehicle(index, {
-                                driverContactVisible: e.target.checked,
-                              })
-                            }
-                          />
-                          Show driver contact on public QR page
+                      {/* Driver contact permission should only show for non-cycle tags */}
+                      {!isCycleTag && (
+                        <label className="block sm:col-span-2">
+                          <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
+                            Driver contact permission
+                          </span>
+                          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                            <input
+                              type="checkbox"
+                              className="checkbox checkbox-sm"
+                              checked={Boolean(v.driverContactVisible)}
+                              onChange={(e) =>
+                                updateVehicle(index, {
+                                  driverContactVisible: e.target.checked,
+                                })
+                              }
+                            />
+                            Show driver contact on page
+                          </label>
                         </label>
-                      </label>
-                    </div>
-
-                    <div className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateVehicle(index, { addDriver: !v.addDriver })
-                        }
-                        className={`flex w-full items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-semibold hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800/80 dark:hover:bg-slate-800 ${textHeading}`}
-                      >
-                        <span>Driver (optional)</span>
-                        {v.addDriver ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </button>
-                      {v.addDriver && (
-                        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                          <input
-                            className={fieldInput}
-                            placeholder="Driver name"
-                            value={v.driverName}
-                            onChange={(e) =>
-                              updateVehicle(index, {
-                                driverName: e.target.value,
-                              })
-                            }
-                          />
-                          <input
-                            className={fieldInput}
-                            placeholder="Driver phone"
-                            value={v.driverPhone}
-                            onChange={(e) =>
-                              updateVehicle(index, {
-                                driverPhone: e.target.value,
-                              })
-                            }
-                            inputMode="tel"
-                          />
-                        </div>
                       )}
                     </div>
+
+                    {/* Hide Driver (optional) entry for "Cycle Tag" */}
+                    {!isCycleTag && (
+                      <div className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateVehicle(index, { addDriver: !v.addDriver })
+                          }
+                          className={`flex w-full items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-semibold hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800/80 dark:hover:bg-slate-800 ${textHeading}`}
+                        >
+                          <span>Driver (optional)</span>
+                          {v.addDriver ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </button>
+                        {v.addDriver && (
+                          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                            <input
+                              className={fieldInput}
+                              placeholder="Driver name"
+                              value={v.driverName}
+                              onChange={(e) =>
+                                updateVehicle(index, {
+                                  driverName: e.target.value,
+                                })
+                              }
+                            />
+                            <input
+                              className={fieldInput}
+                              placeholder="Driver phone"
+                              value={v.driverPhone}
+                              onChange={(e) =>
+                                updateVehicle(index, {
+                                  driverPhone: e.target.value,
+                                })
+                              }
+                              inputMode="tel"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}

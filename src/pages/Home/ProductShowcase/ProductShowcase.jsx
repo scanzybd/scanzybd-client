@@ -334,7 +334,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
               </div>
             ) : (
               <>
-                <ul className="grid grid-cols-1 gap-5 sm:grid-cols- sm:gap-6 xl:grid-cols-2">
+                <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-2">
                   {visibleCatalogProducts.map((product) => (
                     <li key={product._id}>
                       <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-slate-50 dark:bg-slate-900 dark:border-slate-700 shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md">

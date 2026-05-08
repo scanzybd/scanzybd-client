@@ -244,8 +244,7 @@ const ProductPage = () => {
 
   if (id && selectedProduct) {
     return (
-      <div className="min-h-screen w-full bg-linear-to-b from-slate-100 via-slate-50 to-slate-100">
-        {notification && (
+<div className="min-h-screen w-full bg-linear-to-b from-slate-100 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">        {notification && (
           <div className="fixed inset-x-0 top-0 z-100 flex justify-center px-3 pt-4 sm:left-auto sm:right-4 sm:top-4 sm:justify-end sm:px-0">
             <div
               role="status"
@@ -263,19 +262,17 @@ const ProductPage = () => {
           >
             Back to products
           </button>
-          <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="grid gap-0 md:grid-cols-2">
+          <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">            <div className="grid gap-0 md:grid-cols-2">
               {/* Main Info & Image */}
-              <div className="aspect-4/3 bg-slate-100 md:aspect-auto">
-                <img
+              <div className="aspect-4/3 bg-slate-100 dark:bg-slate-800 md:aspect-auto">                <img
                   src={selectedProduct.image || productFallback}
                   alt={selectedProduct.title || "Product"}
                   className="h-full w-full object-cover"
                 />
               </div>
               <div className="p-4 sm:p-6 lg:p-8">
-                <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">{selectedProduct.title}</h1>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600 sm:mt-3">
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">{selectedProduct.title}</h1>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:mt-3">
                   {selectedProduct.description}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-5">
@@ -288,7 +285,7 @@ const ProductPage = () => {
                       ৳ {Number(selectedProduct.originalPrice).toLocaleString()}
                     </span>
                   )}
-                   <p className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 sm:text-sm">
+                   <p className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300 sm:text-sm">
                     Validity: {selectedProduct.validityDays ?? 365} days
                   </p>
                   {selectedProduct.type && (
@@ -314,20 +311,20 @@ const ProductPage = () => {
               
                 {/* Show all other details (not hidden, as per logic in productDetails) */}
                 {productDetails.length > 0 && (
-                  <div className="mt-5 rounded-xl border border-slate-200 p-3 sm:p-4">
-                    <h2 className="text-sm font-semibold text-slate-800">Details</h2>
+                  <div className="mt-5 rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 sm:p-4">
+                    <h2 className="text-sm font-semibold text-slate-800 dark:text-white">Details</h2>
                    
                     {/* Features List */}
                     <dl className="space-y-0">
                       {productDetails.map((item) => (
                         <div
                           key={item.key}
-                          className="flex flex-row items-baseline border-b border-slate-200 px-1 py-2 last:border-b-0"
+                          className="flex flex-row items-baseline border-b border-slate-200 px-1 py-2 dark:border-slate-700 last:border-b-0"
                         >
-                          <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500 w-36 flex-shrink-0">
+                          <dt className="w-36 flex-shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                             {item.label}
                           </dt>
-                          <dd className="ml-2 text-sm text-slate-700 whitespace-pre-line">{item.value}</dd>
+                          <dd className="ml-2 whitespace-pre-line text-sm text-slate-700 dark:text-slate-200">{item.value}</dd>
                         </div>
                       
                       ))}

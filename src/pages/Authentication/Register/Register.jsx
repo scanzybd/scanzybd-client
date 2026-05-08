@@ -43,7 +43,7 @@ const Register = () => {
 };
 
     return (
-        <div className="flex h-screen w-full items-center justify-center bg-yellow-400  px-4 transition-colors dark:bg-slate-950">
+        <div className="flex h-screen w-full items-center justify-center bg-yellow-400 px-4 transition-colors dark:bg-slate-950">
             <div className="card max-w-sm w-full shadow-2xl bg-base-100">
 
                 {/* Header */}
