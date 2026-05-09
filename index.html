@@ -1,25 +1,98 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Basic Meta -->
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/src/assets/icon/icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ScanzyBD</title>
+
+    <!-- SEO -->
+    <title>ScanzyBD | Smart QR Code Tags for Vehicle Safety</title>
+
+    <meta
+      name="description"
+      content="ScanzyBD provides smart QR code tags for vehicles in Bangladesh. Ensure safety, quick identification, and emergency contact with innovative QR solutions."
+    />
+
+    <meta
+      name="keywords"
+      content="QR code tag Bangladesh, vehicle QR tag, smart QR sticker BD, emergency contact QR, car safety Bangladesh"
+    />
+
+    <meta name="author" content="ScanzyBD" />
+    <meta name="robots" content="index, follow" />
+
+    <link rel="canonical" href="https://scanzybd.com/" />
+
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href="/favicon.png"
+    />
+
+    <!-- Open Graph -->
+    <meta
+      property="og:title"
+      content="ScanzyBD | Smart QR Code Tags"
+    />
+
+    <meta
+      property="og:description"
+      content="Enhance vehicle safety in Bangladesh with ScanzyBD smart QR tags for instant identification and emergency contact."
+    />
+
+    <meta
+      property="og:image"
+      content="https://scanzybd.com/preview.png"
+    />
+
+    <meta property="og:url" content="https://scanzybd.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ScanzyBD" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <meta
+      name="twitter:title"
+      content="ScanzyBD | Smart QR Code Tags"
+    />
+
+    <meta
+      name="twitter:description"
+      content="Smart QR tags for vehicle safety and emergency contact in Bangladesh."
+    />
+
+    <meta
+      name="twitter:image"
+      content="https://scanzybd.com/preview.png"
+    />
+
+    <!-- Theme Script -->
     <script>
       (function () {
         try {
           var k = "app-theme";
           var s = localStorage.getItem(k);
-          var dark = s ? s === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+          var dark = s
+            ? s === "dark"
+            : window.matchMedia("(prefers-color-scheme: dark)").matches;
+
           var el = document.documentElement;
+
           el.setAttribute("data-theme", dark ? "dark" : "light");
           el.classList.toggle("dark", dark);
         } catch (e) {}
       })();
     </script>
   </head>
+
   <body>
     <div id="root"></div>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -125,7 +125,7 @@
         "title": "QR tag generator",
         "subtitle": "Separate print designs for bike and car. PDF download: one tag per A4 page — ready for press or home printing.",
         "tagType": "Tag type",
-        "countLabel": "Quantity (max 50)",
+        "countLabel": "Quantity (max 500)",
         "generating": "Generating…",
         "generate": "Generate",
         "created": "Created ({{count}} items)",

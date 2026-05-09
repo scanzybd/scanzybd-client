@@ -184,7 +184,7 @@ const QRGenerator = () => {
 
   const generateQR = async () => {
     const raw = document.getElementById("qr-count")?.value;
-    const count = Math.min(50, Math.max(1, Number(raw) || 1));
+    const count = Math.min(500, Math.max(1, Number(raw) || 1));
 
     setError(null);
     setLoading(true);
@@ -424,8 +424,8 @@ const QRGenerator = () => {
                 id="qr-count"
                 type="number"
                 min={1}
-                max={50}
-                defaultValue={4}
+                max={500}
+                defaultValue={1}
                 className="input input-bordered w-full rounded-xl border-slate-200 bg-slate-50 focus:border-blue-500"
               />
             </div>
