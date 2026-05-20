@@ -1,21 +1,19 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 import { Bike, Car, Download, Eye, FileDown, Loader2, QrCode } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
-import qrBikeFrame from "../../../assets/qr-frame/QR UI-bike.svg";
-import qrCarFrame from "../../../assets/qr-frame/QR UI-car.svg";
 import {
   companyNameSlug,
 } from "../../../config/company";
 import {
   CARD_SIZE,
   computeSinglePageStickerOrigin,
-  drawStickerWithLabelBelow,
+  drawVectorStickerWithLabelBelow,
   getStickerSizeMm,
   PDF_PAGE_INSET_BATCH,
-  placeStickerOnPage as placeStickerOnPdfPage,
+  placeVectorStickerOnPage,
+  QR_FRAME_URL,
 } from "./qrStickerPdf";
 
 /** Visual layout only — labels come from i18n (`dashboard.qr.generate.types.*`). */
@@ -31,8 +29,8 @@ const QR_TYPE_LAYOUT = {
 };
 
 const QR_FRAME_ASSET = {
-  bike: qrBikeFrame,
-  car: qrCarFrame,
+  bike: QR_FRAME_URL.bike,
+  car: QR_FRAME_URL.car,
 };
 
 const QR_OVERLAY_LAYOUT = {
@@ -48,12 +46,6 @@ const FRAME_ZOOM_LAYOUT = {
 const FRAME_OFFSET_LAYOUT = {
   bike: { x: "0%", y: "0%" },
   car: { x: "0%", y: "0%" },
-};
-
-const toPngOptions = {
-  pixelRatio: 2,
-  backgroundColor: "#ffffff",
-  cacheBust: true,
 };
 
 const PDF_LAYOUT_OPTIONS = [
@@ -173,14 +165,7 @@ const QRGenerator = () => {
   const [downloadingSingleIndex, setDownloadingSingleIndex] = useState(null);
   const [error, setError] = useState(null);
 
-  const cardRefs = useRef({});
-  const captureCacheRef = useRef(new Map());
-
   const typeKeys = Object.keys(QR_TYPE_LAYOUT);
-
-  useEffect(() => {
-    captureCacheRef.current.clear();
-  }, [qrList, selectedType]);
 
   const generateQR = async () => {
     const raw = document.getElementById("qr-count")?.value;
@@ -207,25 +192,11 @@ const QRGenerator = () => {
     }
   };
 
-  const captureNodePng = async (index) => {
-    const item = qrList[index];
-    const cacheKey = item?._id || item?.code || `${selectedType}-${index}`;
-    if (captureCacheRef.current.has(cacheKey)) {
-      return captureCacheRef.current.get(cacheKey);
-    }
-    const node = cardRefs.current[index];
-    if (!node) throw new Error("Card not ready");
-    const imageData = await toPng(node, toPngOptions);
-    captureCacheRef.current.set(cacheKey, imageData);
-    return imageData;
-  };
-
   /** Single tag — one A4 page, centered, print-ready. */
   const downloadSinglePdf = async (index) => {
     setDownloadingSingleIndex(index);
     setError(null);
     try {
-      const imgData = await captureNodePng(index);
       const item = qrList[index];
       const code = item?.code || index;
       const type = item?.qrType || selectedType;
@@ -253,7 +224,15 @@ const QRGenerator = () => {
         PDF_PAGE_INSET_BATCH
       );
       const qrCodeLabel = code ? `QR - ${code}` : "QR";
-      drawStickerWithLabelBelow(pdf, imgData, x, y, sticker, type, qrCodeLabel);
+      await drawVectorStickerWithLabelBelow(
+        pdf,
+        item,
+        x,
+        y,
+        sticker,
+        type,
+        qrCodeLabel
+      );
       pdf.save(`${companyNameSlug()}-QR-${type}-${code}-${pdfPageLabel}.pdf`);
     } catch (e) {
       console.error(e);
@@ -301,14 +280,13 @@ const QRGenerator = () => {
     };
 
     for (let i = 0; i < qrList.length; i++) {
-      const imgData = await captureNodePng(i);
       const item = qrList[i];
       const type = item?.qrType || selectedType;
       const sticker = getStickerSizeMm(type);
       const qrCodeLabel = item?.code ? `QR - ${item.code}` : "QR";
-      cursor = placeStickerOnPdfPage(
+      cursor = await placeVectorStickerOnPage(
         pdf,
-        imgData,
+        item,
         sticker,
         cursor,
         pdfFormat,
@@ -573,14 +551,7 @@ const QRGenerator = () => {
                   className="flex w-full max-w-[320px] flex-col items-center gap-3"
                 >
                   <div className={`origin-top shadow-2xl ${cfg.ringClass}`}>
-                    <div
-                      ref={(el) => {
-                        cardRefs.current[index] = el;
-                      }}
-                      className="origin-top scale-100"
-                    >
-                      <QrPrintSurface item={item} qrType={currentType} />
-                    </div>
+                    <QrPrintSurface item={item} qrType={currentType} />
                   </div>
                   <p className="w-full truncate text-center font-mono text-xs text-slate-600">
                     {item.code}

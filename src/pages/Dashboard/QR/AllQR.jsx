@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 import {
   QrCode,
@@ -21,19 +20,15 @@ import {
 } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
-import qrBikeFrame from "../../../assets/qr-frame/QR UI-bike.svg";
-import qrCarFrame from "../../../assets/qr-frame/QR UI-car.svg";
 import {
   CARD_SIZE,
   getStickerSizeMm,
-  PDF_PAGE_INSET_ALL_QR,
-  placeStickerOnPage as placeStickerOnPdfPage,
+  PDF_PAGE_INSET_BATCH,
+  placeVectorStickerOnPage,
+  QR_FRAME_URL,
 } from "./qrStickerPdf";
 
-const QR_FRAME_ASSET = {
-  bike: qrBikeFrame,
-  car: qrCarFrame,
-};
+const QR_FRAME_ASSET = QR_FRAME_URL;
 
 const QR_OVERLAY_LAYOUT = {
   bike: { top: "50%", left: "26%", size: "35%" },
@@ -110,12 +105,6 @@ const PAGE_ORIENTATIONS = [
   { label: "Landscape", value: "l" },
 ];
 
-const toPngOptions = {
-  pixelRatio: 1.8,
-  backgroundColor: "#ffffff",
-  cacheBust: true,
-};
-
 function StickerFramePreview({ qrCode, qrType }) {
   const frameSrc = QR_FRAME_ASSET[qrType] || QR_FRAME_ASSET.bike;
   const overlay = QR_OVERLAY_LAYOUT[qrType] || QR_OVERLAY_LAYOUT.bike;
@@ -176,6 +165,13 @@ function formatCreatedAt(iso, lng) {
   }
 }
 
+function getPdfFormat(pageSize, customWidthMm, customHeightMm) {
+  if (pageSize !== "custom") return pageSize;
+  const width = Math.max(20, Number(customWidthMm) || 210);
+  const height = Math.max(20, Number(customHeightMm) || 297);
+  return [width, height];
+}
+
 const AllQR = () => {
   const { t, i18n } = useTranslation();
   const axiosSecure = useAxiosSecure();
@@ -201,8 +197,6 @@ const AllQR = () => {
   const [filterQrType, setFilterQrType] = useState("");
   const [isPreviewingFiltered, setIsPreviewingFiltered] = useState(false);
   const [isDownloadingFiltered, setIsDownloadingFiltered] = useState(false);
-  const cardRefs = useRef({});
-  const captureCacheRef = useRef(new Map());
 
   const maxDay = daysInMonth(filterYear || String(new Date().getFullYear()), filterMonth);
 
@@ -232,10 +226,6 @@ const AllQR = () => {
 
   const qrCodes = Array.isArray(data?.data) ? data.data : [];
 
-  useEffect(() => {
-    captureCacheRef.current.clear();
-  }, [qrCodes]);
-
   const resetFilters = () => {
     setFilterYear("");
     setFilterMonth("");
@@ -243,99 +233,35 @@ const AllQR = () => {
     setFilterQrType("");
   };
 
-  const captureNodePng = async (index) => {
-    const item = qrCodes[index];
-    const cacheKey = item?._id || item?.code || `qr-${index}`;
-    if (captureCacheRef.current.has(cacheKey)) {
-      return captureCacheRef.current.get(cacheKey);
-    }
-    const node = cardRefs.current[index];
-    if (!node) throw new Error("Card not ready");
-    const imageData = await toPng(node, toPngOptions);
-    captureCacheRef.current.set(cacheKey, imageData);
-    return imageData;
-  };
-
-  // Helper to compute jsPDF format props
-  const getJsPdfFormatProps = () => {
-    let formatObj = PAGE_FORMATS.find((f) => f.value === pdfPageFormat);
-    let format, width, height;
-    if (!formatObj || pdfPageFormat === "custom") {
-      // Use custom
-      format = [Number(pdfCustomWidth), Number(pdfCustomHeight)];
-      width = Number(pdfCustomWidth);
-      height = Number(pdfCustomHeight);
-    } else {
-      format = pdfPageFormat;
-      width = formatObj.w;
-      height = formatObj.h;
-    }
-    // orientation
-    let orientation = pdfPageOrientation;
-
-    // Flip width/height based on orientation for custom
-    if (Array.isArray(format)) {
-      if (orientation === "l") {
-        return {
-          jsPdfOpts: { orientation, unit: "mm", format: [height, width] },
-          actualW: height,
-          actualH: width,
-          formatLabel: "custom",
-        };
-      } else {
-        return {
-          jsPdfOpts: { orientation, unit: "mm", format: [width, height] },
-          actualW: width,
-          actualH: height,
-          formatLabel: "custom",
-        };
-      }
-    } else {
-      const w = orientation === "l" ? height : width;
-      const h = orientation === "l" ? width : height;
-      return {
-        jsPdfOpts: { orientation, unit: "mm", format },
-        actualW: w,
-        actualH: h,
-        formatLabel: format,
-      };
-    }
-  };
-
-  // Dynamically create insets for different formats
-  const getPdfInsets = () => {
-    // Use more insets for smaller page to avoid edge-cut, could be made a prop or customized
-    return PDF_PAGE_INSET_ALL_QR || { left: 10, right: 10, top: 10, bottom: 10 };
-  };
-
   const buildFilteredPdf = async () => {
-    const { jsPdfOpts, actualW, actualH, formatLabel } = getJsPdfFormatProps();
-    const insets = getPdfInsets();
+    const pdfFormat = getPdfFormat(pdfPageFormat, pdfCustomWidth, pdfCustomHeight);
+    const pdf = new jsPDF({
+      orientation: pdfPageOrientation,
+      unit: "mm",
+      format: pdfFormat,
+    });
 
-    const pdf = new jsPDF(jsPdfOpts);
     let cursor = {
-      x: insets.left,
-      y: insets.top,
+      x: PDF_PAGE_INSET_BATCH.left,
+      y: PDF_PAGE_INSET_BATCH.top,
       rowHeight: 0,
     };
 
     for (let i = 0; i < qrCodes.length; i++) {
-      const imgData = await captureNodePng(i);
       const item = qrCodes[i];
       const type = item?.qrType || "bike";
       const sticker = getStickerSizeMm(type);
       const qrCodeLabel = item?.code ? `QR - ${item.code}` : "QR";
-      cursor = placeStickerOnPdfPage(
+      cursor = await placeVectorStickerOnPage(
         pdf,
-        imgData,
+        item,
         sticker,
         cursor,
-        formatLabel,
+        pdfFormat,
         pdfPageOrientation,
         qrCodeLabel,
         type,
-        insets,
-        { pageWidth: actualW, pageHeight: actualH }
+        PDF_PAGE_INSET_BATCH
       );
     }
     return pdf;
@@ -363,7 +289,11 @@ const AllQR = () => {
     try {
       const pdf = await buildFilteredPdf();
       const stamp = new Date().toISOString().slice(0, 10);
-      pdf.save(`all-qr-filtered-${stamp}.pdf`);
+      const pdfPageLabel =
+        pdfPageFormat === "custom"
+          ? `${Math.max(20, Number(pdfCustomWidth) || 210)}x${Math.max(20, Number(pdfCustomHeight) || 297)}mm`
+          : pdfPageFormat;
+      pdf.save(`all-qr-filtered-${pdfPageLabel}-${stamp}.pdf`);
     } catch (e) {
       console.error("Download filtered PDF error:", e);
     } finally {
@@ -808,22 +738,6 @@ const AllQR = () => {
           })}
         </div>
       )}
-
-      <div className="pointer-events-none fixed -left-[9999px] top-0 opacity-0">
-        {qrCodes.map((qr, index) => {
-          const type = qr.qrType || "bike";
-          return (
-            <div
-              key={`capture-${qr._id || index}`}
-              ref={(el) => {
-                cardRefs.current[index] = el;
-              }}
-            >
-              <StickerFramePreview qrCode={qr.qrCode} qrType={type} />
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 };
