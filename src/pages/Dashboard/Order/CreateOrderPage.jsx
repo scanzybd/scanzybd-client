@@ -1,10 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
-import { Link } from "react-router-dom";
-import { ChevronDown, ChevronUp, Copy, MapPin } from "lucide-react";
-import useAuth from "../../../hooks/useAuth";
+import { Link, useNavigate } from "react-router-dom";
+import { ChevronDown, ChevronUp, Copy, MapPin, UserPlus, Banknote, Smartphone, Globe } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
-import useCart from "../../../hooks/useCart";
-import { getAppJwtIfValid } from "../../../utils/appJwtStorage";
 import {
   shellPage,
   cardSurface,
@@ -50,10 +47,16 @@ const emptyVehicleForm = () => ({
 });
 
 const STEPS = [
-  { n: 1, label: "Order" },
+  { n: 1, label: "Customer & products" },
   { n: 2, label: "Address" },
-  { n: 3, label: "Vehicles" },
+  { n: 3, label: "Vehicles & payment" },
 ];
+
+function normalizeProducts(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (raw?.data && Array.isArray(raw.data)) return raw.data;
+  return [];
+}
 
 function RequiredStar() {
   return (
@@ -64,14 +67,20 @@ function RequiredStar() {
   );
 }
 
-const Checkout = () => {
+const CreateOrderPage = () => {
   const axiosSecure = useAxiosSecure();
-  const { user } = useAuth();
-  const { cartItems } = useCart();
+  const navigate = useNavigate();
   const { data: tagTypes = [] } = useTagTypes();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [customerId, setCustomerId] = useState("");
+  const [assignableUsers, setAssignableUsers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [transactionId, setTransactionId] = useState("");
+  const [orderNote, setOrderNote] = useState("");
   const [vehicles, setVehicles] = useState([]);
   const [shipping, setShipping] = useState({
     fullName: "",
@@ -92,7 +101,22 @@ const Checkout = () => {
   const [brtaLoadError, setBrtaLoadError] = useState(null);
   const brtaFetchedRef = useRef(false);
 
-  /** One checkout row per physical tag (quantity expanded). */
+  const cartItems = useMemo(
+    () =>
+      selected.map((row) => ({
+        _id: row.product._id,
+        productId: String(row.product._id),
+        title: row.product.title,
+        name: row.product.title,
+        price: Number(row.product.price) || 0,
+        quantity: Math.max(1, Number(row.quantity) || 1),
+        image: row.product.image || "",
+        type: row.product.type || "",
+      })),
+    [selected]
+  );
+
+  /** One row per physical tag (quantity expanded). */
   const slots = useMemo(() => {
     const out = [];
     for (const item of cartItems) {
@@ -102,8 +126,7 @@ const Checkout = () => {
           key: `${item._id}__${i}`,
           productId: String(item._id),
           title: item.title || item.name || "Product",
-          // Add type property if present from item, fallback empty string otherwise
-          type: item.type || ""
+          type: item.type || "",
         });
       }
     }
@@ -115,8 +138,17 @@ const Checkout = () => {
   }, [slots]);
 
   useEffect(() => {
-    if (cartItems.length === 0) setStep(1);
-  }, [cartItems.length]);
+    axiosSecure.get("/api/users/assignable").then((res) => {
+      setAssignableUsers(res.data?.data || []);
+    });
+    axiosSecure.get("/api/products").then((res) => {
+      setProducts(normalizeProducts(res.data));
+    });
+  }, [axiosSecure]);
+
+  useEffect(() => {
+    if (cartItems.length === 0 && step > 1) setStep(1);
+  }, [cartItems.length, step]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -174,13 +206,33 @@ const Checkout = () => {
     }
   }, [step, loadBrtaOptions, brtaZones.length]);
 
-  const total = useMemo(() => {
-    return cartItems.reduce(
-      (sum, item) =>
-        sum + Number(item.price) * Math.max(1, Number(item.quantity) || 1),
-      0
+  const total = useMemo(
+    () =>
+      cartItems.reduce(
+        (sum, item) =>
+          sum + Number(item.price) * Math.max(1, Number(item.quantity) || 1),
+        0
+      ),
+    [cartItems]
+  );
+
+  const toggleProduct = (product) => {
+    setSelected((prev) => {
+      const exists = prev.find((r) => r.product._id === product._id);
+      if (exists) return prev.filter((r) => r.product._id !== product._id);
+      return [...prev, { product, quantity: 1 }];
+    });
+  };
+
+  const setProductQty = (productId, quantity) => {
+    setSelected((prev) =>
+      prev.map((r) =>
+        r.product._id === productId
+          ? { ...r, quantity: Math.max(1, Number(quantity) || 1) }
+          : r
+      )
     );
-  }, [cartItems]);
+  };
 
   const updateVehicle = useCallback((index, patch) => {
     setVehicles((prev) =>
@@ -321,7 +373,14 @@ const Checkout = () => {
   };
 
   const goToAddress = () => {
-    if (cartItems.length === 0) return;
+    if (!customerId) {
+      alert("Select a customer first.");
+      return;
+    }
+    if (cartItems.length === 0) {
+      alert("Select at least one product.");
+      return;
+    }
     setStep(2);
   };
 
@@ -330,16 +389,16 @@ const Checkout = () => {
     setStep(3);
   };
 
-  const handlePayment = async () => {
+  const handleSubmitOrder = async () => {
     if (loading) return;
 
-    if (!user?.email) {
-      alert("Please login first");
+    if (!customerId) {
+      alert("Select a customer.");
       return;
     }
 
     if (cartItems.length === 0 || slots.length === 0) {
-      alert("Your cart is empty");
+      alert("Select at least one product.");
       return;
     }
 
@@ -350,15 +409,14 @@ const Checkout = () => {
 
     if (!validateShipping() || !validateVehicles()) return;
 
+    if (paymentMethod === "bkash_manual" && !transactionId.trim()) {
+      alert("Enter bKash transaction ID for manual payment.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const token = getAppJwtIfValid();
-      if (!token) {
-        alert("Session expired. Please login again.");
-        return;
-      }
-
       const tagAssignments = slots.map((slot, i) => {
         const v = vehicles[i];
         const isCycleTag = isCycleTagType(slot.type, tagTypes);
@@ -394,55 +452,38 @@ const Checkout = () => {
         };
       });
 
-      const orderRes = await axiosSecure.post(
-        "/api/order/create",
-        {
-          cartItems,
-          amount: total,
-          tagAssignments,
-          shippingAddress: {
-            fullName: shipping.fullName.trim(),
-            phone: shipping.phone.trim(),
-            line1: shipping.addressLine.trim(),
-            line2: "",
-            union: shipping.union.trim(),
-            upazila: (selectedUpazila?.title || "").trim(),
-            city: (selectedDistrict?.title || "").trim(),
-            district: (selectedDivision?.title || "").trim(),
-            postalCode: "",
-          },
+      const res = await axiosSecure.post("/api/order/staff-create", {
+        userId: customerId,
+        cartItems,
+        amount: total,
+        tagAssignments,
+        shippingAddress: {
+          fullName: shipping.fullName.trim(),
+          phone: shipping.phone.trim(),
+          line1: shipping.addressLine.trim(),
+          line2: "",
+          union: shipping.union.trim(),
+          upazila: (selectedUpazila?.title || "").trim(),
+          city: (selectedDistrict?.title || "").trim(),
+          district: (selectedDivision?.title || "").trim(),
+          postalCode: "",
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        paymentMethod,
+        transactionId:
+          paymentMethod === "bkash_manual" ? transactionId.trim() : undefined,
+        note: orderNote.trim() || undefined,
+      });
 
-      const orderId = orderRes?.data?.orderId;
+      if (paymentMethod === "bkash_online" && res.data?.bkashURL) {
+        window.location.href = res.data.bkashURL;
+        return;
+      }
 
-      if (!orderId) throw new Error("Order failed");
-
-      const paymentRes = await axiosSecure.post(
-        "/api/payment/create",
-        { orderId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const url = paymentRes?.data?.bkashURL;
-
-      if (!url) throw new Error("Payment failed");
-
-      localStorage.setItem("pendingOrderId", orderId);
-
-      window.location.href = url;
+      alert(`Order #${res.data?.orderNo || ""} created successfully.`);
+      navigate("/dashboard/orders");
     } catch (err) {
       console.error(err);
-      alert(err?.response?.data?.message || "Something went wrong");
+      alert(err?.response?.data?.message || "Order creation failed");
     } finally {
       setLoading(false);
     }
@@ -473,13 +514,12 @@ const Checkout = () => {
       <div className="w-full max-w-3xl space-y-6">
         <div>
           <h1 className={`text-2xl font-bold tracking-tight ${textHeading}`}>
-            Checkout
+            Create order
           </h1>
           <p className={`mt-1 text-sm ${textMuted}`}>
-            {step === 1 && "Review your order, then add delivery address."}
-            {step === 2 && "Where should we send your QR tags?"}
-            {step === 3 &&
-              "Vehicle details for each tag. Driver is optional."}
+            {step === 1 && "Select customer and products (same flow as customer checkout)."}
+            {step === 2 && "Delivery address for QR tags."}
+            {step === 3 && "Vehicle details per tag, then choose payment method."}
           </p>
         </div>
 
@@ -512,46 +552,74 @@ const Checkout = () => {
           </nav>
         )}
 
-        {/* Step 1: Cart summary only */}
+        {/* Step 1: Customer + products */}
         {step === 1 && (
           <>
             <div className={`p-5 ${cardSurface}`}>
-              <h2 className={`mb-4 text-lg font-bold ${textHeading}`}>Your order</h2>
-
-              {cartItems.length === 0 ? (
-                <div className="py-8 text-center">
-                  <p className={textMuted}>Your cart is empty</p>
-                  <Link
-                    to="/Products"
-                    className="mt-3 inline-block font-semibold text-amber-600 underline dark:text-amber-400"
-                  >
-                    Continue shopping
-                  </Link>
-                </div>
-              ) : (
-                <ul className="space-y-3">
-                  {cartItems.map((item) => (
-                    <li
-                      key={item._id}
-                      className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-700"
-                    >
-                      <span className={`font-medium ${textHeading}`}>
-                        {item.title || item.name}
-                      </span>
-                      <span className={`text-sm ${textMuted}`}>
-                        ×{item.quantity} · ৳{" "}
-                        {Number(item.price) *
-                          Math.max(1, Number(item.quantity) || 1)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+              <label className={`mb-2 flex items-center gap-2 text-sm font-bold ${textHeading}`}>
+                <UserPlus className="h-4 w-4" />
+                Customer *
+              </label>
+              <select
+                className={`${fieldInput} mb-4`}
+                value={customerId}
+                onChange={(e) => setCustomerId(e.target.value)}
+              >
+                <option value="">Select customer…</option>
+                {assignableUsers.map((u) => (
+                  <option key={u._id} value={u._id}>
+                    {u.name} — {u.email}
+                  </option>
+                ))}
+              </select>
+              {!customerId && (
+                <p className={`mb-4 text-xs ${textMuted}`}>
+                  <Link to="/dashboard/add-user" className="text-emerald-700 underline">
+                    Add customer
+                  </Link>{" "}
+                  if not listed.
+                </p>
               )}
+
+              <h2 className={`mb-4 text-lg font-bold ${textHeading}`}>Products</h2>
+              <ul className="max-h-64 space-y-2 overflow-y-auto">
+                {products.map((p) => {
+                  const row = selected.find((r) => r.product._id === p._id);
+                  return (
+                    <li
+                      key={p._id}
+                      className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-700"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={Boolean(row)}
+                        onChange={() => toggleProduct(p)}
+                        className="checkbox checkbox-sm"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className={`font-medium ${textHeading}`}>{p.title}</p>
+                        <p className={`text-xs ${textMuted}`}>
+                          ৳ {Number(p.price || 0).toLocaleString()}
+                        </p>
+                      </div>
+                      {row && (
+                        <input
+                          type="number"
+                          min={1}
+                          value={row.quantity}
+                          onChange={(e) => setProductQty(p._id, e.target.value)}
+                          className="input input-bordered input-xs w-14"
+                        />
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
 
               <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-700">
                 <span className={`text-lg font-semibold ${textHeading}`}>Total</span>
                 <span className="text-xl font-bold text-amber-600 dark:text-amber-400">
-                  ৳ {total}
+                  ৳ {total.toLocaleString()}
                 </span>
               </div>
             </div>
@@ -559,9 +627,9 @@ const Checkout = () => {
             <button
               type="button"
               onClick={goToAddress}
-              disabled={cartItems.length === 0}
+              disabled={!customerId || cartItems.length === 0}
               className={
-                cartItems.length === 0
+                !customerId || cartItems.length === 0
                   ? `${btnPrimary} cursor-not-allowed opacity-50`
                   : btnPrimary
               }
@@ -1094,14 +1162,69 @@ const Checkout = () => {
               })}
             </div>
 
+            <div className={`mb-4 p-4 ${cardSurface}`}>
+              <h3 className={`mb-3 text-sm font-bold ${textHeading}`}>Payment method</h3>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {[
+                  { id: "cash", label: "Cash", icon: Banknote },
+                  { id: "bkash_manual", label: "Manual bKash", icon: Smartphone },
+                  { id: "bkash_online", label: "bKash Online", icon: Globe },
+                ].map(({ id, label, icon: Icon }) => (
+                  <label
+                    key={id}
+                    className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border p-3 text-center text-xs font-semibold ${
+                      paymentMethod === id
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+                        : "border-slate-200 bg-white text-slate-600"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value={id}
+                      checked={paymentMethod === id}
+                      onChange={() => setPaymentMethod(id)}
+                      className="sr-only"
+                    />
+                    <Icon className="h-5 w-5" />
+                    {label}
+                  </label>
+                ))}
+              </div>
+              {paymentMethod === "bkash_manual" && (
+                <label className="mt-3 block">
+                  <span className={`text-xs font-medium ${textMuted}`}>
+                    bKash Transaction ID *
+                  </span>
+                  <input
+                    className={`${fieldInput} mt-1`}
+                    value={transactionId}
+                    onChange={(e) => setTransactionId(e.target.value)}
+                    placeholder="e.g. DEC60OP75K"
+                  />
+                </label>
+              )}
+              <input
+                type="text"
+                className={`${fieldInput} mt-3`}
+                value={orderNote}
+                onChange={(e) => setOrderNote(e.target.value)}
+                placeholder="Payment note (optional)"
+              />
+            </div>
+
             <div className="flex flex-col gap-3 sm:flex-row-reverse">
               <button
                 type="button"
-                onClick={handlePayment}
+                onClick={handleSubmitOrder}
                 disabled={loading}
                 className={`${btnPrimary} sm:flex-1 ${loading ? "cursor-not-allowed opacity-60" : ""}`}
               >
-                {loading ? "Processing..." : "Pay with bKash"}
+                {loading
+                  ? "Processing..."
+                  : paymentMethod === "bkash_online"
+                    ? "Create order & pay online"
+                    : "Create order"}
               </button>
               <button
                 type="button"
@@ -1119,4 +1242,4 @@ const Checkout = () => {
   );
 };
 
-export default Checkout;
+export default CreateOrderPage;

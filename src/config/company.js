@@ -37,6 +37,9 @@ export const COMPANY_LEGAL_NAME = str(
     "QR Tag System"
 );
 
+/** Hero / banner background — matches Banner.png & BannerVideo yellow */
+export const BRAND_YELLOW = str(import.meta.env.VITE_BRAND_YELLOW, "#FFD700");
+
 /** Dashboard sidebar subtitle under “Dashboard” */
 export const COMPANY_TAGLINE = str(
     import.meta.env.VITE_COMPANY_TAGLINE,

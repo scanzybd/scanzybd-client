@@ -7,6 +7,7 @@ import PrivateRoute from "../routes/PrivetRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
 import UserLayout from "../layouts/UserLayout";
 import AdminRoute from "../routes/AdminRoute";
+import ProviderRoute from "../routes/ProviderRoute";
 import { lazyPage, lazyImport, RouteFallback } from "./lazyRoute";
 import * as chunks from "./routeChunks";
 
@@ -42,23 +43,17 @@ const MyPurchases = lazyPage(chunks.loadMyPurchases);
 
 // ——— Dashboard ———
 const DashboardHome = lazyPage(chunks.loadDashboardHome);
-const AllOrders = lazyPage(chunks.loadAllOrders);
-const CancelledOrders = lazyPage(chunks.loadCancelledOrders);
-const PendingOrders = lazyPage(chunks.loadPendingOrders);
-const OrderReports = lazyPage(chunks.loadOrderReports);
-const ConfirmedOrder = lazyPage(chunks.loadConfirmedOrder);
-const ShippedOrders = lazyPage(chunks.loadShippedOrders);
-const DeliveredOrders = lazyPage(chunks.loadDeliveredOrders);
-const ReturnedOrders = lazyPage(chunks.loadReturnedOrders);
 const AllProducts = lazyPage(chunks.loadAllProducts);
 const AddProductsLazy = lazyImport(chunks.loadAddProducts);
 const AllQR = lazyPage(chunks.loadAllQR);
 const GenerateQR = lazyPage(chunks.loadGenerateQR);
 const FinanceManagement = lazyPage(chunks.loadFinanceManagement);
+const ProviderFinance = lazyPage(chunks.loadProviderFinance);
+const ProviderDueList = lazyPage(chunks.loadProviderDueList);
 const AllPackages = lazyPage(chunks.loadAllPackages);
 const AddPackagesLazy = lazyImport(chunks.loadAddPackages);
 const QrScanner = lazyPage(chunks.loadQrScanner);
-const AddVehiclePage = lazyPage(chunks.loadAddVehiclePage);
+const CreateOrderPage = lazyPage(chunks.loadCreateOrderPage);
 const AssignVehiclePage = lazyPage(chunks.loadAssignVehiclePage);
 const ScanAssignPage = lazyPage(chunks.loadScanAssignPage);
 const AllVehiclePage = lazyPage(chunks.loadAllVehiclePage);
@@ -68,6 +63,8 @@ const AddUserPageLazy = lazyImport(chunks.loadAddUserPage);
 const AddProviderPageLazy = lazyImport(chunks.loadAddProviderPage);
 const ReviewManagement = lazyPage(chunks.loadReviewManagement);
 const ContactInbox = lazyPage(chunks.loadContactInbox);
+const StaffOrdersPage = lazyPage(chunks.loadStaffOrders);
+const OrderDetailPage = lazyPage(chunks.loadOrderDetail);
 
 const router = createBrowserRouter([
   {
@@ -206,6 +203,10 @@ const router = createBrowserRouter([
         Component: UserOrders,
       },
       {
+        path: "my-orders",
+        Component: UserOrders,
+      },
+      {
         path: "my-purchases",
         Component: MyPurchases,
       },
@@ -253,40 +254,68 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "orders",
+        Component: StaffOrdersPage,
+      },
+      {
+        path: "orders/:orderId",
+        Component: OrderDetailPage,
+      },
+      {
         path: "all-orders",
-        Component: AllOrders,
+        element: <Navigate to="/dashboard/orders" replace />,
       },
       {
         path: "completed-orders",
-        Component: ConfirmedOrder,
+        element: <Navigate to="/dashboard/orders" replace />,
       },
       {
         path: "shipped-orders",
-        Component: ShippedOrders,
+        element: <Navigate to="/dashboard/orders" replace />,
       },
       {
         path: "delivered-orders",
-        Component: DeliveredOrders,
+        element: <Navigate to="/dashboard/orders" replace />,
       },
       {
         path: "returned-orders",
-        Component: ReturnedOrders,
+        element: <Navigate to="/dashboard/orders" replace />,
       },
       {
         path: "cancelled-orders",
-        Component: CancelledOrders,
+        element: <Navigate to="/dashboard/orders" replace />,
       },
       {
         path: "pending-orders",
-        Component: PendingOrders,
+        element: <Navigate to="/dashboard/orders" replace />,
       },
       {
         path: "order-reports",
-        Component: OrderReports,
+        element: <Navigate to="/dashboard/orders" replace />,
       },
       {
         path: "finance-management",
-        Component: FinanceManagement,
+        element: (
+          <AdminRoute>
+            <FinanceManagement />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "provider-due-list",
+        element: (
+          <AdminRoute>
+            <ProviderDueList />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "provider-finance",
+        element: (
+          <ProviderRoute>
+            <ProviderFinance />
+          </ProviderRoute>
+        ),
       },
       {
         path: "all-qr",
@@ -321,8 +350,12 @@ const router = createBrowserRouter([
         Component: AllVehiclePage,
       },
       {
+        path: "create-order",
+        Component: CreateOrderPage,
+      },
+      {
         path: "add-vehicle",
-        Component: AddVehiclePage,
+        element: <Navigate to="/dashboard/create-order" replace />,
       },
       {
         path: "assign-vehicle",
@@ -349,11 +382,9 @@ const router = createBrowserRouter([
       {
         path: "add-user",
         element: (
-          <AdminRoute>
-            <Suspense fallback={<RouteFallback />}>
-              <AddUserPageLazy />
-            </Suspense>
-          </AdminRoute>
+          <Suspense fallback={<RouteFallback />}>
+            <AddUserPageLazy />
+          </Suspense>
         ),
       },
       {

@@ -8,68 +8,99 @@ const EXPIRY_KEY = "cart_expiry";
 // 48 hours in milliseconds
 const EXPIRY_TIME = 48 * 60 * 60 * 1000;
 
-export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState(() => {
-    const storedCart = localStorage.getItem(CART_KEY);
-    const expiry = localStorage.getItem(EXPIRY_KEY);
-    const now = new Date().getTime();
+function getCartItemId(itemOrId) {
+  if (itemOrId == null) return "";
+  if (typeof itemOrId === "object") {
+    const id = itemOrId._id ?? itemOrId.id ?? itemOrId.productId;
+    return id != null ? String(id) : "";
+  }
+  return String(itemOrId);
+}
 
-    if (storedCart && expiry) {
-      if (now > Number(expiry)) {
-        localStorage.removeItem(CART_KEY);
-        localStorage.removeItem(EXPIRY_KEY);
-        return [];
-      }
-      return JSON.parse(storedCart);
-    }
+function normalizeCartItem(item) {
+  const id = getCartItemId(item);
+  if (!id) return null;
+  return { ...item, _id: id, quantity: Math.max(1, Number(item.quantity) || 1) };
+}
+
+function loadCartFromStorage() {
+  const storedCart = localStorage.getItem(CART_KEY);
+  const expiry = localStorage.getItem(EXPIRY_KEY);
+  const now = Date.now();
+
+  if (!storedCart || !expiry) return [];
+
+  if (now > Number(expiry)) {
+    localStorage.removeItem(CART_KEY);
+    localStorage.removeItem(EXPIRY_KEY);
     return [];
-  });
+  }
 
-  // 🔥 SAVE CART WITH 48H EXPIRY RESET
+  try {
+    const parsed = JSON.parse(storedCart);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(normalizeCartItem).filter(Boolean);
+  } catch {
+    localStorage.removeItem(CART_KEY);
+    localStorage.removeItem(EXPIRY_KEY);
+    return [];
+  }
+}
+
+function persistCart(items) {
+  if (items.length > 0) {
+    localStorage.setItem(CART_KEY, JSON.stringify(items));
+    localStorage.setItem(EXPIRY_KEY, String(Date.now() + EXPIRY_TIME));
+  } else {
+    localStorage.removeItem(CART_KEY);
+    localStorage.removeItem(EXPIRY_KEY);
+  }
+}
+
+export const CartProvider = ({ children }) => {
+  const [cartItems, setCartItems] = useState(loadCartFromStorage);
+
   useEffect(() => {
-    if (cartItems.length > 0) {
-      localStorage.setItem(CART_KEY, JSON.stringify(cartItems));
-      localStorage.setItem(
-        EXPIRY_KEY,
-        (new Date().getTime() + EXPIRY_TIME).toString()
-      );
-    }
+    persistCart(cartItems);
   }, [cartItems]);
 
-  // ➕ ADD
   const addToCart = (item) => {
+    const normalized = normalizeCartItem(item);
+    if (!normalized) return;
+
     setCartItems((prev) => {
-      const exists = prev.find((i) => i._id === item._id);
+      const id = normalized._id;
+      const exists = prev.find((i) => getCartItemId(i) === id);
 
       if (exists) {
         return prev.map((i) =>
-          i._id === item._id
+          getCartItemId(i) === id
             ? { ...i, quantity: i.quantity + 1 }
             : i
         );
       }
 
-      return [...prev, { ...item, quantity: 1 }];
+      return [...prev, normalized];
     });
   };
 
-  // ➕ INCREASE
   const increaseQty = (id) => {
+    const targetId = getCartItemId(id);
     setCartItems((prev) =>
       prev.map((item) =>
-        item._id === id
+        getCartItemId(item) === targetId
           ? { ...item, quantity: item.quantity + 1 }
           : item
       )
     );
   };
 
-  // ➖ DECREASE
   const decreaseQty = (id) => {
+    const targetId = getCartItemId(id);
     setCartItems((prev) =>
       prev
         .map((item) =>
-          item._id === id
+          getCartItemId(item) === targetId
             ? { ...item, quantity: item.quantity - 1 }
             : item
         )
@@ -77,18 +108,15 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  // ❌ REMOVE
   const removeFromCart = (id) => {
+    const targetId = getCartItemId(id);
     setCartItems((prev) =>
-      prev.filter((item) => item._id !== id)
+      prev.filter((item) => getCartItemId(item) !== targetId)
     );
   };
 
-  // 🧹 CLEAR
   const clearCart = () => {
     setCartItems([]);
-    localStorage.removeItem(CART_KEY);
-    localStorage.removeItem(EXPIRY_KEY);
   };
 
   return (

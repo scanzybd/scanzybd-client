@@ -1,16 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
-
-const productTypes = [
-"Car Tag",
-  "Bike Tag",
-  "Helmet Tag",
-  "Truck Tag",
-  "Van Tag",
-  "Bus Tag",
-  "Cycle Tag",
-];
+import useAuth from "../../../hooks/useAuth";
+import useTagTypes from "../../../hooks/useTagTypes";
 
 async function uploadToImgbbDirect(dataUrl, apiKey) {
   let base64 = String(dataUrl).trim();
@@ -83,6 +75,8 @@ function productToForm(p) {
 
 const EditProductModal = ({ product, onClose, onSaved }) => {
   const axiosSecure = useAxiosSecure();
+  const { userRole } = useAuth();
+  const { data: tagTypes = [], isLoading: tagTypesLoading } = useTagTypes();
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -96,6 +90,7 @@ const EditProductModal = ({ product, onClose, onSaved }) => {
   }, [product]);
 
   if (!product) return null;
+  if (userRole !== "admin") return null;
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -283,10 +278,12 @@ const EditProductModal = ({ product, onClose, onSaved }) => {
             className="select select-bordered w-full"
             required
           >
-            <option value="">Select type</option>
-            {productTypes.map((t) => (
-              <option key={t} value={t}>
-                {t}
+            <option value="">
+              {tagTypesLoading ? "Loading types…" : "Select type"}
+            </option>
+            {tagTypes.map((t) => (
+              <option key={t.name} value={t.name}>
+                {t.name}
               </option>
             ))}
           </select>

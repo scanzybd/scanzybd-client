@@ -86,7 +86,7 @@ const PaymentSuccess = () => {
 
           <button
             onClick={() => navigate("/user/user-orders")}
-            className="w-full bg-gray-200 py-2 rounded-lg"
+            className="w-full bg-gray-200 dark:bg-gray-800 py-2 rounded-lg"
           >
             My Orders
           </button>

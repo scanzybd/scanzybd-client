@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { ShoppingCart } from 'lucide-react';
 import useAuth from '../../../../hooks/useAuth';
 import useCart from '../../../../hooks/useCart';
-import ThemeToggle from '../../../../components/ThemeToggle';
 import Swal from "sweetalert2";
 
 const navLinkClass = (active) =>
@@ -23,6 +22,10 @@ const Navbar = () => {
 
   const { logOut, user, userRole, loading } = useAuth();
   const { cartItems } = useCart();
+
+  const userName = user?.name || user?.displayName || t("user.menu.myAccount");
+  const avatarLetter =
+    (user?.name || user?.displayName || "").charAt(0).toUpperCase() || "👤";
 
   const closeDropdown = () => {
     document.activeElement?.blur();
@@ -155,11 +158,6 @@ const Navbar = () => {
           {/* RIGHT */}
           <div className="flex items-center justify-end gap-1 sm:gap-2 lg:gap-3 flex-nowrap min-w-0">
 
-            {/* THEME */}
-            <div className="shrink-0 [&_svg]:text-slate-700 dark:[&_svg]:text-slate-200">
-              <ThemeToggle />
-            </div>
-
             {/* CART */}
             <Link
               to="/user/my-cart"
@@ -198,13 +196,13 @@ const Navbar = () => {
                   className="btn btn-ghost btn-circle avatar"
                 >
                   <div className="flex w-9 sm:w-10 items-center justify-center rounded-full bg-yellow-500 font-bold text-slate-900 shadow-sm ring-2 ring-amber-600/20 dark:text-slate-950">
-                    {user?.displayName?.charAt(0).toUpperCase() || "👤"}
+                    {avatarLetter}
                   </div>
                 </div>
 
                 <ul className="dropdown-content menu bg-base-100 rounded-box z-[60] mt-2 w-52 p-2 shadow">
-                  <li className="px-3 py-2 text-sm font-semibold">
-                    {user?.displayName || user?.email}
+                  <li className="px-3 py-2 text-sm font-semibold truncate">
+                    {userName}
                   </li>
 
                   <hr className="my-2" />
@@ -228,7 +226,7 @@ const Navbar = () => {
 
                   <li>
                     <Link
-                      to="/user/user-orders"
+                      to="/user/my-orders"
                       onClick={closeDropdown}
                     >
                       {t("user.menu.orders")}

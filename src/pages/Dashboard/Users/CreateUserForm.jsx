@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { Link } from "react-router";
 import { ArrowLeft, Mail, Lock, User, Shield } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useAuth from "../../../hooks/useAuth";
 
 const CreateUserForm = ({ role, badge, title, description }) => {
     const axiosSecure = useAxiosSecure();
+    const { userRole } = useAuth();
+    const isAdmin = userRole === "admin";
     const [form, setForm] = useState({
         name: "",
         email: "",
@@ -66,11 +69,11 @@ const CreateUserForm = ({ role, badge, title, description }) => {
     return (
         <div className="mx-auto max-w-lg">
             <Link
-                to="/dashboard/user-management"
-                className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-emerald-700 hover:text-emerald-800"
+                to={isAdmin ? "/dashboard/user-management" : "/dashboard"}
+                className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-emerald-700 hover:text-emerald-800 dark:text-emerald-400"
             >
                 <ArrowLeft className="h-4 w-4" />
-                Back to user management
+                {isAdmin ? "Back to user management" : "Back to dashboard"}
             </Link>
 
             <div className="mb-8 border-b border-slate-200/90 pb-6">

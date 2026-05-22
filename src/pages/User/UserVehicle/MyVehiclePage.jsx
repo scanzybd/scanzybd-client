@@ -1,84 +1,80 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { Pencil, Trash2, Car, QrCode, Phone, UserRound, AlertCircle } from "lucide-react";
+import Switch from "react-switch";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 import SmartLoader from "../../../components/SmartLoader";
-import {
-  shellPage,
-  cardSurfaceSm,
-  fieldInput,
-  btnPrimaryInline,
-  btnSecondaryInline,
-  textHeading,
-  textMuted,
-} from "../../../lib/uiClasses";
-import { Pencil, Trash2 } from "lucide-react";
-import Switch from "react-switch";
+import VehicleQrPreview from "../../../components/VehicleQrPreview";
+import { getVehicleQrIds, qrAssignmentLabel } from "../../../lib/vehicleQr";
 
-/** Solid hex for react-switch (tailwind slate-200 → slate-300 track) */
 const CONTACT_OFF_HEX = "#d1d9e3";
-
-const CONTACT_ON_HEX = {
-  green: "#059669",
-  blue: "#2563eb",
-  red: "#dc2626",
-};
+const CONTACT_ON_HEX = { green: "#059669", blue: "#2563eb", red: "#dc2626" };
 
 const switchIconBase =
   "flex h-full w-full items-center text-[8px] font-bold uppercase tracking-wide text-white";
 
-const ContactToggle = ({ label, checked, onClick, disabled = false, tone = "green" }) => {
-  const onHex = CONTACT_ON_HEX[tone] ?? CONTACT_ON_HEX.green;
+const ContactToggle = ({ label, checked, onClick, disabled = false, tone = "green" }) => (
+  <Switch
+    checked={checked}
+    onChange={() => !disabled && onClick()}
+    disabled={disabled}
+    onColor={CONTACT_ON_HEX[tone] ?? CONTACT_ON_HEX.green}
+    offColor={CONTACT_OFF_HEX}
+    onHandleColor="#f1f5f9"
+    offHandleColor="#f1f5f9"
+    height={22}
+    width={48}
+    borderRadius={11}
+    handleDiameter={18}
+    uncheckedIcon={
+      <div className={`${switchIconBase} justify-end pr-1`}>OFF</div>
+    }
+    checkedIcon={
+      <div className={`${switchIconBase} justify-start pl-1`}>ON</div>
+    }
+    aria-label={label}
+  />
+);
 
+const phoneDigits = (v) => String(v || "").replace(/\D/g, "").slice(0, 11);
+
+const fieldClass =
+  "input input-bordered w-full rounded-xl border-slate-200 bg-white text-sm dark:border-slate-600 dark:bg-slate-800";
+
+function ContactRow({ icon: Icon, label, tone, vehicle, fieldKey, saving, onToggle }) {
   return (
-    <Switch
-      checked={checked}
-      onChange={() => {
-        if (!disabled) onClick();
-      }}
-      disabled={disabled}
-      onColor={onHex}
-      offColor={CONTACT_OFF_HEX}
-      onHandleColor="#f1f5f9"
-      offHandleColor="#f1f5f9"
-      height={20}
-      width={44}
-      borderRadius={10}
-      handleDiameter={16}
-      uncheckedIcon={
-        <div className={`${switchIconBase} justify-end pr-1`}>
-          OFF
-        </div>
-      }
-      checkedIcon={
-        <div className={`${switchIconBase} justify-start pl-1`}>
-          ON
-        </div>
-      }
-      boxShadow="0 1px 2px rgba(15, 23, 42, 0.12)"
-      activeBoxShadow="0 0 0 2px rgba(59, 130, 246, 0.35)"
-      className={`shrink-0 align-middle ${disabled ? "opacity-60" : ""}`}
-      aria-label={label}
-      title={`${label} ${checked ? "ON" : "OFF"}`}
-    />
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/50">
+      <div className="flex min-w-0 items-center gap-2">
+        <Icon className="h-4 w-4 shrink-0 text-slate-400" />
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{label}</span>
+      </div>
+      <ContactToggle
+        label={label}
+        checked={Boolean(vehicle[fieldKey])}
+        onClick={() => onToggle(vehicle, fieldKey)}
+        disabled={Boolean(saving[`${vehicle._id}:${fieldKey}`])}
+        tone={tone}
+      />
+    </div>
   );
-};
+}
 
 const MyVehiclePage = () => {
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
 
   const [vehicles, setVehicles] = useState([]);
-  const [viewVehicle, setViewVehicle] = useState(null);
   const [editVehicle, setEditVehicle] = useState(null);
   const [mongoUser, setMongoUser] = useState(null);
   const [roleLoading, setRoleLoading] = useState(true);
+  const [loadingVehicles, setLoadingVehicles] = useState(true);
 
   const [qrMap, setQrMap] = useState({});
   const [toggleSaving, setToggleSaving] = useState({});
   const [inlineEditor, setInlineEditor] = useState({});
   const [uiError, setUiError] = useState("");
 
-  // ---------------- LOAD USER ----------------
   useEffect(() => {
     const getUser = async () => {
       try {
@@ -90,93 +86,95 @@ const MyVehiclePage = () => {
         setRoleLoading(false);
       }
     };
-
     getUser();
   }, [axiosSecure]);
 
   const role = mongoUser?.role;
+  const isAdmin = role === "admin";
 
-  // ---------------- LOAD VEHICLES ----------------
   const loadVehicles = useCallback(async () => {
     if (!user?.email) return;
-
+    setLoadingVehicles(true);
     try {
       const res = await axiosSecure.get("/api/vehicle/my");
-
       const data = res.data.data || [];
       setVehicles(data);
 
-      // ---------------- QR FETCH ----------------
-      const qrIds = [...new Set(data.filter(v => v.qrData).map(v => v.qrData))];
-
-      const qrResults = await Promise.all(
-        qrIds.map(async (id) => {
-          try {
-            const res = await axiosSecure.get(`/api/qr/id/${id}`);
-            return res.data;
-          } catch {
-            return null;
-          }
-        })
-      );
-
+      const qrRes = await axiosSecure.get("/api/qr/allQR");
+      const payload = qrRes.data;
+      const allQr = Array.isArray(payload) ? payload : payload?.data ?? [];
       const map = {};
-      qrResults.forEach((qr) => {
-        if (qr?._id) map[qr._id] = qr;
-      });
-
+      for (const q of allQr) {
+        if (q?._id) map[String(q._id)] = q;
+      }
       setQrMap(map);
     } catch (err) {
       console.log(err);
+    } finally {
+      setLoadingVehicles(false);
     }
-  }, [user, axiosSecure]);
+  }, [user?.email, axiosSecure]);
 
   useEffect(() => {
     loadVehicles();
   }, [loadVehicles]);
 
-  // ---------------- UPDATE ----------------
+  const openEdit = (v) => {
+    setEditVehicle({
+      _id: v._id,
+      ownerPhone: v.ownerPhone || "",
+      emergencyPhone: v.emergencyPhone || "",
+      driverName: v.driver?.name || "",
+      driverPhone: v.driver?.phone || "",
+      vehicleName: v.vehicleName,
+      plate: v.plate,
+    });
+  };
+
   const handleUpdate = async () => {
+    if (!editVehicle?._id) return;
+
+    const ownerPhone = phoneDigits(editVehicle.ownerPhone);
+    const emergencyPhone = phoneDigits(editVehicle.emergencyPhone);
+    const driverName = editVehicle.driverName?.trim() || "";
+    const driverPhone = phoneDigits(editVehicle.driverPhone);
+
+    if (ownerPhone && ownerPhone.length !== 11) {
+      setUiError("Owner phone must be 11 digits.");
+      return;
+    }
+    if (emergencyPhone && emergencyPhone.length !== 11) {
+      setUiError("Emergency phone must be 11 digits.");
+      return;
+    }
+    if ((driverName && !driverPhone) || (driverPhone && !driverName)) {
+      setUiError("Driver name and phone both required, or leave both empty.");
+      return;
+    }
+    if (driverPhone && driverPhone.length !== 11) {
+      setUiError("Driver phone must be 11 digits.");
+      return;
+    }
+
     try {
-      const payload = {
-        vehicleName: editVehicle.vehicleName,
-        model: editVehicle.model,
-        plate: editVehicle.plate,
-        ownerPhone: editVehicle.ownerPhone,
-        emergencyPhone: editVehicle.emergencyPhone,
-        qrData: editVehicle.qrData,
-      };
-
-      const driverName = editVehicle?.driver?.name?.trim?.() || "";
-      const driverPhone = editVehicle?.driver?.phone?.trim?.() || "";
-      payload.driver =
-        driverName && driverPhone
-          ? { name: driverName, phone: driverPhone }
-          : null;
-
       await axiosSecure.post(`/api/vehicle/update/${editVehicle._id}`, {
-        ...payload,
+        ownerPhone,
+        emergencyPhone,
+        driver: driverName && driverPhone ? { name: driverName, phone: driverPhone } : null,
       });
-
-      alert("✅ Vehicle updated");
       setEditVehicle(null);
-      loadVehicles();
+      setUiError("");
+      await loadVehicles();
     } catch (err) {
-      console.log(err);
-      alert("❌ Update failed");
+      setUiError(err?.response?.data?.message || "Update failed.");
     }
   };
 
-  // ---------------- DELETE ----------------
   const handleDelete = async (id) => {
-    if (!id) return;
-
-    const confirmDelete = window.confirm("Are you sure?");
-    if (!confirmDelete) return;
-
+    if (!id || !window.confirm("Delete this vehicle?")) return;
     try {
       await axiosSecure.delete(`/api/vehicle/delete/${id}`);
-      loadVehicles();
+      await loadVehicles();
     } catch (err) {
       console.log(err);
     }
@@ -184,7 +182,8 @@ const MyVehiclePage = () => {
 
   const handleToggleVisibility = async (vehicle, key) => {
     const needsOwner = key === "ownerContactVisible" && !String(vehicle.ownerPhone || "").trim();
-    const needsEmergency = key === "emergencyContactVisible" && !String(vehicle.emergencyPhone || "").trim();
+    const needsEmergency =
+      key === "emergencyContactVisible" && !String(vehicle.emergencyPhone || "").trim();
     const needsDriver =
       key === "driverContactVisible" &&
       (!vehicle?.driver?.name || !String(vehicle?.driver?.phone || "").trim());
@@ -200,7 +199,7 @@ const MyVehiclePage = () => {
           driverPhone: vehicle?.driver?.phone || "",
         },
       }));
-      setUiError("Contact missing. নিচে field fill করে Save দিন।");
+      setUiError("Contact missing. Fill the field below and save.");
       return;
     }
 
@@ -215,11 +214,9 @@ const MyVehiclePage = () => {
     );
 
     try {
-      await axiosSecure.post(`/api/vehicle/update/${vehicle._id}`, {
-        [key]: nextValue,
-      });
+      await axiosSecure.post(`/api/vehicle/update/${vehicle._id}`, { [key]: nextValue });
+      setUiError("");
     } catch (err) {
-      console.log(err);
       setVehicles((prev) =>
         prev.map((v) => (v._id === vehicle._id ? { ...v, [key]: previous } : v))
       );
@@ -243,25 +240,27 @@ const MyVehiclePage = () => {
 
     const payload = {};
     if (row.target === "ownerContactVisible") {
-      if (!/^\d{11}$/.test(String(row.ownerPhone || ""))) {
+      const p = phoneDigits(row.ownerPhone);
+      if (p.length !== 11) {
         setUiError("Owner phone must be 11 digits.");
         return;
       }
-      payload.ownerPhone = row.ownerPhone;
+      payload.ownerPhone = p;
     }
     if (row.target === "emergencyContactVisible") {
-      if (!/^\d{11}$/.test(String(row.emergencyPhone || ""))) {
+      const p = phoneDigits(row.emergencyPhone);
+      if (p.length !== 11) {
         setUiError("Emergency phone must be 11 digits.");
         return;
       }
-      payload.emergencyPhone = row.emergencyPhone;
+      payload.emergencyPhone = p;
     }
     if (row.target === "driverContactVisible") {
-      if (!row.driverName?.trim() || !/^\d{11}$/.test(String(row.driverPhone || ""))) {
-        setUiError("Driver name and 11-digit driver phone required.");
+      if (!row.driverName?.trim() || phoneDigits(row.driverPhone).length !== 11) {
+        setUiError("Driver name and 11-digit phone required.");
         return;
       }
-      payload.driver = { name: row.driverName.trim(), phone: row.driverPhone };
+      payload.driver = { name: row.driverName.trim(), phone: phoneDigits(row.driverPhone) };
     }
 
     try {
@@ -270,429 +269,439 @@ const MyVehiclePage = () => {
       closeInlineEditor(vehicle._id);
       setUiError("");
     } catch (err) {
-      console.log(err);
       setUiError(err?.response?.data?.message || "Contact save failed.");
     }
   };
 
+  const vehicleCountLabel = useMemo(
+    () => `${vehicles.length} vehicle${vehicles.length === 1 ? "" : "s"}`,
+    [vehicles.length]
+  );
+
   if (roleLoading) {
-    return <SmartLoader fullPage label="Checking role permissions..." />;
+    return <SmartLoader fullPage label="Loading your account..." />;
   }
 
+  const renderInlineEditor = (v) => {
+    const row = inlineEditor[v._id];
+    if (!row) return null;
+    return (
+      <div className="mt-3 space-y-2 rounded-xl border border-amber-200 bg-amber-50/80 p-3 dark:border-amber-900/50 dark:bg-amber-950/30">
+        <p className="text-xs font-semibold text-amber-900 dark:text-amber-200">
+          Add contact to turn visibility ON
+        </p>
+        {row.target === "ownerContactVisible" && (
+          <input
+            className={fieldClass}
+            placeholder="Owner phone (11 digits)"
+            value={row.ownerPhone}
+            onChange={(e) =>
+              setInlineEditor((prev) => ({
+                ...prev,
+                [v._id]: { ...prev[v._id], ownerPhone: phoneDigits(e.target.value) },
+              }))
+            }
+          />
+        )}
+        {row.target === "emergencyContactVisible" && (
+          <input
+            className={fieldClass}
+            placeholder="Emergency phone (11 digits)"
+            value={row.emergencyPhone}
+            onChange={(e) =>
+              setInlineEditor((prev) => ({
+                ...prev,
+                [v._id]: { ...prev[v._id], emergencyPhone: phoneDigits(e.target.value) },
+              }))
+            }
+          />
+        )}
+        {row.target === "driverContactVisible" && (
+          <div className="grid gap-2 sm:grid-cols-2">
+            <input
+              className={fieldClass}
+              placeholder="Driver name"
+              value={row.driverName}
+              onChange={(e) =>
+                setInlineEditor((prev) => ({
+                  ...prev,
+                  [v._id]: { ...prev[v._id], driverName: e.target.value },
+                }))
+              }
+            />
+            <input
+              className={fieldClass}
+              placeholder="Driver phone (11 digits)"
+              value={row.driverPhone}
+              onChange={(e) =>
+                setInlineEditor((prev) => ({
+                  ...prev,
+                  [v._id]: { ...prev[v._id], driverPhone: phoneDigits(e.target.value) },
+                }))
+              }
+            />
+          </div>
+        )}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => saveInlineContact(v)}
+            className="btn btn-primary btn-sm rounded-lg"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={() => closeInlineEditor(v._id)}
+            className="btn btn-ghost btn-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderVehicleCard = (v) => {
+    const vehicleQrIds = getVehicleQrIds(v);
+
+    return (
+      <article
+        key={v._id}
+        className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
+      >
+        {/* ——— Mobile header ——— */}
+        <div className="border-b border-slate-100 p-4 lg:hidden dark:border-slate-800">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate text-lg font-bold text-slate-900 dark:text-white">
+                {v.vehicleName}
+              </h2>
+              <p className="mt-0.5 font-mono text-sm text-emerald-700 dark:text-emerald-400">
+                {v.plate}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                {v.model} · {qrAssignmentLabel(v)}
+              </p>
+            </div>
+            <VehicleQrPreview vehicle={v} qrMap={qrMap} compact />
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => openEdit(v)}
+              className="btn btn-primary btn-sm flex-1 gap-1 rounded-xl"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Edit contacts
+            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => handleDelete(v._id)}
+                className="btn btn-outline btn-error btn-sm rounded-xl"
+                aria-label="Delete"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ——— Desktop header ——— */}
+        <div className="hidden border-b border-slate-100 px-6 py-4 lg:flex lg:items-center lg:justify-between dark:border-slate-800">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50">
+              <Car className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">{v.vehicleName}</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {v.model} ·{" "}
+                <span className="font-mono font-medium text-emerald-700 dark:text-emerald-400">
+                  {v.plate}
+                </span>
+              </p>
+              <span
+                className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                  vehicleQrIds.length > 0
+                    ? "bg-emerald-50 text-emerald-800"
+                    : "bg-rose-50 text-rose-700"
+                }`}
+              >
+                <QrCode className="h-3 w-3" />
+                {qrAssignmentLabel(v)}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <VehicleQrPreview vehicle={v} qrMap={qrMap} />
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => openEdit(v)}
+                className="btn btn-primary btn-sm gap-2 rounded-xl"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit contacts
+              </button>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => handleDelete(v._id)}
+                  className="btn btn-outline btn-error btn-sm gap-2 rounded-xl"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ——— Contact phones (read-only display) ——— */}
+        <div className="space-y-2 p-4 lg:grid lg:grid-cols-2 lg:gap-3 lg:p-6">
+          {v.ownerPhone ? (
+            <p className="flex items-center gap-2 text-sm text-slate-600 lg:col-span-2 dark:text-slate-300">
+              <Phone className="h-4 w-4 text-emerald-600" />
+              Owner: <span className="font-mono font-medium">{v.ownerPhone}</span>
+            </p>
+          ) : null}
+          {v.emergencyPhone ? (
+            <p className="flex items-center gap-2 text-sm text-slate-600 lg:col-span-2 dark:text-slate-300">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              Emergency: <span className="font-mono font-medium">{v.emergencyPhone}</span>
+            </p>
+          ) : null}
+          {v.driver?.name || v.driver?.phone ? (
+            <p className="flex items-center gap-2 text-sm text-slate-600 lg:col-span-2 dark:text-slate-300">
+              <UserRound className="h-4 w-4 text-blue-600" />
+              Driver: {v.driver.name}{" "}
+              {v.driver.phone ? (
+                <span className="font-mono">({v.driver.phone})</span>
+              ) : null}
+            </p>
+          ) : null}
+        </div>
+
+        {/* ——— Visibility toggles ——— */}
+        <div className="space-y-2 border-t border-slate-100 px-4 py-4 lg:px-6 dark:border-slate-800">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Public visibility (QR scan)
+          </p>
+          <div className="space-y-2 lg:grid lg:grid-cols-3 lg:gap-3">
+            <ContactRow
+              icon={Phone}
+              label="Owner"
+              tone="green"
+              vehicle={v}
+              fieldKey="ownerContactVisible"
+              saving={toggleSaving}
+              onToggle={handleToggleVisibility}
+            />
+            <ContactRow
+              icon={UserRound}
+              label="Driver"
+              tone="blue"
+              vehicle={v}
+              fieldKey="driverContactVisible"
+              saving={toggleSaving}
+              onToggle={handleToggleVisibility}
+            />
+            <ContactRow
+              icon={AlertCircle}
+              label="Emergency"
+              tone="red"
+              vehicle={v}
+              fieldKey="emergencyContactVisible"
+              saving={toggleSaving}
+              onToggle={handleToggleVisibility}
+            />
+          </div>
+          {renderInlineEditor(v)}
+        </div>
+      </article>
+    );
+  };
+
   return (
-    <div className={`flex min-h-screen justify-center p-5 ${shellPage}`}>
-      <div className="w-full max-w-md space-y-4">
+    <div className="min-h-screen bg-slate-50 pb-10 dark:bg-slate-950">
+      {/* Mobile page shell */}
+      <div className="mx-auto w-full max-w-lg px-4 pt-5 lg:hidden">
         {uiError ? (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
             {uiError}
           </div>
         ) : null}
-
-        {/* HEADER */}
-        <div className="text-center">
-          <h1 className={`text-xl font-bold tracking-tight ${textHeading}`}>
-            My Vehicles
-          </h1>
-          <p className={`text-xs ${textMuted}`}>{user?.email}</p>
-        </div>
-
-        {/* LIST */}
-        {vehicles.length === 0 ? (
-          <div className={`p-5 text-center shadow-sm ${cardSurfaceSm} ${textMuted}`}>
-            No vehicles yet
+        <header className="mb-5 text-center">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">My Vehicles</h1>
+          <p className="mt-1 text-xs text-slate-500">{user?.email}</p>
+          <p className="mt-2 text-sm font-medium text-emerald-700">{vehicleCountLabel}</p>
+        </header>
+        {loadingVehicles ? (
+          <SmartLoader label="Loading vehicles..." />
+        ) : vehicles.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+            No vehicles yet.
+            <Link
+              to="/user/user-add-vehicle"
+              className="mt-3 block font-medium text-emerald-700"
+            >
+              Add a vehicle
+            </Link>
           </div>
         ) : (
-          vehicles.map((v) => {
-            const qr = qrMap[v.qrData];
-
-            return (
-              <div
-                key={v._id}
-                className={`flex flex-col gap-4 p-4 md:flex-row md:items-start md:justify-between ${cardSurfaceSm}`}
-              >
-
-                {/* LEFT SIDE */}
-                <div className="flex-1 space-y-1">
-                  <p className={`font-bold ${textHeading}`}>{v.vehicleName}</p>
-
-                  <p className={`text-xs ${textMuted}`}>
-                    {v.model} • {v.plate}
-                  </p>
-
-                  {v.driver ? (
-                    <p className="text-xs text-slate-600 dark:text-slate-400">
-                      {v.driver.name} ({v.driver.phone})
-                    </p>
-                  ) : (
-                    <p className={`text-xs ${textMuted}`}>No driver assigned</p>
-                  )}
-
-                  <p className={`text-xs ${textMuted}`}>
-                    QR:{" "}
-                    <span className={v.qrData ? "font-medium text-emerald-600 dark:text-emerald-400" : "font-medium text-rose-600 dark:text-rose-400"}>
-                      {v.qrData ? "Assigned" : "Not assigned"}
-                    </span>
-                  </p>
-
-                  <div className="mt-3 space-y-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                        Owner contact
-                      </p>
-                      <ContactToggle
-                        label="Owner contact"
-                        checked={Boolean(v.ownerContactVisible)}
-                        onClick={() => handleToggleVisibility(v, "ownerContactVisible")}
-                        disabled={Boolean(toggleSaving[`${v._id}:ownerContactVisible`])}
-                        tone="green"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                        Driver contact
-                      </p>
-                      <ContactToggle
-                        label="Driver contact"
-                        checked={Boolean(v.driverContactVisible)}
-                        onClick={() => handleToggleVisibility(v, "driverContactVisible")}
-                        disabled={Boolean(toggleSaving[`${v._id}:driverContactVisible`])}
-                        tone="blue"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                        Emergency contact
-                      </p>
-                      <ContactToggle
-                        label="Emergency contact"
-                        checked={Boolean(v.emergencyContactVisible)}
-                        onClick={() => handleToggleVisibility(v, "emergencyContactVisible")}
-                        disabled={Boolean(toggleSaving[`${v._id}:emergencyContactVisible`])}
-                        tone="red"
-                      />
-                    </div>
-                  </div>
-
-                  {inlineEditor[v._id] ? (
-                    <div className="mt-2 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
-                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                        Add required contact
-                      </p>
-
-                      {inlineEditor[v._id].target === "ownerContactVisible" ? (
-                        <input
-                          className={fieldInput}
-                          placeholder="Owner phone (11 digit)"
-                          value={inlineEditor[v._id].ownerPhone}
-                          onChange={(e) =>
-                            setInlineEditor((prev) => ({
-                              ...prev,
-                              [v._id]: {
-                                ...prev[v._id],
-                                ownerPhone: e.target.value.replace(/\D/g, "").slice(0, 11),
-                              },
-                            }))
-                          }
-                        />
-                      ) : null}
-
-                      {inlineEditor[v._id].target === "emergencyContactVisible" ? (
-                        <input
-                          className={fieldInput}
-                          placeholder="Emergency phone (11 digit)"
-                          value={inlineEditor[v._id].emergencyPhone}
-                          onChange={(e) =>
-                            setInlineEditor((prev) => ({
-                              ...prev,
-                              [v._id]: {
-                                ...prev[v._id],
-                                emergencyPhone: e.target.value.replace(/\D/g, "").slice(0, 11),
-                              },
-                            }))
-                          }
-                        />
-                      ) : null}
-
-                      {inlineEditor[v._id].target === "driverContactVisible" ? (
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                          <input
-                            className={fieldInput}
-                            placeholder="Driver name"
-                            value={inlineEditor[v._id].driverName}
-                            onChange={(e) =>
-                              setInlineEditor((prev) => ({
-                                ...prev,
-                                [v._id]: { ...prev[v._id], driverName: e.target.value },
-                              }))
-                            }
-                          />
-                          <input
-                            className={fieldInput}
-                            placeholder="Driver phone (11 digit)"
-                            value={inlineEditor[v._id].driverPhone}
-                            onChange={(e) =>
-                              setInlineEditor((prev) => ({
-                                ...prev,
-                                [v._id]: {
-                                  ...prev[v._id],
-                                  driverPhone: e.target.value.replace(/\D/g, "").slice(0, 11),
-                                },
-                              }))
-                            }
-                          />
-                        </div>
-                      ) : null}
-
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => saveInlineContact(v)}
-                          className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => closeInlineEditor(v._id)}
-                          className="rounded-md bg-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100"
-                        >
-                          Close
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="flex w-full items-center justify-between gap-3 md:w-auto md:flex-col md:items-center">
-
-{/* ACTIONS */}
-<div className="flex gap-2">
-
-  {/* EDIT */}
-  <button
-    type="button"
-    onClick={() => setEditVehicle(v)}
-    className="flex items-center justify-center rounded-lg  p-2
-    bg-white text-slate-700
-    hover:bg-slate-100 hover:border-amber-600 hover:text-amber-700
-    dark:bg-slate-800 dark:text-slate-50 dark:border-slate-400
-    dark:hover:bg-amber-500 dark:hover:text-slate-900 dark:hover:border-amber-300
-    transition"
-    title="Edit"
-  >
-    <Pencil className="h-4 w-4" />
-  </button>
-
-  {/* DELETE */}
-  {role === "admin" && (
-    <button
-      type="button"
-      onClick={() => handleDelete(v._id)}
-      className={`
-        flex items-center justify-center rounded-lg p-2
-        bg-white text-rose-700
-        hover:bg-rose-50 hover:border-rose-600 hover:text-rose-800
-        dark:bg-slate-900 dark:text-rose-300 dark:border-slate-400
-        dark:hover:bg-rose-600 dark:hover:text-white dark:hover:border-rose-500
-        transition
-      `}
-      title="Delete"
-    >
-      <Trash2 className="h-4 w-4" />
-    </button>
-  )}
- 
-
-</div>
-                  {/* RIGHT SIDE - QR IMAGE */}
-                  <div className="flex flex-col items-center min-w-[96px]">
-                    {qr?.qrCode ? (
-                      <>
-                        <img
-                          src={qr.qrCode}
-                          alt="QR"
-                          className="h-[86px] w-[86px] rounded"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-                          {qr.code}
-                        </p>
-                      </>
-                    ) : v.qrData ? (
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${v.qrData}`}
-                        alt="QR"
-                        className="h-[86px] w-[86px] rounded"
-                      />
-                    ) : (
-                      <p className={`text-xs ${textMuted}`}>No QR</p>
-                    )}
-                  </div>
-
-                
-                </div>
-
-              </div>
-            );
-          })
+          <div className="space-y-4">{vehicles.map(renderVehicleCard)}</div>
         )}
+      </div>
 
-        {/* VIEW MODAL */}
-        {viewVehicle && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-            onClick={() => setViewVehicle(null)}
-          >
-            <div className={`w-80 rounded-xl p-4 shadow-lg ${cardSurfaceSm}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 className={`font-bold ${textHeading}`}>Vehicle Details</h2>
-              <p className={textMuted}>{viewVehicle.vehicleName}</p>
-              <p className={textMuted}>{viewVehicle.model}</p>
-              <p className={textMuted}>{viewVehicle.plate}</p>
-
-              <button
-                type="button"
-                onClick={() => setViewVehicle(null)}
-                className={`mt-2 w-full ${btnSecondaryInline}`}
-              >
-                Close
-              </button>
-            </div>
+      {/* Desktop page shell */}
+      <div className="mx-auto hidden w-full max-w-5xl px-6 py-8 lg:block">
+        {uiError ? (
+          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            {uiError}
           </div>
-        )}
-
-        {/* EDIT MODAL */}
-        {editVehicle && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-            onClick={() => setEditVehicle(null)}
-          >
-            <div className={`w-80 space-y-3 p-4 shadow-lg ${cardSurfaceSm}`}
-              onClick={(e) => e.stopPropagation()}
+        ) : null}
+        <header className="mb-8 flex items-end justify-between gap-4 border-b border-slate-200 pb-6 dark:border-slate-800">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+              Your fleet
+            </p>
+            <h1 className="mt-1 text-3xl font-bold text-slate-900 dark:text-white">My Vehicles</h1>
+            <p className="mt-1 text-sm text-slate-600">{user?.email}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{vehicles.length}</p>
+            <p className="text-xs text-slate-500">registered</p>
+            <Link
+              to="/user/user-add-vehicle"
+              className="btn btn-primary btn-sm mt-3 rounded-xl"
             >
-              <h2 className={`text-center font-bold ${textHeading}`}>Edit Vehicle</h2>
+              Add vehicle
+            </Link>
+          </div>
+        </header>
+        {loadingVehicles ? (
+          <div className="flex min-h-[240px] items-center justify-center rounded-2xl border border-slate-200 bg-white">
+            <SmartLoader label="Loading vehicles..." />
+          </div>
+        ) : vehicles.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center">
+            <Car className="mx-auto h-12 w-12 text-slate-300" />
+            <p className="mt-3 font-medium text-slate-700">No vehicles yet</p>
+            <Link to="/user/user-add-vehicle" className="btn btn-primary mt-4 rounded-xl">
+              Add your first vehicle
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-6 xl:grid-cols-2">{vehicles.map(renderVehicleCard)}</div>
+        )}
+      </div>
 
-              <label className="space-y-1">
-                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
-                  Vehicle name
-                </span>
-                <input
-                  value={editVehicle.vehicleName}
-                  onChange={(e) =>
-                    setEditVehicle({ ...editVehicle, vehicleName: e.target.value })
-                  }
-                  className={fieldInput}
-                />
-              </label>
+      {/* Edit modal — contacts only */}
+      {editVehicle && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+          onClick={() => setEditVehicle(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl dark:bg-slate-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Edit contacts</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {editVehicle.vehicleName} · {editVehicle.plate}
+            </p>
 
-              <label className="space-y-1">
-                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
-                  Model
-                </span>
-                <input
-                  value={editVehicle.model}
-                  onChange={(e) =>
-                    setEditVehicle({ ...editVehicle, model: e.target.value })
-                  }
-                  className={fieldInput}
-                />
-              </label>
-
-              <label className="space-y-1">
-                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
-                  Plate
-                </span>
-                <input
-                  value={editVehicle.plate}
-                  onChange={(e) =>
-                    setEditVehicle({ ...editVehicle, plate: e.target.value })
-                  }
-                  className={fieldInput}
-                />
-              </label>
-
-              <label className="space-y-1">
-                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+            <div className="mt-4 space-y-3">
+              <label className="block text-sm">
+                <span className="font-medium text-slate-700 dark:text-slate-300">
                   Owner phone
                 </span>
                 <input
-                  value={editVehicle.ownerPhone || ""}
+                  type="tel"
+                  inputMode="numeric"
+                  className={`${fieldClass} mt-1`}
+                  placeholder="01XXXXXXXXX"
+                  value={editVehicle.ownerPhone}
                   onChange={(e) =>
-                    setEditVehicle({ ...editVehicle, ownerPhone: e.target.value })
+                    setEditVehicle((prev) => ({
+                      ...prev,
+                      ownerPhone: phoneDigits(e.target.value),
+                    }))
                   }
-                  placeholder="Owner phone"
-                  className={fieldInput}
                 />
               </label>
-
-              <label className="space-y-1">
-                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+              <label className="block text-sm">
+                <span className="font-medium text-slate-700 dark:text-slate-300">
                   Emergency phone
                 </span>
                 <input
-                  value={editVehicle.emergencyPhone || ""}
+                  type="tel"
+                  inputMode="numeric"
+                  className={`${fieldClass} mt-1`}
+                  placeholder="01XXXXXXXXX"
+                  value={editVehicle.emergencyPhone}
                   onChange={(e) =>
-                    setEditVehicle({ ...editVehicle, emergencyPhone: e.target.value })
+                    setEditVehicle((prev) => ({
+                      ...prev,
+                      emergencyPhone: phoneDigits(e.target.value),
+                    }))
                   }
-                  placeholder="Emergency phone"
-                  className={fieldInput}
                 />
               </label>
-
-              <label className="space-y-1">
-                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+              <label className="block text-sm">
+                <span className="font-medium text-slate-700 dark:text-slate-300">
                   Driver name
                 </span>
                 <input
-                  value={editVehicle?.driver?.name || ""}
+                  className={`${fieldClass} mt-1`}
+                  placeholder="Optional"
+                  value={editVehicle.driverName}
                   onChange={(e) =>
-                    setEditVehicle({
-                      ...editVehicle,
-                      driver: { ...(editVehicle?.driver || {}), name: e.target.value },
-                    })
+                    setEditVehicle((prev) => ({ ...prev, driverName: e.target.value }))
                   }
-                  placeholder="Driver name"
-                  className={fieldInput}
                 />
               </label>
-
-              <label className="space-y-1">
-                <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+              <label className="block text-sm">
+                <span className="font-medium text-slate-700 dark:text-slate-300">
                   Driver phone
                 </span>
                 <input
-                  value={editVehicle?.driver?.phone || ""}
+                  type="tel"
+                  inputMode="numeric"
+                  className={`${fieldClass} mt-1`}
+                  placeholder="01XXXXXXXXX"
+                  value={editVehicle.driverPhone}
                   onChange={(e) =>
-                    setEditVehicle({
-                      ...editVehicle,
-                      driver: { ...(editVehicle?.driver || {}), phone: e.target.value },
-                    })
+                    setEditVehicle((prev) => ({
+                      ...prev,
+                      driverPhone: phoneDigits(e.target.value),
+                    }))
                   }
-                  placeholder="Driver phone"
-                  className={fieldInput}
                 />
               </label>
+            </div>
 
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleUpdate}
-                  className={`flex-1 ${btnPrimaryInline} py-2.5`}
-                >
-                  Save
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setEditVehicle(null)}
-                  className={`flex-1 ${btnSecondaryInline} py-2.5`}
-                >
-                  Cancel
-                </button>
-              </div>
+            <div className="mt-6 flex gap-2">
+              <button
+                type="button"
+                onClick={handleUpdate}
+                className="btn btn-primary flex-1 rounded-xl"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditVehicle(null)}
+                className="btn btn-ghost flex-1 rounded-xl"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        )}
-
-      </div>
+        </div>
+      )}
     </div>
   );
 };

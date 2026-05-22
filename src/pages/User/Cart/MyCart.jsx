@@ -34,6 +34,8 @@ const MyCart = () => {
     );
   }, [cartItems]);
 
+  const cartLineId = (item) => item._id ?? item.id ?? item.productId;
+
   return (
     <div className={`mx-auto flex min-h-screen max-w-5xl flex-col p-6 ${shellPage}`}>
       <h1 className={`mb-6 text-3xl font-bold tracking-tight ${textHeading}`}>
@@ -79,7 +81,7 @@ const MyCart = () => {
                   <button
                     type="button"
                     onClick={() =>
-                      item.quantity > 1 && decreaseQty(item._id)
+                      item.quantity > 1 && decreaseQty(cartLineId(item))
                     }
                     className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 font-medium text-slate-800 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                   >
@@ -90,7 +92,7 @@ const MyCart = () => {
 
                   <button
                     type="button"
-                    onClick={() => increaseQty(item._id)}
+                    onClick={() => increaseQty(cartLineId(item))}
                     className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 font-medium text-slate-800 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                   >
                     +
@@ -103,7 +105,7 @@ const MyCart = () => {
 
                 <button
                   type="button"
-                  onClick={() => removeFromCart(item._id)}
+                  onClick={() => removeFromCart(cartLineId(item))}
                   className="font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400"
                 >
                   Remove

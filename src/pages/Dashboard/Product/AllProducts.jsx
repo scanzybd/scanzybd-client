@@ -136,14 +136,20 @@ const AllProducts = () => {
                   Added by {product?.createdBy?.name || "—"}
                 </p>
 
-                <button
-                  type="button"
-                  onClick={() => setEditing(product)}
-                  className="btn btn-block mt-4 gap-2 rounded-xl border-0 bg-slate-900 font-semibold text-white hover:bg-slate-800"
-                >
-                  <Pencil className="h-4 w-4" />
-                  Edit product
-                </button>
+                {userRole === "admin" ? (
+                  <button
+                    type="button"
+                    onClick={() => setEditing(product)}
+                    className="btn btn-block mt-4 gap-2 rounded-xl border-0 bg-slate-900 font-semibold text-white hover:bg-slate-800"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit product
+                  </button>
+                ) : (
+                  <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                    View only — contact an admin to edit.
+                  </p>
+                )}
               </div>
             </li>
           ))}

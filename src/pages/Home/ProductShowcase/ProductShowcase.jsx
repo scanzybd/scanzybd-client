@@ -249,7 +249,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
         <div className="flex flex-col gap-10 lg:grid lg:grid-cols-12 lg:items-start lg:gap-8">
           <section className="order-1 space-y-6 lg:col-span-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
                 {/* <span className="font-semibold text-slate-900">
                    {isLoading ? "…" : catalogProducts.length}
                       </span>{" "} */}
@@ -259,7 +259,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                   <span className="ml-1 text-slate-400">(spotlight above)</span>
                 )} */}
                  {hasMoreCatalog && !showAllCatalog && (
-                  <span className="ml-1 block text-slate-400 sm:inline">
+                  <span className="ml-1 block text-slate-400 dark:text-slate-500 sm:inline">
                     — showing first {CATALOG_PAGE_SIZE}
                   </span>
                 )}
@@ -267,11 +267,11 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
             </div>
 
             {isError && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-200">
                 Could not load the catalog. Ensure the API is running at{" "}
-                <code className="rounded bg-white px-1">{API_BASE_URL}</code> (set{" "}
-                <code className="rounded bg-white px-1">VITE_API_BASE_URL</code> in{" "}
-                <code className="rounded bg-white px-1">client/.env</code>) and try again.
+                <code className="rounded bg-white px-1 dark:bg-slate-800 dark:text-slate-200">{API_BASE_URL}</code> (set{" "}
+                <code className="rounded bg-white px-1 dark:bg-slate-800 dark:text-slate-200">VITE_API_BASE_URL</code> in{" "}
+                <code className="rounded bg-white px-1 dark:bg-slate-800 dark:text-slate-200">client/.env</code>) and try again.
               </div>
             )}
 
@@ -283,8 +283,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                 />
                 <input
                   type="search"
-                  className="input input-bordered w-full rounded-xl border-slate-300 bg-slate-50 pl-10 pr-4  dark:bg-slate-800 dark:border-slate-700 dark:text-white
-  text-sm shadow-sm focus:border-yellow-600 focus:outline-none focus:ring-2 focus:ring-amber-600/15"
+                  className="input input-bordered w-full rounded-xl border-slate-300 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-yellow-600 focus:outline-none focus:ring-2 focus:ring-amber-600/15 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
                   placeholder="Search by name..."
                   value={searchTerm}
                   onChange={(e) => {
@@ -297,7 +296,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
               <div className="relative sm:w-52">
                 <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:hidden" />
                 <select
-                  className="select select-bordered w-full rounded-xl border-slate-300 bg-slate-50 text-sm shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:border-amber-600 sm:pl-3"
+                  className="select select-bordered w-full rounded-xl border-slate-300 bg-slate-50 text-sm text-slate-900 shadow-sm focus:border-amber-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 sm:pl-3"
                   value={filterPrice}
                   onChange={(e) => {
                     setFilterPrice(e.target.value);
@@ -313,18 +312,18 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
             </div>
 
             {isLoading ? (
-              <div className="flex min-h-[240px] items-center justify-center rounded-2xl border border-slate-200 bg-white/80 py-16">
+              <div className="flex min-h-[240px] items-center justify-center rounded-2xl border border-slate-200 bg-white/80 py-16 dark:border-slate-700 dark:bg-slate-900/80">
                 <SmartLoader label="Loading products..." />
               </div>
             ) : catalogProducts.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 py-16 text-center">
-                <Package className="mx-auto h-12 w-12 text-slate-300" />
-                <p className="mt-3 font-medium text-slate-700">
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 py-16 text-center dark:border-slate-700 dark:bg-slate-900/50">
+                <Package className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600" />
+                <p className="mt-3 font-medium text-slate-700 dark:text-slate-200">
                   {filteredProducts.length === 0 && products.length > 0
                     ? "No products match your filters"
                     : "No other products in the list"}
                 </p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   {filteredProducts.length === 0 && products.length > 0
                     ? "Try another search or price filter."
                     : spotlightProduct
@@ -337,8 +336,8 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                 <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-2">
                   {visibleCatalogProducts.map((product) => (
                     <li key={product._id}>
-                      <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-slate-50 dark:bg-slate-900 dark:border-slate-700 shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md">
-                        <div className="relative aspect-4/3 overflow-hidden bg-slate-200">
+                      <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-white shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-amber-500/40">
+                        <div className="relative aspect-4/3 overflow-hidden bg-slate-200 dark:bg-slate-800">
                           <img
                             src={product.image || productFallback}
                             alt=""
@@ -358,16 +357,16 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                           <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                             {product.description}
                           </p>
-                          <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-slate-100 pt-4">
+                          <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-slate-100 pt-4 dark:border-slate-700">
                             <div>
-                              <p className="text-base font-bold tabular-nums text-amber-700 sm:text-lg">
+                              <p className="text-base font-bold tabular-nums text-amber-700 dark:text-amber-400 sm:text-lg">
                                 ৳ {Number(product.price).toLocaleString()}
                               </p>
-                              <p className="mt-0.5 text-[11px] text-slate-500">
+                              <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                                 Validity: {product.validityDays ?? 365} days / unit
                               </p>
                             </div>
-                            <div className="text-right text-xs text-slate-500">
+                            <div className="text-right text-xs text-slate-500 dark:text-slate-400">
                               {product.rating != null && (
                                 <span className="tabular-nums">
                                   ★ {product.rating}
@@ -379,7 +378,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                           <button
                             type="button"
                             onClick={() => handleAddToCart(product)}
-                            className="btn mt-4 w-full gap-2 rounded-xl border-0 bg-yellow-500 text-sm font-semibold text-white shadow-none hover:bg-yellow-600"
+                            className="btn mt-4 w-full gap-2 rounded-xl border-0 bg-yellow-500 text-sm font-semibold text-slate-900 shadow-none hover:bg-yellow-600"
                           >
                             <ShoppingCart className="h-4 w-4" />
                             {t("store.addToCart")}
@@ -387,7 +386,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                           <button
                             type="button"
                             onClick={() => navigate(`/Products/${product._id}`)}
-                            className="btn mt-2 w-full rounded-xl border border-slate-300 bg-white dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:hover:bg-slate-700 hover:bg-slate-50"
+                            className="btn mt-2 w-full rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                           >
                             {t("store.details")}
                           </button>
@@ -428,7 +427,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
 
           {cartItems.length > 0 && (
             <aside className="order-2 lg:sticky lg:top-20 lg:col-span-4 lg:self-start">
-              <div className="overflow-hidden rounded-2xl border border-slate-200 dark:bg-slate-900 dark:border-slate-700 bg-white shadow-sm">
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <div className="border-b border-slate-100 bg-slate-50/80 dark:bg-slate-800 dark:border-slate-700 px-4 py-4 sm:px-5">
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="text-base font-bold text-slate-900 dark:text-white sm:text-lg">Your cart</h2>
@@ -441,9 +440,9 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
               <div className="max-h-[min(420px,55vh)] overflow-y-auto px-4 py-3 sm:px-5">
                 {cartItems.length === 0 ? (
                   <div className="py-10 text-center">
-                    <ShoppingCart className="mx-auto h-10 w-10 text-slate-300" />
-                    <p className="mt-2 text-sm font-medium text-slate-600">Cart is empty</p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <ShoppingCart className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" />
+                    <p className="mt-2 text-sm font-medium text-slate-600 dark:text-slate-300">Cart is empty</p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                       Add products from the list
                     </p>
                   </div>
@@ -454,7 +453,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                         key={item._id}
                         className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50/50 dark:bg-slate-800 dark:border-slate-700 p-2.5"
                       >
-                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-slate-200">
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-slate-200 dark:bg-slate-700 dark:ring-slate-600">
                           <img
                             src={item.image || productFallback}
                             alt=""
@@ -497,13 +496,13 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                       ৳ {totalPrice.toLocaleString()}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm text-emerald-700">
+                  <div className="flex justify-between text-sm text-emerald-700 dark:text-emerald-400">
                     <span>Est. discount (10%)</span>
                     <span className="tabular-nums">− ৳ {discount.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between border-t border-slate-200 pt-3 text-sm font-bold text-slate-900 sm:text-base dark:text-white">
+                  <div className="flex justify-between border-t border-slate-200 pt-3 text-sm font-bold text-slate-900 sm:text-base dark:border-slate-600 dark:text-white">
                     <span>Total</span>
-                    <span className="tabular-nums text-amber-700">
+                    <span className="tabular-nums text-amber-700 dark:text-amber-400">
                       ৳ {payable.toLocaleString()}
                     </span>
                   </div>

@@ -14,21 +14,19 @@ import {
     UserPlus,
     BookMarked,
     ClipboardList,
+    ShoppingCart,
+    Wallet,
     Menu,
-    XCircle,
     Clock,
-    Search,
     Building2,
-    CheckCircle2,
-    MessageSquareQuote,
+    Mail,
+    Star,
 } from "lucide-react";
 import dashboardLogo from "../assets/logo/Logo Double Line.svg";
 import useAuth from "../hooks/useAuth";
 import Swal from "sweetalert2";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SmartLoader from "../components/SmartLoader";
-import LanguageSwitcher from "../components/LanguageSwitcher";
-import ThemeToggle from "../components/ThemeToggle";
 import { COMPANY_NAME, COMPANY_TAGLINE } from "../config/company";
 
 const ACCENT = "emerald";
@@ -43,6 +41,8 @@ const DashboardLayout = () => {
     const { user, userRole, logOut, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
+    const sidebarNavRef = useRef(null);
+    const profileMenuRef = useRef(null);
     const userName = user?.name || user?.displayName || "User";
     const userEmail = user?.email || "";
 
@@ -81,7 +81,59 @@ const DashboardLayout = () => {
         }
     };
 
-    const isActive = (path) => location.pathname === path;
+    const normalizePath = (p) => {
+        const n = (p || "").replace(/\/+$/, "") || "/";
+        return n;
+    };
+
+    const isActive = (path) => {
+        const current = normalizePath(location.pathname);
+        const target = normalizePath(path);
+        if (target === "/dashboard") {
+            return current === "/dashboard";
+        }
+        return current === target || current.startsWith(`${target}/`);
+    };
+
+    useEffect(() => {
+        if (loading) return;
+        const frame = requestAnimationFrame(() => {
+            const nav = sidebarNavRef.current;
+            if (!nav) return;
+            const activeEl = nav.querySelector('[data-nav-active="true"]');
+            activeEl?.scrollIntoView({ block: "nearest", inline: "nearest" });
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [location.pathname, loading, userRole]);
+
+    useEffect(() => {
+        setProfileOpen(false);
+    }, [location.pathname]);
+
+    useEffect(() => {
+        if (!profileOpen) return;
+
+        const closeProfile = () => setProfileOpen(false);
+
+        const handleOutside = (event) => {
+            if (profileMenuRef.current?.contains(event.target)) return;
+            closeProfile();
+        };
+
+        const handleEscape = (event) => {
+            if (event.key === "Escape") closeProfile();
+        };
+
+        document.addEventListener("mousedown", handleOutside);
+        document.addEventListener("touchstart", handleOutside, { passive: true });
+        document.addEventListener("keydown", handleEscape);
+
+        return () => {
+            document.removeEventListener("mousedown", handleOutside);
+            document.removeEventListener("touchstart", handleOutside);
+            document.removeEventListener("keydown", handleEscape);
+        };
+    }, [profileOpen]);
 
     const allMenuSections = [
         {
@@ -98,7 +150,6 @@ const DashboardLayout = () => {
             category: t("dashboard.menu.vehicle"),
             items: [
                 { path: "/dashboard/all-vehicles", icon: GraduationCap, label: t("dashboard.menu.allVehicles") },
-                { path: "/dashboard/add-vehicle", icon: UserPlus, label: t("dashboard.menu.addVehicle") },
                 { path: "/dashboard/assign-vehicle", icon: Users, label: t("dashboard.menu.assign") },
                 { path: "/dashboard/scan-assign-vehicle", icon: Clock, label: t("dashboard.menu.scanAssign") },
             ],
@@ -120,20 +171,15 @@ const DashboardLayout = () => {
         {
             category: t("dashboard.menu.orders"),
             items: [
-                { path: "/dashboard/all-orders", icon: GraduationCap, label: t("dashboard.menu.orderList") },
-                { path: "/dashboard/completed-orders", icon: UserPlus, label: "Confirmed" },
-                { path: "/dashboard/shipped-orders", icon: Clock, label: "Shipped" },
-                { path: "/dashboard/delivered-orders", icon: CheckCircle2, label: "Delivered" },
-                { path: "/dashboard/returned-orders", icon: XCircle, label: "Returned" },
-                { path: "/dashboard/pending-orders", icon: Clock, label: t("dashboard.menu.pending") },
-                { path: "/dashboard/cancelled-orders", icon: XCircle, label: t("dashboard.menu.cancelled") },
-                { path: "/dashboard/order-reports", icon: ClipboardList, label: t("dashboard.menu.reports") },
+                { path: "/dashboard/create-order", icon: ShoppingCart, label: t("dashboard.menu.createOrder") },
+                { path: "/dashboard/orders", icon: ClipboardList, label: t("dashboard.menu.ordersList") },
             ],
         },
         {
             category: t("dashboard.menu.finance"),
             items: [
                 { path: "/dashboard/finance-management", icon: Settings, label: t("dashboard.menu.finance") },
+                { path: "/dashboard/provider-due-list", icon: Wallet, label: t("dashboard.menu.providerDue") },
             ],
         },
         {
@@ -141,8 +187,13 @@ const DashboardLayout = () => {
             items: [
                 { path: "/dashboard/all-qr", icon: Award, label: t("dashboard.menu.allQr") },
                 { path: "/dashboard/generate-qr", icon: FileText, label: t("dashboard.menu.generateQr") },
-                { path: "/dashboard/reviews", icon: MessageSquareQuote, label: t("dashboard.menu.reviews") },
-                { path: "/dashboard/contact-messages", icon: MessageSquareQuote, label: t("dashboard.menu.messages") },
+            ],
+        },
+        {
+            category: t("dashboard.menu.support"),
+            items: [
+                { path: "/dashboard/reviews", icon: Star, label: t("dashboard.menu.reviews") },
+                { path: "/dashboard/contact-messages", icon: Mail, label: t("dashboard.menu.messages") },
             ],
         },
         {
@@ -155,7 +206,7 @@ const DashboardLayout = () => {
         },
     ];
 
-    /** Provider: limited sidebar — vehicle ops, catalog read-only, completed orders only */
+    /** Provider: vehicle ops, catalog read-only, own-product orders (read-only lists) */
     const providerMenuSections = [
         {
             category: t("dashboard.menu.main"),
@@ -171,7 +222,6 @@ const DashboardLayout = () => {
             category: t("dashboard.menu.vehicle"),
             items: [
                 { path: "/dashboard/all-vehicles", icon: GraduationCap, label: t("dashboard.menu.allVehicles") },
-                { path: "/dashboard/add-vehicle", icon: UserPlus, label: t("dashboard.menu.addVehicle") },
                 { path: "/dashboard/assign-vehicle", icon: Users, label: t("dashboard.menu.assign") },
                 { path: "/dashboard/scan-assign-vehicle", icon: Clock, label: t("dashboard.menu.scanAssign") },
             ],
@@ -187,11 +237,20 @@ const DashboardLayout = () => {
         {
             category: t("dashboard.menu.orders"),
             items: [
-                {
-                    path: "/dashboard/completed-orders",
-                    icon: CheckCircle2,
-                    label: "Confirmed",
-                },
+                { path: "/dashboard/create-order", icon: ShoppingCart, label: t("dashboard.menu.createOrder") },
+                { path: "/dashboard/orders", icon: ClipboardList, label: t("dashboard.menu.ordersList") },
+            ],
+        },
+        {
+            category: t("dashboard.menu.finance"),
+            items: [
+                { path: "/dashboard/provider-finance", icon: Wallet, label: t("dashboard.menu.finance") },
+            ],
+        },
+        {
+            category: t("dashboard.menu.users"),
+            items: [
+                { path: "/dashboard/add-user", icon: UserPlus, label: t("dashboard.menu.addUser") },
             ],
         },
     ];
@@ -247,7 +306,7 @@ const DashboardLayout = () => {
                     </div>
                 </div>
 
-                <nav className="flex-1 overflow-y-auto px-2 py-4">
+                <nav ref={sidebarNavRef} className="flex-1 overflow-y-auto px-2 py-4 scroll-smooth">
                     {menuItems.map((section, idx) => (
                         <div key={idx} className="mb-6">
                             <h3 className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
@@ -256,12 +315,15 @@ const DashboardLayout = () => {
                             <ul className="space-y-0.5">
                                 {section.items.map((item) => {
                                     const Icon = item.icon;
+                                    const active = isActive(item.path);
                                     return (
                                         <li key={item.path}>
                                             <Link
                                                 to={item.path}
                                                 onClick={() => setSidebarOpen(false)}
                                                 className={linkClass(item.path)}
+                                                data-nav-active={active ? "true" : undefined}
+                                                aria-current={active ? "page" : undefined}
                                             >
                                                 <Icon size={18} className="shrink-0 opacity-90" />
                                                 <span className="truncate">{item.label}</span>
@@ -290,27 +352,15 @@ const DashboardLayout = () => {
                         <button
                             type="button"
                             onClick={() => setSidebarOpen(true)}
-                            className="btn btn-ghost btn-square text-slate-600 lg:hidden"
+                            className="btn btn-ghost btn-square text-slate-600 dark:text-slate-300 lg:hidden"
                             aria-label="Open menu"
                         >
                             <Menu className="h-6 w-6" />
                         </button>
-                        <div className="relative hidden min-w-0 flex-1 max-w-md md:block">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="search"
-                                placeholder="Search dashboard..."
-                                className="input input-sm w-full rounded-xl border-slate-200 bg-slate-50 pl-9 pr-3 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30"
-                                readOnly
-                                title="Quick search (coming soon)"
-                            />
-                        </div>
                     </div>
 
                     <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-                        <ThemeToggle />
-                        <LanguageSwitcher className="hidden sm:flex" />
-                        <div className="relative">
+                        <div className="relative" ref={profileMenuRef}>
                             <button
                                 type="button"
                                 onClick={() => setProfileOpen((prev) => !prev)}
@@ -322,17 +372,25 @@ const DashboardLayout = () => {
                                 {userName?.charAt(0)?.toUpperCase() || "U"}
                             </button>
                             {profileOpen && (
-                                <div className="absolute right-0 top-11 z-50 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
-                                    <div className="border-b border-slate-100 px-4 py-3">
-                                        <p className="truncate text-sm font-semibold text-slate-900">
+                                <div className="absolute right-0 top-11 z-50 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                                    <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-700">
+                                        <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                                             {userName}
                                         </p>
-                                        <p className="truncate text-xs text-slate-500">{userEmail}</p>
+                                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">{userEmail}</p>
                                     </div>
+                                    <Link
+                                        to="/user/user-settings"
+                                        onClick={() => setProfileOpen(false)}
+                                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    >
+                                        <Settings size={16} />
+                                        {t("user.menu.settings")}
+                                    </Link>
                                     <Link
                                         to="/"
                                         onClick={() => setProfileOpen(false)}
-                                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50"
+                                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                                     >
                                         <Home size={16} />
                                         {t("dashboard.logout.home")}
@@ -343,7 +401,7 @@ const DashboardLayout = () => {
                                             setProfileOpen(false);
                                             await handleLogout();
                                         }}
-                                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-rose-700 transition-colors hover:bg-rose-50"
+                                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-rose-700 transition-colors hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40"
                                     >
                                         <LogOut size={16} />
                                         {t("dashboard.logout.logout")}
@@ -355,7 +413,7 @@ const DashboardLayout = () => {
                 </header>
 
                 <main className="p-4 sm:p-6">
-                    <div className="mx-auto w-full max-w-[1400px]">
+                    <div className="dashboard-main mx-auto w-full max-w-[1400px]">
                         <Outlet />
                     </div>
                 </main>

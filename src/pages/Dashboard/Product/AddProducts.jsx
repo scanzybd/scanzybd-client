@@ -1,16 +1,7 @@
 import React, { useState } from "react";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
-
-const productTypes = [
-  "Car Tag",
-  "Bike Tag",
-  "Helmet Tag",
-  "Truck Tag",
-  "Van Tag",
-  "Bus Tag",
-  "Cycle Tag",
-];
+import useTagTypes from "../../../hooks/useTagTypes";
 
 /** Same encoding rules as server — direct to ImgBB if server upload fails */
 async function uploadToImgbbDirect(dataUrl, apiKey) {
@@ -36,6 +27,7 @@ async function uploadToImgbbDirect(dataUrl, apiKey) {
 const AddProducts = () => {
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
+  const { data: tagTypes = [], isLoading: tagTypesLoading } = useTagTypes();
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadError, setUploadError] = useState(null);
@@ -304,10 +296,12 @@ const AddProducts = () => {
             onChange={handleChange}
             className="w-full p-3 border rounded mb-3"
           >
-            <option value="">Select Product Type</option>
-            {productTypes.map((t, i) => (
-              <option key={i} value={t}>
-                {t}
+            <option value="">
+              {tagTypesLoading ? "Loading types…" : "Select Product Type"}
+            </option>
+            {tagTypes.map((t) => (
+              <option key={t.name} value={t.name}>
+                {t.name}
               </option>
             ))}
           </select>

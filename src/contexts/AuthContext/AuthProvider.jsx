@@ -81,9 +81,34 @@ const AuthProvider = ({ children }) => {
         setLoading(false);
     };
 
-    const updateUserProfile = (profile) => {
-        setUser((prev) => (prev ? { ...prev, ...profile } : prev));
-        return Promise.resolve();
+    const updateUserProfile = async (profile) => {
+        const token = getAppJwtIfValid();
+        if (!token) {
+            throw new Error("Not signed in");
+        }
+
+        const patch = {};
+        if (profile?.name !== undefined) {
+            patch.name = String(profile.name).trim();
+        }
+        if (profile?.displayName !== undefined && patch.name === undefined) {
+            patch.name = String(profile.displayName).trim();
+        }
+
+        if (!patch.name) {
+            throw new Error("Name is required");
+        }
+
+        const res = await axios.patch(`${API_BASE_URL}/api/auth/me`, patch, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const updated = res.data ?? null;
+        setUser(updated ? { ...updated, role: normalizeRole(updated.role) } : null);
+        if (updated?.role) {
+            setUserRole(normalizeRole(updated.role));
+        }
+        return updated;
     };
 
     const sendUserPasswordResetEmail = async (email) => {

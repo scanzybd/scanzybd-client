@@ -1,14 +1,34 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Html5Qrcode } from "html5-qrcode";
-import { Car, Hash, Phone, QrCode, UserPlus, ScanLine } from "lucide-react";
+import { Car, UserPlus, Banknote, Smartphone, Globe, ShoppingBag } from "lucide-react";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useMongoProfile from "../../../hooks/useMongoProfile";
 import SmartLoader from "../../../components/SmartLoader";
+import AddVehicleForm from "../../../components/AddVehicleForm";
+import useTagTypes from "../../../hooks/useTagTypes";
+import { isCycleTagType } from "../../../lib/tagTypeUtils";
+import {
+  createEmptyVehicleForm,
+  buildVehicleAddPayload,
+  validateVehicleForm,
+} from "../../../lib/vehicleFormUtils";
+import {
+  cardSurface,
+  dashboardBadge,
+  dashboardPageHeader,
+  dashboardPageSubtitle,
+  dashboardPageTitle,
+} from "../../../lib/uiClasses";
+
+function normalizeList(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (raw?.data && Array.isArray(raw.data)) return raw.data;
+  return [];
+}
 
 const AddVehiclePage = () => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const axiosSecure = useAxiosSecure();
   const queryClient = useQueryClient();
 
@@ -16,34 +36,25 @@ const AddVehiclePage = () => {
     Boolean(user?.email)
   );
 
-  const [form, setForm] = useState({
-    vehicleName: "",
-    model: "",
-    plate: "",
-    ownerPhone: "",
-  });
-
-  const [driver, setDriver] = useState({
-    name: "",
-    phone: "",
-  });
-
-  const [showDriverForm, setShowDriverForm] = useState(false);
-
-  const [scanning, setScanning] = useState(false);
-  const [scannedQR, setScannedQR] = useState(null);
+  const [form, setForm] = useState(createEmptyVehicleForm);
+  const { data: tagTypes = [] } = useTagTypes();
 
   const [assignableUsers, setAssignableUsers] = useState([]);
   const [assignableLoading, setAssignableLoading] = useState(false);
   const [selectedOwnerId, setSelectedOwnerId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const scannerRef = useRef(null);
+  const [createOrder, setCreateOrder] = useState(false);
+  const [orderProducts, setOrderProducts] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [transactionId, setTransactionId] = useState("");
+  const [orderNote, setOrderNote] = useState("");
+  const [products, setProducts] = useState([]);
 
-  const role = mongoUser?.role || "user";
-  const isStaffAdd = useMemo(
-    () => role === "admin" || role === "provider",
-    [role]
-  );
+  const role = userRole || mongoUser?.role || user?.role || "user";
+  const isStaffAdd = role === "admin" || role === "provider";
+  const profileId = mongoUser?._id || mongoUser?.id || user?._id;
+  const isCycle = isCycleTagType(form.tagType, tagTypes);
 
   useEffect(() => {
     if (!isStaffAdd) return;
@@ -64,127 +75,195 @@ const AddVehiclePage = () => {
     };
   }, [isStaffAdd, axiosSecure]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  useEffect(() => {
+    if (!isStaffAdd) return;
+    axiosSecure
+      .get("/api/products")
+      .then((res) => setProducts(normalizeList(res.data)))
+      .catch(console.error);
+  }, [isStaffAdd, axiosSecure]);
+
+  const orderTotal = useMemo(
+    () =>
+      orderProducts.reduce(
+        (sum, row) =>
+          sum + Number(row.product?.price || 0) * Math.max(1, Number(row.quantity) || 1),
+        0
+      ),
+    [orderProducts]
+  );
+
+  const toggleProduct = (product) => {
+    setOrderProducts((prev) => {
+      const exists = prev.find((p) => p.product._id === product._id);
+      if (exists) {
+        return prev.filter((p) => p.product._id !== product._id);
+      }
+      return [...prev, { product, quantity: 1 }];
+    });
   };
 
-  const handleDriverChange = (e) => {
-    setDriver({ ...driver, [e.target.name]: e.target.value });
+  const setProductQty = (productId, quantity) => {
+    setOrderProducts((prev) =>
+      prev.map((row) =>
+        row.product._id === productId
+          ? { ...row, quantity: Math.max(1, Number(quantity) || 1) }
+          : row
+      )
+    );
   };
+
+  const buildTagSlot = (vehicleId, productRow) => ({
+    productId: String(productRow?.product?._id || productRow?.product?.id || ""),
+    productTitle: productRow?.product?.title || form.model || "Vehicle",
+    vehicleId,
+    model: form.model,
+    plate: isCycle
+      ? form.plate
+      : `${form.zone}-${form.series}-${form.regNumber}`,
+    chassisLast4: form.chassisLast4,
+    engineLast4: form.engineLast4,
+    ownerPhone: form.ownerPhone,
+    emergencyPhone: form.emergencyPhone,
+    ownerContactVisible: form.ownerContactVisible,
+    driverContactVisible: form.driverContactVisible,
+    emergencyContactVisible: form.emergencyContactVisible,
+    driver:
+      form.addDriver && form.driverName && form.driverPhone
+        ? { name: form.driverName, phone: form.driverPhone }
+        : undefined,
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.vehicleName || !form.model || !form.plate || !form.ownerPhone) {
-      alert("Fill all required fields.");
+    const validationError = validateVehicleForm(form, isCycle);
+    if (validationError) {
+      alert(validationError);
       return;
     }
 
-    if (!mongoUser?._id) {
+    if (!profileId) {
       alert("Could not load your profile. Please sign in again.");
       return;
     }
 
     if (isStaffAdd && !selectedOwnerId) {
-      alert("Select the customer user who owns this vehicle.");
+      alert("Select the customer who owns this vehicle.");
       return;
     }
 
+    if (createOrder && orderProducts.length === 0) {
+      alert("Select at least one product for the order.");
+      return;
+    }
+
+    if (createOrder && paymentMethod === "bkash_manual" && !transactionId.trim()) {
+      alert("Enter bKash transaction ID for manual payment.");
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      const payload = {
-        ...form,
-        owner: isStaffAdd ? selectedOwnerId : mongoUser._id,
-        driver: showDriverForm ? driver : null,
-        qrData: scannedQR || null,
+      const vehiclePayload = {
+        ...buildVehicleAddPayload(form, isCycle),
+        owner: isStaffAdd ? selectedOwnerId : profileId,
       };
 
-      await axiosSecure.post("/api/vehicle/add", payload);
+      const vehicleRes = await axiosSecure.post("/api/vehicle/add", vehiclePayload);
+      const vehicle = vehicleRes.data?.data;
+      const vehicleId = vehicle?._id;
+
+      if (!createOrder || orderProducts.length === 0) {
+        await queryClient.invalidateQueries({ queryKey: ["dashboard", "vehicles"] });
+        alert("Vehicle added successfully.");
+        setForm(createEmptyVehicleForm());
+        setSelectedOwnerId("");
+        setOrderProducts([]);
+        setCreateOrder(false);
+        return;
+      }
+
+      const primaryProduct = orderProducts[0];
+      const orderPayload = {
+        userId: selectedOwnerId,
+        items: orderProducts.map((row) => ({
+          productId: String(row.product._id),
+          title: row.product.title,
+          price: Number(row.product.price),
+          quantity: Number(row.quantity) || 1,
+          image: row.product.image || "",
+        })),
+        tagAssignments: vehicleId
+          ? [buildTagSlot(vehicleId, primaryProduct)]
+          : [],
+        shippingAddress: {},
+        totalAmount: orderTotal,
+        paymentMethod,
+        transactionId:
+          paymentMethod === "bkash_manual" ? transactionId.trim() : undefined,
+        note: orderNote.trim() || undefined,
+      };
+
+      const orderRes = await axiosSecure.post("/api/order/staff-create", orderPayload);
+
+      if (paymentMethod === "bkash_online" && orderRes.data?.bkashURL) {
+        window.location.href = orderRes.data.bkashURL;
+        return;
+      }
 
       await queryClient.invalidateQueries({ queryKey: ["dashboard", "vehicles"] });
+      await queryClient.invalidateQueries({ queryKey: ["staff-orders"] });
 
-      alert("Vehicle added successfully.");
-
-      setForm({
-        vehicleName: "",
-        model: "",
-        plate: "",
-        ownerPhone: "",
-      });
-
-      setDriver({ name: "", phone: "" });
-      setShowDriverForm(false);
-      setScannedQR(null);
+      alert(
+        `Vehicle and order #${orderRes.data?.orderNo || ""} created successfully.`
+      );
+      setForm(createEmptyVehicleForm());
       setSelectedOwnerId("");
+      setOrderProducts([]);
+      setCreateOrder(false);
+      setTransactionId("");
+      setOrderNote("");
     } catch (err) {
       console.log(err);
-      alert("Failed to add vehicle.");
+      alert(err?.response?.data?.message || "Failed to save. Try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  useEffect(() => {
-    if (!scanning) return;
-
-    const scanner = new Html5Qrcode("add-vehicle-reader");
-    scannerRef.current = scanner;
-
-    Html5Qrcode.getCameras().then((devices) => {
-      if (!devices?.length) return;
-
-      scanner.start(
-        devices[0].id,
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        (text) => {
-          scanner.stop();
-          setScanning(false);
-          const code = text.split("/").pop();
-          setScannedQR(code);
-        }
-      );
-    });
-
-    return () => {
-      scanner.stop().catch(() => {});
-    };
-  }, [scanning]);
-
-  if (roleLoading) {
+  if (roleLoading && !userRole) {
     return <SmartLoader fullPage label="Checking permissions..." />;
   }
 
-  const canScanQR = role === "admin" || role === "provider";
-
   return (
     <div className="mx-auto max-w-lg">
-      <div className="mb-8 border-b border-slate-200/90 pb-6">
-        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700">
+      <div className={dashboardPageHeader}>
+        <div className={dashboardBadge}>
           <Car className="h-3.5 w-3.5" />
           Fleet
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          Add vehicle
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
+        <h1 className={dashboardPageTitle}>Add vehicle</h1>
+        <p className={dashboardPageSubtitle}>
           {isStaffAdd
-            ? "Register a vehicle for a customer account and optionally link a driver or QR tag."
-            : "Register a vehicle and optionally link a driver or QR tag."}
+            ? "Register a customer vehicle and optionally create a paid order."
+            : "Register your vehicle."}
         </p>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-4 rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm"
-      >
+      <form onSubmit={handleSubmit} className={`space-y-4 p-6 ${cardSurface}`}>
         {isStaffAdd && (
           <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/50 p-4">
             <label className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-900">
               <UserPlus className="h-3.5 w-3.5" />
-              Vehicle owner (customer)
+              Vehicle owner (customer) *
             </label>
             <select
               className="select select-bordered mt-1 w-full rounded-xl border-slate-200 bg-white focus:border-emerald-500"
               value={selectedOwnerId}
               onChange={(e) => setSelectedOwnerId(e.target.value)}
-              required={isStaffAdd}
+              required
+              disabled={submitting}
             >
               <option value="">Select customer user…</option>
               {assignableUsers.map((u) => (
@@ -194,137 +273,137 @@ const AddVehiclePage = () => {
               ))}
             </select>
             {assignableLoading && (
-              <p className="mt-2 text-xs text-slate-500">Loading users…</p>
-            )}
-            {!assignableLoading && assignableUsers.length === 0 && (
-              <p className="mt-2 text-xs text-amber-800">
-                No customer accounts found. Create users first (User management).
-              </p>
+              <p className="mt-2 text-xs text-slate-500">Loading customers…</p>
             )}
           </div>
         )}
 
-        <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Vehicle name
-          </label>
-          <input
-            name="vehicleName"
-            value={form.vehicleName}
-            onChange={handleChange}
-            placeholder="e.g. Toyota Axio"
-            className="input input-bordered w-full rounded-xl border-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            required
-          />
-        </div>
+        <AddVehicleForm
+          form={form}
+          onPatch={(patch) => setForm((prev) => ({ ...prev, ...patch }))}
+        />
 
-        <div>
-          <label className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <Hash className="h-3 w-3" /> Model
-          </label>
-          <input
-            name="model"
-            value={form.model}
-            onChange={handleChange}
-            placeholder="Model year / variant"
-            className="input input-bordered w-full rounded-xl border-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            required
-          />
-        </div>
+        {isStaffAdd && (
+          <>
+            <button
+              type="button"
+              onClick={() => setCreateOrder((v) => !v)}
+              className="btn btn-outline btn-sm w-full rounded-xl border-emerald-300 text-emerald-800"
+            >
+              {createOrder ? "− Remove order" : "+ Create order"}
+            </button>
 
-        <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Plate number
-          </label>
-          <input
-            name="plate"
-            value={form.plate}
-            onChange={handleChange}
-            placeholder="Dhaka Metro 00-0000"
-            className="input input-bordered w-full rounded-xl border-slate-200 font-mono focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            required
-          />
-        </div>
+            {createOrder && (
+              <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                  <ShoppingBag className="h-4 w-4" />
+                  Products
+                </h3>
+                <ul className="max-h-48 space-y-2 overflow-y-auto">
+                  {products.map((p) => {
+                    const row = orderProducts.find((r) => r.product._id === p._id);
+                    return (
+                      <li
+                        key={p._id}
+                        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-sm"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={Boolean(row)}
+                          onChange={() => toggleProduct(p)}
+                          className="checkbox checkbox-sm checkbox-primary"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium">{p.title}</p>
+                          <p className="text-xs text-emerald-700">
+                            ৳ {Number(p.price || 0).toLocaleString()}
+                          </p>
+                        </div>
+                        {row && (
+                          <input
+                            type="number"
+                            min={1}
+                            value={row.quantity}
+                            onChange={(e) => setProductQty(p._id, e.target.value)}
+                            className="input input-bordered input-xs w-14"
+                          />
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="text-right text-sm font-bold text-slate-900">
+                  Total: ৳ {orderTotal.toLocaleString()}
+                </p>
 
-        <div>
-          <label className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <Phone className="h-3 w-3" /> Owner phone
-          </label>
-          <input
-            name="ownerPhone"
-            value={form.ownerPhone}
-            onChange={handleChange}
-            placeholder="01XXXXXXXXX"
-            className="input input-bordered w-full rounded-xl border-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            required
-          />
-        </div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-slate-600">
+                  Payment method
+                </h3>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {[
+                    { id: "cash", label: "Cash", icon: Banknote },
+                    { id: "bkash_manual", label: "Manual bKash", icon: Smartphone },
+                    { id: "bkash_online", label: "bKash Online", icon: Globe },
+                  ].map(({ id, label, icon: Icon }) => (
+                    <label
+                      key={id}
+                      className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border p-3 text-center text-xs font-semibold transition ${
+                        paymentMethod === id
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+                          : "border-slate-200 bg-white text-slate-600"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value={id}
+                        checked={paymentMethod === id}
+                        onChange={() => setPaymentMethod(id)}
+                        className="sr-only"
+                      />
+                      <Icon className="h-5 w-5" />
+                      {label}
+                    </label>
+                  ))}
+                </div>
 
-        <button
-          type="button"
-          onClick={() => setShowDriverForm(!showDriverForm)}
-          className={`btn btn-block gap-2 rounded-xl border ${
-            showDriverForm
-              ? "border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100"
-              : "border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100"
-          }`}
-        >
-          <UserPlus className="h-4 w-4" />
-          {showDriverForm ? "Remove driver" : "Add driver (optional)"}
-        </button>
+                {paymentMethod === "bkash_manual" && (
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600">
+                      bKash Transaction ID
+                    </label>
+                    <input
+                      type="text"
+                      value={transactionId}
+                      onChange={(e) => setTransactionId(e.target.value)}
+                      placeholder="e.g. DEC60OP75K"
+                      className="input input-bordered mt-1 w-full rounded-xl text-sm"
+                    />
+                  </div>
+                )}
 
-        {showDriverForm && (
-          <div className="space-y-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-4">
-            <input
-              name="name"
-              value={driver.name}
-              onChange={handleDriverChange}
-              placeholder="Driver name"
-              className="input input-bordered w-full rounded-xl border-slate-200 bg-white"
-            />
-            <input
-              name="phone"
-              value={driver.phone}
-              onChange={handleDriverChange}
-              placeholder="Driver phone"
-              className="input input-bordered w-full rounded-xl border-slate-200 bg-white"
-            />
-          </div>
-        )}
-
-        {canScanQR && (
-          <div className="rounded-xl border border-dashed border-emerald-200/80 bg-emerald-50/40 p-4">
-            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-900">
-              <QrCode className="h-4 w-4" />
-              Link QR code
-            </div>
-            {!scanning ? (
-              <button
-                type="button"
-                onClick={() => setScanning(true)}
-                className="btn btn-block gap-2 rounded-xl border-0 bg-amber-400 font-semibold text-slate-900 hover:bg-amber-500"
-              >
-                <ScanLine className="h-4 w-4" />
-                Scan QR
-              </button>
-            ) : (
-              <div className="overflow-hidden rounded-xl bg-black">
-                <div id="add-vehicle-reader" className="min-h-[240px]" />
+                <input
+                  type="text"
+                  value={orderNote}
+                  onChange={(e) => setOrderNote(e.target.value)}
+                  placeholder="Payment note (optional)"
+                  className="input input-bordered w-full rounded-xl text-sm"
+                />
               </div>
             )}
-            {scannedQR && (
-              <p className="mt-2 break-all text-xs font-mono text-emerald-800">
-                Captured: {scannedQR}
-              </p>
-            )}
-          </div>
+          </>
         )}
 
         <button
           type="submit"
-          className="btn btn-block gap-2 rounded-xl border-0 bg-emerald-500 text-base font-semibold text-white hover:bg-emerald-600"
+          disabled={submitting || (isStaffAdd && !selectedOwnerId)}
+          className="btn btn-block gap-2 rounded-xl border-0 bg-emerald-500 text-base font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
         >
-          Save vehicle
+          {submitting
+            ? "Saving…"
+            : createOrder && orderProducts.length > 0
+              ? "Save vehicle & create order"
+              : "Save vehicle"}
         </button>
       </form>
     </div>

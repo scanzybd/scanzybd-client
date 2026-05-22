@@ -258,7 +258,7 @@ const ProductPage = () => {
           <button
             type="button"
             onClick={() => navigate("/Products")}
-            className="btn mb-5 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+            className="btn mb-5 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             Back to products
           </button>
@@ -276,12 +276,12 @@ const ProductPage = () => {
                   {selectedProduct.description}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-5">
-                  <p className="rounded-full bg-amber-50 px-3 py-1 text-2xl font-bold text-amber-700 sm:text-3xl">
+                  <p className="rounded-full bg-amber-50 px-3 py-1 text-2xl font-bold text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 sm:text-3xl">
                     ৳ {Number(selectedProduct.price).toLocaleString()}
                   </p>
                  
                   {selectedProduct.originalPrice && (
-                    <span className="ml-2 line-through text-base text-slate-500">
+                    <span className="ml-2 line-through text-base text-slate-500 dark:text-slate-400">
                       ৳ {Number(selectedProduct.originalPrice).toLocaleString()}
                     </span>
                   )}
@@ -289,17 +289,17 @@ const ProductPage = () => {
                     Validity: {selectedProduct.validityDays ?? 365} days
                   </p>
                   {selectedProduct.type && (
-                    <span className="ml-2 rounded bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-800">
+                    <span className="ml-2 rounded bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300">
                       {selectedProduct.type}
                     </span>
                   )}
                   {selectedProduct.inStock === false && (
-                    <span className="ml-2 rounded bg-rose-200 px-2 py-0.5 text-xs font-medium text-rose-700">
+                    <span className="ml-2 rounded bg-rose-200 px-2 py-0.5 text-xs font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
                       Out of Stock
                     </span>
                   )}
                   {selectedProduct.rating && (
-                    <span className="ml-2 rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                    <span className="ml-2 rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-950/50 dark:text-green-300">
                       ★ {selectedProduct.rating}
                       {selectedProduct.reviews ? ` (${selectedProduct.reviews} reviews)` : ""}
                     </span>
@@ -342,7 +342,7 @@ const ProductPage = () => {
                 <button
                   type="button"
                   onClick={() => handleAddToCart(selectedProduct)}
-                  className="btn mt-6 w-full gap-2 rounded-xl border-0 bg-yellow-500 text-sm font-semibold text-white hover:bg-yellow-600"
+                  className="btn mt-6 w-full gap-2 rounded-xl border-0 bg-yellow-500 text-sm font-semibold text-slate-900 hover:bg-yellow-600"
                 >
                   <ShoppingCart className="h-4 w-4" />
                   {t("store.addToCart")}
@@ -357,7 +357,7 @@ const ProductPage = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-linear-to-b from-slate-100 via-slate-50 to-slate-100">
+    <div className="min-h-screen w-full bg-linear-to-b from-slate-100 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {notification && (
         <div className="fixed inset-x-0 top-0 z-100 flex justify-center px-3 pt-4 sm:left-auto sm:right-4 sm:top-4 sm:justify-end sm:px-0">
           <div
@@ -375,15 +375,15 @@ const ProductPage = () => {
        
         <div className="flex flex-col gap-10 lg:grid lg:grid-cols-12 lg:items-start lg:gap-8">
           <section className="order-1 space-y-6 lg:col-span-8">
-            <div className="text-sm text-slate-600">
+            <div className="text-sm text-slate-600 dark:text-slate-400">
               
               {searchTerm || filterPrice !== "all" ? " (filtered)" : ""}
             </div>
 
             {isError && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-200">
                 Could not load the catalog. Ensure the API is running at{" "}
-                <code className="rounded bg-white px-1">{API_BASE_URL}</code>.
+                <code className="rounded bg-white px-1 dark:bg-slate-800 dark:text-slate-200">{API_BASE_URL}</code>.
               </div>
             )}
 
@@ -392,7 +392,7 @@ const ProductPage = () => {
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   type="search"
-                  className="input input-bordered w-full rounded-xl border-slate-300 bg-slate-50 pl-10 pr-4 text-sm shadow-sm focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-600/15"
+                  className="input input-bordered w-full rounded-xl border-slate-300 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-600/15 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
                   placeholder="Search by name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -402,7 +402,7 @@ const ProductPage = () => {
               <div className="relative sm:w-52">
                 <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:hidden" />
                 <select
-                  className="select select-bordered w-full rounded-xl border-slate-300 bg-slate-50 text-sm shadow-sm focus:border-amber-600 sm:pl-3"
+                  className="select select-bordered w-full rounded-xl border-slate-300 bg-slate-50 text-sm text-slate-900 shadow-sm focus:border-amber-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 sm:pl-3"
                   value={filterPrice}
                   onChange={(e) => setFilterPrice(e.target.value)}
                 >
@@ -415,9 +415,9 @@ const ProductPage = () => {
             </div>
 
             {filteredProducts.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 py-16 text-center">
-                <Package className="mx-auto h-12 w-12 text-slate-300" />
-                <p className="mt-3 font-medium text-slate-700">
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 py-16 text-center dark:border-slate-700 dark:bg-slate-900/50">
+                <Package className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600" />
+                <p className="mt-3 font-medium text-slate-700 dark:text-slate-200">
                   {products.length ? "No products match your filters" : "No products yet"}
                 </p>
               </div>
@@ -425,8 +425,8 @@ const ProductPage = () => {
               <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
                 {filteredProducts.map((product) => (
                   <li key={product._id}>
-                    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-slate-50 shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md">
-                      <div className="relative aspect-4/3 overflow-hidden bg-slate-200">
+                    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-white shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-amber-500/40">
+                      <div className="relative aspect-4/3 overflow-hidden bg-slate-200 dark:bg-slate-800">
                         <img
                           src={product.image || productFallback}
                           alt=""
@@ -435,24 +435,24 @@ const ProductPage = () => {
                         />
                       </div>
                       <div className="flex flex-1 flex-col p-4 sm:p-5">
-                        <h3 className="line-clamp-2 text-base font-semibold leading-snug text-slate-900 sm:text-lg">
+                        <h3 className="line-clamp-2 text-base font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-lg">
                           {product.title}
                         </h3>
-                        <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600">
+                        <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                           {product.description}
                         </p>
-                        <div className="mt-4 flex items-end justify-between gap-3 border-t border-slate-100 pt-4">
-                          <p className="text-lg font-bold tabular-nums text-amber-700">
+                        <div className="mt-4 flex items-end justify-between gap-3 border-t border-slate-100 pt-4 dark:border-slate-700">
+                          <p className="text-lg font-bold tabular-nums text-amber-700 dark:text-amber-400">
                             ৳ {Number(product.price).toLocaleString()}
                           </p>
-                          <p className="text-[11px] text-slate-500">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
                             {product.validityDays ?? 365} days
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => handleAddToCart(product)}
-                          className="btn mt-4 w-full gap-2 rounded-xl border-0 bg-yellow-500 text-sm font-semibold text-white shadow-none hover:bg-yellow-600"
+                          className="btn mt-4 w-full gap-2 rounded-xl border-0 bg-yellow-500 text-sm font-semibold text-slate-900 shadow-none hover:bg-yellow-600"
                         >
                           <ShoppingCart className="h-4 w-4" />
                           {t("store.addToCart")}
@@ -460,7 +460,7 @@ const ProductPage = () => {
                         <button
                           type="button"
                           onClick={() => navigate(`/Products/${product._id}`)}
-                          className="btn mt-2 w-full rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                          className="btn mt-2 w-full rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                         >
                           {t("store.details")}
                         </button>
@@ -474,10 +474,10 @@ const ProductPage = () => {
 
           {cartItems.length > 0 && (
             <aside className="order-2 lg:sticky lg:top-20 lg:col-span-4 lg:self-start">
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-5">
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 dark:border-slate-700 dark:bg-slate-800 sm:px-5">
                   <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-lg font-bold text-slate-900">Your cart</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">Your cart</h2>
                     <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-amber-500 px-2 text-sm font-bold text-slate-900">
                       {cartCount}
                     </span>
@@ -489,9 +489,9 @@ const ProductPage = () => {
                     {cartItems.map((item) => (
                       <li
                         key={item._id}
-                        className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-2.5"
+                        className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 dark:border-slate-700 dark:bg-slate-800"
                       >
-                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-slate-200">
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-slate-200 dark:bg-slate-700 dark:ring-slate-600">
                           <img
                             src={item.image || productFallback}
                             alt=""
@@ -499,10 +499,10 @@ const ProductPage = () => {
                           />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="line-clamp-2 text-sm font-medium text-slate-900">
+                          <p className="line-clamp-2 text-sm font-medium text-slate-900 dark:text-slate-100">
                             {item.title}
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
                             ৳ {item.price}
                             {item.quantity > 1 && <span> × {item.quantity}</span>}
                           </p>
@@ -510,7 +510,7 @@ const ProductPage = () => {
                         <button
                           type="button"
                           onClick={() => handleRemove(item._id)}
-                          className="btn btn-ghost btn-square btn-sm shrink-0 text-rose-600 hover:bg-rose-50"
+                          className="btn btn-ghost btn-square btn-sm shrink-0 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30"
                           aria-label="Remove"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -520,20 +520,20 @@ const ProductPage = () => {
                   </ul>
                 </div>
 
-                <div className="space-y-3 border-t border-slate-100 bg-slate-50/50 px-4 py-4 sm:px-5">
-                  <div className="flex justify-between text-sm text-slate-600">
+                <div className="space-y-3 border-t border-slate-100 bg-slate-50/50 px-4 py-4 dark:border-slate-700 dark:bg-slate-800 sm:px-5">
+                  <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                     <span>Subtotal</span>
-                    <span className="font-medium tabular-nums text-slate-900">
+                    <span className="font-medium tabular-nums text-slate-900 dark:text-white">
                       ৳ {totalPrice.toLocaleString()}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm text-emerald-700">
+                  <div className="flex justify-between text-sm text-emerald-700 dark:text-emerald-400">
                     <span>Est. discount (10%)</span>
                     <span className="tabular-nums">− ৳ {discount.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between border-t border-slate-200 pt-3 text-base font-bold text-slate-900">
+                  <div className="flex justify-between border-t border-slate-200 pt-3 text-base font-bold text-slate-900 dark:border-slate-600 dark:text-white">
                     <span>Total</span>
-                    <span className="tabular-nums text-amber-700">
+                    <span className="tabular-nums text-amber-700 dark:text-amber-400">
                       ৳ {payable.toLocaleString()}
                     </span>
                   </div>

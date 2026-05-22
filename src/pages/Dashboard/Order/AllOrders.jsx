@@ -1,11 +1,14 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useAuth from "../../../hooks/useAuth";
 import OrderTable from "../../../components/OrderTable";
 
 const AllOrders = () => {
   const axiosSecure = useAxiosSecure();
   const queryClient = useQueryClient();
+  const { userRole } = useAuth();
+  const isAdmin = userRole === "admin";
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["all-orders"],
@@ -61,9 +64,9 @@ const AllOrders = () => {
       orders={safeOrders}
       isLoading={isLoading}
       summaryCards={summaryCards}
-      statusOptions={["pending", "confirmed", "shipped", "delivered", "returned", "cancelled"]}
-      onStatusUpdate={handleStatusUpdate}
-      statusUpdatingId={isStatusUpdating ? variables?.orderId || "" : ""}
+      statusOptions={isAdmin ? ["pending", "confirmed", "shipped", "delivered", "returned", "cancelled"] : []}
+      onStatusUpdate={isAdmin ? handleStatusUpdate : undefined}
+      statusUpdatingId={isAdmin && isStatusUpdating ? variables?.orderId || "" : ""}
     />
   );
 };

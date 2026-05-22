@@ -41,15 +41,19 @@ export const loadConfirmedOrder = () => import("../pages/Dashboard/Order/Confirm
 export const loadShippedOrders = () => import("../pages/Dashboard/Order/ShippedOrders.jsx");
 export const loadDeliveredOrders = () => import("../pages/Dashboard/Order/DeliveredOrders.jsx");
 export const loadReturnedOrders = () => import("../pages/Dashboard/Order/ReturnedOrders.jsx");
+export const loadStaffOrders = () => import("../pages/Dashboard/Order/StaffOrdersPage.jsx");
+export const loadOrderDetail = () => import("../pages/Dashboard/Order/OrderDetailPage.jsx");
 export const loadAllProducts = () => import("../pages/Dashboard/Product/AllProducts.jsx");
 export const loadAddProducts = () => import("../pages/Dashboard/Product/AddProducts.jsx");
 export const loadAllQR = () => import("../pages/Dashboard/QR/AllQR.jsx");
 export const loadGenerateQR = () => import("../pages/Dashboard/QR/GenerateQR.jsx");
 export const loadFinanceManagement = () => import("../pages/Dashboard/Finance/FinanceManagement.jsx");
+export const loadProviderFinance = () => import("../pages/Dashboard/Finance/ProviderFinance.jsx");
+export const loadProviderDueList = () => import("../pages/Dashboard/Finance/ProviderDueList.jsx");
 export const loadAllPackages = () => import("../pages/Dashboard/Package/AllPackages.jsx");
 export const loadAddPackages = () => import("../pages/Dashboard/Package/AddPackages.jsx");
 export const loadQrScanner = () => import("../pages/Dashboard/QR/QrScanner.jsx");
-export const loadAddVehiclePage = () => import("../pages/Dashboard/Vehicle/AddVehiclePage.jsx");
+export const loadCreateOrderPage = () => import("../pages/Dashboard/Order/CreateOrderPage.jsx");
 export const loadAssignVehiclePage = () => import("../pages/Dashboard/Vehicle/AssignVehiclePage.jsx");
 export const loadScanAssignPage = () => import("../pages/Dashboard/Vehicle/ScanAssignPage.jsx");
 export const loadAllVehiclePage = () => import("../pages/Dashboard/Vehicle/AllVehiclePage.jsx");
@@ -86,23 +90,19 @@ export const allRouteChunkLoaders = [
   loadUserOrders,
   loadMyPurchases,
   loadDashboardHome,
-  loadAllOrders,
-  loadCancelledOrders,
-  loadPendingOrders,
-  loadOrderReports,
-  loadConfirmedOrder,
-  loadShippedOrders,
-  loadDeliveredOrders,
-  loadReturnedOrders,
+  loadStaffOrders,
+  loadOrderDetail,
   loadAllProducts,
   loadAddProducts,
   loadAllQR,
   loadGenerateQR,
   loadFinanceManagement,
+  loadProviderFinance,
+  loadProviderDueList,
   loadAllPackages,
   loadAddPackages,
   loadQrScanner,
-  loadAddVehiclePage,
+  loadCreateOrderPage,
   loadAssignVehiclePage,
   loadScanAssignPage,
   loadAllVehiclePage,

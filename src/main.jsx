@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './i18n/config'
 import './index.css'
+import './styles/dashboard-dark.css'
 import { SITE_TITLE } from './config/company'
 import { RouterProvider } from "react-router/dom";
 import router from './router/router';

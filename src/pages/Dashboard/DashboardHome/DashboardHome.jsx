@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Clock,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
@@ -25,8 +26,7 @@ function greetingLabel() {
   return "Good evening";
 }
 
-/** Simple SVG line chart — values 0..max */
-function LineChartCard({ title, subtitle, values, labels }) {
+function LineChartCard({ title, subtitle, values, labels, detailHref }) {
   const max = Math.max(...values, 1);
   const w = 100;
   const h = 48;
@@ -46,15 +46,11 @@ function LineChartCard({ title, subtitle, values, labels }) {
           <p className="text-xs text-slate-500">{subtitle}</p>
         </div>
         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
-          This year
+          Paid only
         </span>
       </div>
       <div className="relative flex-1 rounded-xl bg-gradient-to-b from-emerald-50/80 to-transparent px-2 pt-2">
-        <svg
-          viewBox={`0 0 ${w} ${h}`}
-          className="h-36 w-full overflow-visible"
-          preserveAspectRatio="none"
-        >
+        <svg viewBox={`0 0 ${w} ${h}`} className="h-36 w-full overflow-visible" preserveAspectRatio="none">
           <defs>
             <linearGradient id="lineFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="rgb(16 185 129)" stopOpacity="0.35" />
@@ -78,7 +74,7 @@ function LineChartCard({ title, subtitle, values, labels }) {
         </div>
       </div>
       <Link
-        to="/dashboard/finance-management"
+        to={detailHref}
         className="btn btn-block mt-4 gap-2 rounded-xl border-0 bg-emerald-500 text-base font-semibold text-white hover:bg-emerald-600"
       >
         More detail
@@ -90,30 +86,20 @@ function LineChartCard({ title, subtitle, values, labels }) {
 
 function BarChartCard({ title, values, dayLabels }) {
   const max = Math.max(...values, 1);
+  const total = values.reduce((a, b) => a + b, 0);
   return (
     <div className="flex min-h-[280px] flex-col rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-          <p className="text-xs text-slate-500">Last 7 days · orders</p>
-        </div>
-        <div className="flex -space-x-2">
-          {["bg-emerald-400", "bg-emerald-500", "bg-teal-500"].map((c, i) => (
-            <div
-              key={i}
-              className={`h-8 w-8 rounded-full border-2 border-white ${c}`}
-            />
-          ))}
-          <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-slate-200 text-[10px] font-bold text-slate-600">
-            +{Math.max(0, values.reduce((a, b) => a + b, 0) - 3)}
-          </div>
+          <p className="text-xs text-slate-500">Last 7 days · {total} orders</p>
         </div>
       </div>
       <div className="flex flex-1 items-end justify-between gap-1 border-b border-slate-100 pb-1 pt-4">
         {values.map((v, i) => (
           <div key={i} className="flex flex-1 flex-col items-center gap-1">
             <div
-              className="w-full max-w-[2rem] rounded-t-md bg-gradient-to-t from-emerald-600/90 to-emerald-400/80 transition-all"
+              className="w-full max-w-[2rem] rounded-t-md bg-gradient-to-t from-emerald-600/90 to-emerald-400/80"
               style={{ height: `${Math.max(8, (v / max) * 120)}px` }}
               title={`${v} orders`}
             />
@@ -122,7 +108,7 @@ function BarChartCard({ title, values, dayLabels }) {
         ))}
       </div>
       <Link
-        to="/dashboard/all-orders"
+        to="/dashboard/orders"
         className="btn btn-block mt-4 gap-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-800 hover:bg-slate-50"
       >
         More detail
@@ -135,111 +121,18 @@ function BarChartCard({ title, values, dayLabels }) {
 const DashboardHome = () => {
   const axiosSecure = useAxiosSecure();
   const { user, userRole } = useAuth();
+  const isAdmin = userRole === "admin";
+  const isProvider = userRole === "provider";
 
-  const {
-    data: orders = [],
-    isLoading: ordersLoading,
-    isError: ordersError,
-  } = useQuery({
-    queryKey: ["dashboard-analytics-orders"],
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["dashboard-analytics", userRole],
     queryFn: async () => {
-      const res = await axiosSecure.get("/api/order");
-      return Array.isArray(res.data) ? res.data : [];
-    },
-    enabled: !!userRole,
-  });
-
-  const {
-    data: vehiclesResponse,
-    isLoading: vehiclesLoading,
-    isError: vehiclesError,
-  } = useQuery({
-    queryKey: ["dashboard-analytics-vehicles"],
-    queryFn: async () => {
-      const res = await axiosSecure.get("/api/vehicle");
+      const res = await axiosSecure.get("/api/order/dashboard-analytics");
       return res.data;
     },
-    enabled: !!userRole,
+    enabled: Boolean(userRole),
+    staleTime: 30_000,
   });
-
-  const {
-    data: products = [],
-    isLoading: productsLoading,
-    isError: productsError,
-  } = useQuery({
-    queryKey: ["dashboard-analytics-products"],
-    queryFn: async () => {
-      const res = await axiosSecure.get("/api/products/mine");
-      return Array.isArray(res.data) ? res.data : [];
-    },
-    enabled: !!userRole,
-  });
-
-  const loading = ordersLoading || vehiclesLoading || productsLoading;
-  const hasError = ordersError || vehiclesError || productsError;
-
-  const vehicles = useMemo(
-    () => (Array.isArray(vehiclesResponse?.data) ? vehiclesResponse.data : []),
-    [vehiclesResponse]
-  );
-
-  const chartData = useMemo(() => {
-    const monthly = Array(12).fill(0);
-    const last7 = Array(7).fill(0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i < 7; i++) {
-      const dayStart = new Date(today);
-      dayStart.setDate(today.getDate() - (6 - i));
-      const dayEnd = new Date(dayStart);
-      dayEnd.setDate(dayStart.getDate() + 1);
-      orders.forEach((o) => {
-        const d = o.createdAt ? new Date(o.createdAt) : null;
-        if (!d || Number.isNaN(d.getTime())) return;
-        if (d >= dayStart && d < dayEnd) last7[i] += 1;
-      });
-    }
-
-    orders.forEach((o) => {
-      const d = o.createdAt ? new Date(o.createdAt) : null;
-      if (!d || Number.isNaN(d.getTime())) return;
-      monthly[d.getMonth()] += Number(o.totalAmount || 0);
-    });
-
-    return { monthly, last7 };
-  }, [orders]);
-
-  const analytics = useMemo(() => {
-    const totalOrders = orders.length;
-    const totalProducts = products.length;
-    const totalVehicles = vehicles.length;
-    const totalRevenue = orders.reduce(
-      (sum, order) => sum + Number(order?.totalAmount || 0),
-      0
-    );
-    const paidOrders = orders.filter((o) => o?.paymentStatus === "paid").length;
-    const pendingOrders = orders.filter((o) => o?.status === "pending").length;
-    const completedOrders = orders.filter(
-      (o) => o?.status === "paid" || o?.status === "completed"
-    ).length;
-
-    return {
-      totalOrders,
-      totalProducts,
-      totalVehicles,
-      totalRevenue,
-      completedOrders,
-      pendingOrders,
-      paidOrders,
-      recentOrders: [...orders].slice(0, 6),
-    };
-  }, [orders, products, vehicles]);
-
-  const paidRate =
-    analytics.totalOrders > 0
-      ? Math.round((analytics.paidOrders / analytics.totalOrders) * 100)
-      : 0;
 
   const last7Labels = useMemo(() => {
     const out = [];
@@ -251,11 +144,18 @@ const DashboardHome = () => {
     return out;
   }, []);
 
-  if (loading) {
+  const paidRate =
+    data && data.totalOrders > 0
+      ? Math.round((data.paidOrders / data.totalOrders) * 100)
+      : 0;
+
+  const financeHref = isProvider ? "/dashboard/provider-finance" : "/dashboard/finance-management";
+
+  if (isLoading) {
     return <SmartLoader fullPage label="Loading analytics..." />;
   }
 
-  if (hasError) {
+  if (isError || !data?.success) {
     return (
       <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-700">
         Failed to load analytics. Please refresh.
@@ -265,29 +165,32 @@ const DashboardHome = () => {
 
   const name = user?.displayName?.split(" ")[0] || user?.email?.split("@")[0] || "there";
 
+  const scopeNote = isProvider
+    ? "Orders you created · paid sales & unsettled earnings"
+    : "All store orders";
+
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
             {greetingLabel()}, {name}!
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Here&apos;s what&apos;s happening with your store ·{" "}
-            <span className="font-medium text-emerald-600">{userRole}</span>
+            {scopeNote} · <span className="font-medium text-emerald-600">{userRole}</span>
           </p>
         </div>
       </div>
 
-      {/* KPI row — 3 cards like reference */}
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Orders</p>
+              <p className="text-sm font-medium text-slate-500">
+                {isProvider ? "My orders" : "Orders"}
+              </p>
               <p className="mt-1 text-3xl font-bold tabular-nums text-slate-900">
-                {analytics.totalOrders.toLocaleString()}
+                {data.totalOrders.toLocaleString()}
               </p>
             </div>
             <div className="rounded-xl bg-emerald-50 p-3 text-emerald-600">
@@ -295,68 +198,95 @@ const DashboardHome = () => {
             </div>
           </div>
           <p className="mt-4 text-xs font-medium text-emerald-600">
-            +{paidRate}% paid vs total
+            {data.paidOrders} paid · {paidRate}% of total
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Revenue</p>
+              <p className="text-sm font-medium text-slate-500">Paid revenue</p>
               <p className="mt-1 text-3xl font-bold tabular-nums text-slate-900">
-                ৳ {analytics.totalRevenue.toLocaleString()}
+                ৳ {Number(data.paidRevenue || 0).toLocaleString()}
               </p>
             </div>
             <div className="rounded-xl bg-amber-50 p-3 text-amber-600">
               <BadgeDollarSign size={22} />
             </div>
           </div>
-          <p className="mt-4 text-xs font-medium text-emerald-600">
-            From all recorded orders
+          <p className="mt-4 text-xs font-medium text-slate-500">
+            {isProvider ? "From your paid orders" : "Paid orders only"}
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Pending</p>
+              <p className="text-sm font-medium text-slate-500">
+                {isProvider ? "Unsettled" : "Pending"}
+              </p>
               <p className="mt-1 text-3xl font-bold tabular-nums text-slate-900">
-                {analytics.pendingOrders}
+                {isProvider
+                  ? `৳ ${Number(data.unsettledEarnings || 0).toLocaleString()}`
+                  : data.pendingOrders}
               </p>
             </div>
-            <div className="rounded-xl bg-rose-50 p-3 text-rose-600">
-              <Clock size={22} />
+            <div
+              className={`rounded-xl p-3 ${
+                isProvider ? "bg-violet-50 text-violet-600" : "bg-rose-50 text-rose-600"
+              }`}
+            >
+              {isProvider ? <Wallet size={22} /> : <Clock size={22} />}
             </div>
           </div>
-          <p className="mt-4 text-xs font-medium text-rose-600">
-            {analytics.pendingOrders > 0 ? "Needs attention" : "All clear"}
+          <p className="mt-4 text-xs font-medium text-slate-600">
+            {isProvider ? (
+              <Link to={financeHref} className="text-violet-700 hover:underline">
+                Request settlement →
+              </Link>
+            ) : data.pendingOrders > 0 ? (
+              <span className="text-rose-600">Needs attention</span>
+            ) : (
+              "All clear"
+            )}
           </p>
         </div>
       </div>
 
-      {/* Charts row */}
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
           <LineChartCard
-            title="Revenue overview"
-            subtitle="Sum of order amounts by month (current data)"
-            values={chartData.monthly}
+            title={isProvider ? "My paid sales" : "Paid revenue"}
+            subtitle="Monthly total from paid orders"
+            values={data.monthly || []}
             labels={MONTHS}
+            detailHref={financeHref}
           />
         </div>
         <div className="lg:col-span-2">
-          <BarChartCard title="Order activity" values={chartData.last7} dayLabels={last7Labels} />
+          <BarChartCard
+            title={isProvider ? "My order activity" : "Order activity"}
+            values={data.last7 || []}
+            dayLabels={last7Labels}
+          />
         </div>
       </div>
 
-      {/* Secondary stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: "Products", value: analytics.totalProducts, icon: Package, href: "/dashboard/all-products" },
-          { label: "Vehicles", value: analytics.totalVehicles, icon: Car, href: "/dashboard/all-vehicles" },
-          { label: "Completed", value: analytics.completedOrders, icon: CheckCircle, href: "/dashboard/completed-orders" },
-          { label: "Paid orders", value: analytics.paidOrders, icon: TrendingUp, href: "/dashboard/all-orders" },
-        ].map((row) => {
+        {(isAdmin
+          ? [
+              { label: "Products", value: data.totalProducts, icon: Package, href: "/dashboard/all-products" },
+              { label: "Vehicles", value: data.totalVehicles, icon: Car, href: "/dashboard/all-vehicles" },
+              { label: "In progress", value: data.completedOrders, icon: CheckCircle, href: "/dashboard/orders" },
+              { label: "Paid orders", value: data.paidOrders, icon: TrendingUp, href: "/dashboard/orders" },
+            ]
+          : [
+              { label: "My products", value: data.totalProducts, icon: Package, href: "/dashboard/all-products" },
+              { label: "My vehicles", value: data.totalVehicles, icon: Car, href: "/dashboard/all-vehicles" },
+              { label: "Paid orders", value: data.paidOrders, icon: TrendingUp, href: "/dashboard/orders" },
+              { label: "Pending", value: data.pendingOrders, icon: Clock, href: "/dashboard/orders" },
+            ]
+        ).map((row) => {
           const Icon = row.icon;
           return (
             <Link
@@ -374,12 +304,11 @@ const DashboardHome = () => {
         })}
       </div>
 
-      {/* Tables */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-bold text-slate-900">Recent orders</h2>
-            <Link to="/dashboard/all-orders" className="text-sm font-medium text-emerald-600 hover:underline">
+            <Link to="/dashboard/orders" className="text-sm font-medium text-emerald-600 hover:underline">
               View all
             </Link>
           </div>
@@ -387,26 +316,38 @@ const DashboardHome = () => {
             <table className="table table-sm w-full">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
-                  <th className="pb-2 font-semibold">ID</th>
+                  <th className="pb-2 font-semibold">Order</th>
                   <th className="pb-2 font-semibold">Amount</th>
+                  <th className="pb-2 font-semibold">Pay</th>
                   <th className="pb-2 font-semibold">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {analytics.recentOrders.length === 0 ? (
+                {(data.recentOrders || []).length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="py-8 text-center text-sm text-slate-500">
+                    <td colSpan={4} className="py-8 text-center text-sm text-slate-500">
                       No orders yet.
                     </td>
                   </tr>
                 ) : (
-                  analytics.recentOrders.map((order) => (
+                  data.recentOrders.map((order) => (
                     <tr key={order._id} className="border-b border-slate-100 text-sm">
                       <td className="py-2 font-mono text-xs text-slate-600">
-                        …{String(order._id).slice(-8)}
+                        {order.orderNo || `…${String(order._id).slice(-6)}`}
                       </td>
                       <td className="py-2 font-medium tabular-nums">
                         ৳ {Number(order.totalAmount || 0).toLocaleString()}
+                      </td>
+                      <td className="py-2">
+                        <span
+                          className={`badge badge-sm border-0 ${
+                            order.paymentStatus === "paid"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {order.paymentStatus || "unpaid"}
+                        </span>
                       </td>
                       <td className="py-2">
                         <span className="badge badge-sm border-0 bg-slate-100 text-slate-700">
@@ -426,26 +367,41 @@ const DashboardHome = () => {
           <ul className="space-y-3 text-sm">
             <li className="flex justify-between border-b border-slate-100 pb-2">
               <span className="text-slate-600">Catalog products</span>
-              <span className="font-semibold text-slate-900">{analytics.totalProducts}</span>
+              <span className="font-semibold text-slate-900">{data.totalProducts}</span>
             </li>
+            {isAdmin ? (
+              <li className="flex justify-between border-b border-slate-100 pb-2">
+                <span className="text-slate-600">Fleet / vehicles</span>
+                <span className="font-semibold text-slate-900">{data.totalVehicles}</span>
+              </li>
+            ) : (
+              <li className="flex justify-between border-b border-slate-100 pb-2">
+                <span className="text-slate-600">My vehicles</span>
+                <span className="font-semibold text-slate-900">{data.totalVehicles}</span>
+              </li>
+            )}
             <li className="flex justify-between border-b border-slate-100 pb-2">
-              <span className="text-slate-600">Fleet / vehicles</span>
-              <span className="font-semibold text-slate-900">{analytics.totalVehicles}</span>
+              <span className="text-slate-600">Pending orders</span>
+              <span className="font-semibold text-amber-700">{data.pendingOrders}</span>
             </li>
-            <li className="flex justify-between border-b border-slate-100 pb-2">
-              <span className="text-slate-600">Open pending orders</span>
-              <span className="font-semibold text-amber-700">{analytics.pendingOrders}</span>
-            </li>
+            {isProvider ? (
+              <li className="flex justify-between border-b border-slate-100 pb-2">
+                <span className="text-slate-600">Unsettled earnings</span>
+                <span className="font-semibold text-violet-700">
+                  ৳ {Number(data.unsettledEarnings || 0).toLocaleString()}
+                </span>
+              </li>
+            ) : null}
             <li className="flex justify-between pt-1">
-              <span className="text-slate-600">Payment success focus</span>
+              <span className="text-slate-600">Payment rate</span>
               <span className="font-semibold text-emerald-600">{paidRate}%</span>
             </li>
           </ul>
           <Link
-            to="/dashboard/order-reports"
+            to={isProvider ? "/dashboard/provider-finance" : "/dashboard/orders"}
             className="btn btn-block mt-6 gap-2 rounded-xl border-0 bg-slate-900 text-white hover:bg-slate-800"
           >
-            Reports
+            {isProvider ? "My finance" : "View orders"}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

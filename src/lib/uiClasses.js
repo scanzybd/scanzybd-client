@@ -27,3 +27,15 @@ export const btnSecondaryInline =
 export const textMuted = "text-slate-600 dark:text-slate-400";
 export const textHeading = "text-slate-900 dark:text-slate-50";
 export const textSubtle = "text-slate-500 dark:text-slate-500";
+
+/** Dashboard page section title block */
+export const dashboardPageHeader =
+  "mb-8 border-b border-slate-200/90 pb-6 dark:border-slate-700/90";
+
+export const dashboardPageTitle =
+  "text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 md:text-3xl";
+
+export const dashboardPageSubtitle = "mt-1 text-sm text-slate-600 dark:text-slate-400";
+
+export const dashboardBadge =
+  "mb-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300";

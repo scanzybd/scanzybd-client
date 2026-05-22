@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useAuth from "../../../hooks/useAuth";
 import OrderTable from "../../../components/OrderTable";
 
 const ReturnedOrders = () => {
   const axiosSecure = useAxiosSecure();
   const queryClient = useQueryClient();
+  const { userRole } = useAuth();
+  const isAdmin = userRole === "admin";
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["returned-orders"],
@@ -18,11 +21,7 @@ const ReturnedOrders = () => {
     mutationFn: async ({ orderId, status }) =>
       axiosSecure.patch(`/api/order/${orderId}/status`, { status }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["confirmed-orders"] });
-      await queryClient.invalidateQueries({ queryKey: ["shipped-orders"] });
       await queryClient.invalidateQueries({ queryKey: ["returned-orders"] });
-      await queryClient.invalidateQueries({ queryKey: ["delivered-orders"] });
-      await queryClient.invalidateQueries({ queryKey: ["all-orders"] });
       await queryClient.invalidateQueries({ queryKey: ["order-reports"] });
     },
   });
@@ -36,9 +35,9 @@ const ReturnedOrders = () => {
       title="Returned Orders"
       orders={orders}
       isLoading={isLoading}
-      statusOptions={["returned", "shipped", "delivered", "cancelled"]}
-      onStatusUpdate={handleStatusUpdate}
-      statusUpdatingId={isStatusUpdating ? variables?.orderId || "" : ""}
+      statusOptions={isAdmin ? ["returned", "shipped", "delivered", "cancelled"] : []}
+      onStatusUpdate={isAdmin ? handleStatusUpdate : undefined}
+      statusUpdatingId={isAdmin && isStatusUpdating ? variables?.orderId || "" : ""}
     />
   );
 };

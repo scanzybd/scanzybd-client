@@ -1,23 +1,49 @@
 import React, { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import Swal from "sweetalert2";
 import useAuth from "../../../hooks/useAuth";
 
 const UserProfile = () => {
     const { user, loading, updateUserProfile } = useAuth();
+    const queryClient = useQueryClient();
     const [name, setName] = useState("");
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        setName(user?.displayName ?? "");
-    }, [user?.displayName]);
+        setName(user?.name || user?.displayName || "");
+    }, [user?.name, user?.displayName]);
 
     const handleSaveName = async (e) => {
         e.preventDefault();
         if (!user || saving) return;
+
+        const trimmed = name.trim();
+        if (!trimmed) {
+            await Swal.fire({
+                icon: "warning",
+                title: "Name required",
+                text: "Please enter your name.",
+            });
+            return;
+        }
+
         setSaving(true);
         try {
-            await updateUserProfile({ displayName: name.trim() || null });
+            await updateUserProfile({ name: trimmed });
+            await queryClient.invalidateQueries({ queryKey: ["auth", "mongo-profile"] });
+            await Swal.fire({
+                icon: "success",
+                title: "Saved",
+                text: "Your name has been updated.",
+                timer: 1600,
+                showConfirmButton: false,
+            });
         } catch (err) {
-            console.error(err);
+            await Swal.fire({
+                icon: "error",
+                title: "Could not save",
+                text: err?.response?.data?.message || err?.message || "Please try again.",
+            });
         } finally {
             setSaving(false);
         }
@@ -84,7 +110,7 @@ const UserProfile = () => {
                         className="btn border-0 bg-amber-500 font-semibold text-slate-900 hover:bg-amber-600 disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-600"
                         disabled={saving}
                     >
-                    {saving ? "Saving…" : "Save name"}
+                        {saving ? "Saving…" : "Save name"}
                     </button>
                 </form>
             </div>
