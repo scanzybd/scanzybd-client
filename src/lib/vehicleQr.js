@@ -16,9 +16,14 @@ export function canAssignMoreQr(vehicle) {
   return getVehicleQrIds(vehicle).length < MAX_VEHICLE_QRS;
 }
 
-export function qrAssignmentLabel(vehicle) {
+/** Confirmed orders table: No QR | 1/2 | 2/2 */
+export function formatVehicleQrSlotLabel(vehicle) {
   const n = getVehicleQrIds(vehicle).length;
   if (n === 0) return "No QR";
-  if (n >= MAX_VEHICLE_QRS) return "2/2 QR";
-  return `${n}/2 QR`;
+  if (n >= MAX_VEHICLE_QRS) return "2/2";
+  return `${n}/2`;
+}
+
+export function qrAssignmentLabel(vehicle) {
+  return formatVehicleQrSlotLabel(vehicle);
 }

@@ -99,6 +99,7 @@
       "addPackage": "Add Package",
       "orderList": "Order List",
       "completed": "Completed",
+      "confirmedOrders": "Confirmed Orders",
       "pending": "Pending",
       "cancelled": "Cancelled",
       "reports": "Reports",

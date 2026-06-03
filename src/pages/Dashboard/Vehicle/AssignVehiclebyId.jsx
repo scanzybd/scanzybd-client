@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Link2, Car, QrCode } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
@@ -14,8 +15,12 @@ import { canAssignMoreQr, qrAssignmentLabel } from "../../../lib/vehicleQr";
 
 const AssignVehiclebyId = () => {
   const { code } = useParams();
+  const [searchParams] = useSearchParams();
+  const presetVehicleId = searchParams.get("vehicleId") || "";
+  const returnTo = searchParams.get("returnTo") || "/dashboard/scan-assign-vehicle";
   const navigate = useNavigate();
   const axiosSecure = useAxiosSecure();
+  const queryClient = useQueryClient();
 
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState("");
@@ -40,7 +45,15 @@ const AssignVehiclebyId = () => {
 
         const res = await axiosSecure.get("/api/vehicle");
         if (!cancelled) {
-          const available = (res.data.data || []).filter((v) => canAssignMoreQr(v));
+          const all = res.data.data || [];
+          let available = all.filter((v) => canAssignMoreQr(v));
+          if (presetVehicleId) {
+            const preset = all.find((v) => String(v._id) === String(presetVehicleId));
+            if (preset && !available.some((v) => String(v._id) === String(preset._id))) {
+              available = [preset, ...available];
+            }
+            setSelectedVehicle(presetVehicleId);
+          }
           setVehicles(available);
         }
       } catch (err) {
@@ -54,7 +67,7 @@ const AssignVehiclebyId = () => {
     return () => {
       cancelled = true;
     };
-  }, [axiosSecure, code]);
+  }, [axiosSecure, code, presetVehicleId]);
 
   const handleAssign = async () => {
     if (!code || !selectedVehicle || assigning) return;
@@ -66,8 +79,14 @@ const AssignVehiclebyId = () => {
         vehicleId: selectedVehicle,
       });
 
+      await queryClient.invalidateQueries({ queryKey: ["confirmed-orders"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard", "vehicles"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard", "qr"] });
+
       alert("Assigned successfully.");
-      navigate("/dashboard/scan-assign-vehicle");
+      navigate(returnTo.startsWith("/") ? returnTo : "/dashboard/confirmed-orders", {
+        replace: true,
+      });
     } catch (err) {
       console.log(err);
       alert(err?.response?.data?.message || "Assignment failed.");
@@ -105,7 +124,9 @@ const AssignVehiclebyId = () => {
           Assign vehicle
         </h1>
         <p className={dashboardPageSubtitle}>
-          Link this QR to a vehicle that has fewer than 2 tags.
+          {presetVehicleId
+            ? "Confirm linking this QR to the vehicle from your order."
+            : "Link this QR to a vehicle that has fewer than 2 tags."}
         </p>
       </div>
 

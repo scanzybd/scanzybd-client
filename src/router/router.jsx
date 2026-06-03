@@ -65,6 +65,7 @@ const AddProviderPageLazy = lazyImport(chunks.loadAddProviderPage);
 const ReviewManagement = lazyPage(chunks.loadReviewManagement);
 const ContactInbox = lazyPage(chunks.loadContactInbox);
 const StaffOrdersPage = lazyPage(chunks.loadStaffOrders);
+const ConfirmedOrder = lazyPage(chunks.loadConfirmedOrder);
 const OrderDetailPage = lazyPage(chunks.loadOrderDetail);
 
 const router = createBrowserRouter([
@@ -267,8 +268,18 @@ const router = createBrowserRouter([
         element: <Navigate to="/dashboard/orders" replace />,
       },
       {
+        path: "confirmed-orders",
+        element: (
+          <AdminRoute>
+            <Suspense fallback={<RouteFallback />}>
+              <ConfirmedOrder />
+            </Suspense>
+          </AdminRoute>
+        ),
+      },
+      {
         path: "completed-orders",
-        element: <Navigate to="/dashboard/orders" replace />,
+        element: <Navigate to="/dashboard/confirmed-orders" replace />,
       },
       {
         path: "shipped-orders",

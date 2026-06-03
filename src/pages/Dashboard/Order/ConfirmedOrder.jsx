@@ -10,6 +10,10 @@ import {
   DELIVERY_LABEL_MM,
   deliveryLabelsFilename,
 } from "../../../lib/deliveryLabelPdf";
+import {
+  formatOrderPlateNumbers,
+  formatOrderTagTypes,
+} from "../../../lib/orderPrintTableUtils";
 
 const ConfirmedOrder = () => {
   const axiosSecure = useAxiosSecure();
@@ -255,12 +259,13 @@ const ConfirmedOrder = () => {
               <th>Date</th>
               <th>Customer</th>
               <th>Phone</th>
+              <th>Plate no.</th>
+              <th>Tag type</th>
               <th>City</th>
               <th>District</th>
               <th>Address</th>
               <th>Amount (৳)</th>
               <th>Payment</th>
-              <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -273,12 +278,13 @@ const ConfirmedOrder = () => {
                   <td>{formatPrintDate(order?.createdAt)}</td>
                   <td>{ship.fullName || "—"}</td>
                   <td>{ship.phone || "—"}</td>
+                  <td>{formatOrderPlateNumbers(order)}</td>
+                  <td>{formatOrderTagTypes(order)}</td>
                   <td>{ship.city || "—"}</td>
                   <td>{ship.district || "—"}</td>
                   <td>{[ship.line1, ship.line2].filter(Boolean).join(", ") || "—"}</td>
                   <td>{Number(order?.totalAmount || 0).toLocaleString()}</td>
                   <td>{order?.paymentStatus || "—"}</td>
-                  <td>{order?.status || "—"}</td>
                 </tr>
               );
             })}
@@ -291,6 +297,7 @@ const ConfirmedOrder = () => {
         title="Confirmed Orders"
         orders={safeOrders}
         isLoading={isLoading}
+        showFulfillment
         statusOptions={isAdmin ? ["confirmed", "shipped", "delivered", "returned", "cancelled"] : []}
         onStatusUpdate={isAdmin ? handleStatusUpdate : undefined}
         statusUpdatingId={isAdmin && isStatusUpdating ? variables?.orderId || "" : ""}

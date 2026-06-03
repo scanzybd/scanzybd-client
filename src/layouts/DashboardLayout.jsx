@@ -173,6 +173,7 @@ const DashboardLayout = () => {
             items: [
                 { path: "/dashboard/create-order", icon: ShoppingCart, label: t("dashboard.menu.createOrder") },
                 { path: "/dashboard/orders", icon: ClipboardList, label: t("dashboard.menu.ordersList") },
+                { path: "/dashboard/confirmed-orders", icon: FileText, label: t("dashboard.menu.confirmedOrders") },
             ],
         },
         {

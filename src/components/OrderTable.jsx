@@ -5,6 +5,7 @@ import {
   formatShippingAddrMain,
   formatShippingLine1Details,
 } from "../lib/shippingAddressUtils";
+import OrderFulfillmentTags from "./order/OrderFulfillmentTags";
 
 const statusStyles = {
   pending: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900/50",
@@ -31,6 +32,7 @@ const OrderTable = ({
   summaryCards = [],
   onStatusUpdate,
   statusUpdatingId = "",
+  showFulfillment = false,
 }) => {
   if (isLoading) {
     return <SmartLoader label={`Loading ${title.toLowerCase()}...`} />;
@@ -273,13 +275,19 @@ const OrderTable = ({
                     ))}
                   </ul>
                 )}
-                {tags.length > 0 && (
+                {!showFulfillment && tags.length > 0 && (
                   <p className={`border-t border-slate-100 pt-2 text-xs ${textMuted} dark:border-slate-700`}>
                     {tags.length} tag{tags.length === 1 ? "" : "s"} assigned
                   </p>
                 )}
               </div>
             </div>
+
+            {showFulfillment && tags.length > 0 ? (
+              <div className="border-t border-slate-100 px-4 py-3 dark:border-slate-700">
+                <OrderFulfillmentTags order={order} />
+              </div>
+            ) : null}
 
             {hasStatusEditor && (
               <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 px-4 py-3 dark:border-slate-700">
