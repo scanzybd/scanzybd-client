@@ -48,6 +48,7 @@ const AddProductsLazy = lazyImport(chunks.loadAddProducts);
 const AllQR = lazyPage(chunks.loadAllQR);
 const GenerateQR = lazyPage(chunks.loadGenerateQR);
 const FinanceManagement = lazyPage(chunks.loadFinanceManagement);
+const PaymentGatewaySettings = lazyPage(chunks.loadPaymentGatewaySettings);
 const ProviderFinance = lazyPage(chunks.loadProviderFinance);
 const ProviderDueList = lazyPage(chunks.loadProviderDueList);
 const AllPackages = lazyPage(chunks.loadAllPackages);
@@ -298,6 +299,14 @@ const router = createBrowserRouter([
         element: (
           <AdminRoute>
             <FinanceManagement />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "payment-gateways",
+        element: (
+          <AdminRoute>
+            <PaymentGatewaySettings />
           </AdminRoute>
         ),
       },

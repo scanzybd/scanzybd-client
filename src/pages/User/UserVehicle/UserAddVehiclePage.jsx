@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
@@ -120,6 +121,10 @@ const UserAddVehiclePage = () => {
 
   if (roleLoading) {
     return <SmartLoader fullPage label="Checking role permissions..." />;
+  }
+
+  if (role === "user") {
+    return <Navigate to="/user/my-vehiclePage" replace />;
   }
 
   return (

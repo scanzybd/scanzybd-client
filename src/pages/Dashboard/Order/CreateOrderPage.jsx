@@ -1,6 +1,12 @@
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronUp, Copy, MapPin, UserPlus, Banknote, Smartphone, Globe } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, MapPin, UserPlus } from "lucide-react";
+import StaffPaymentMethodPicker from "../../../components/payment/StaffPaymentMethodPicker";
+import {
+  getStaffPaymentRedirect,
+  isStaffOnlinePayment,
+  staffSubmitButtonLabel,
+} from "../../../lib/staffPaymentUtils";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import {
   shellPage,
@@ -474,8 +480,9 @@ const CreateOrderPage = () => {
         note: orderNote.trim() || undefined,
       });
 
-      if (paymentMethod === "bkash_online" && res.data?.bkashURL) {
-        window.location.href = res.data.bkashURL;
+      const payUrl = getStaffPaymentRedirect(res.data);
+      if (isStaffOnlinePayment(paymentMethod) && payUrl) {
+        window.location.href = payUrl;
         return;
       }
 
@@ -1162,56 +1169,17 @@ const CreateOrderPage = () => {
               })}
             </div>
 
-            <div className={`mb-4 p-4 ${cardSurface}`}>
-              <h3 className={`mb-3 text-sm font-bold ${textHeading}`}>Payment method</h3>
-              <div className="grid gap-2 sm:grid-cols-3">
-                {[
-                  { id: "cash", label: "Cash", icon: Banknote },
-                  { id: "bkash_manual", label: "Manual bKash", icon: Smartphone },
-                  { id: "bkash_online", label: "bKash Online", icon: Globe },
-                ].map(({ id, label, icon: Icon }) => (
-                  <label
-                    key={id}
-                    className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border p-3 text-center text-xs font-semibold ${
-                      paymentMethod === id
-                        ? "border-emerald-500 bg-emerald-50 text-emerald-900"
-                        : "border-slate-200 bg-white text-slate-600"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value={id}
-                      checked={paymentMethod === id}
-                      onChange={() => setPaymentMethod(id)}
-                      className="sr-only"
-                    />
-                    <Icon className="h-5 w-5" />
-                    {label}
-                  </label>
-                ))}
-              </div>
-              {paymentMethod === "bkash_manual" && (
-                <label className="mt-3 block">
-                  <span className={`text-xs font-medium ${textMuted}`}>
-                    bKash Transaction ID *
-                  </span>
-                  <input
-                    className={`${fieldInput} mt-1`}
-                    value={transactionId}
-                    onChange={(e) => setTransactionId(e.target.value)}
-                    placeholder="e.g. DEC60OP75K"
-                  />
-                </label>
-              )}
-              <input
-                type="text"
-                className={`${fieldInput} mt-3`}
-                value={orderNote}
-                onChange={(e) => setOrderNote(e.target.value)}
-                placeholder="Payment note (optional)"
-              />
-            </div>
+            <StaffPaymentMethodPicker
+              cardClassName={`mb-4 p-4 ${cardSurface}`}
+              titleClassName={`mb-3 text-sm font-bold ${textHeading}`}
+              fieldInputClassName={`${fieldInput} mt-1`}
+              value={paymentMethod}
+              onChange={setPaymentMethod}
+              transactionId={transactionId}
+              onTransactionIdChange={setTransactionId}
+              orderNote={orderNote}
+              onOrderNoteChange={setOrderNote}
+            />
 
             <div className="flex flex-col gap-3 sm:flex-row-reverse">
               <button
@@ -1220,11 +1188,7 @@ const CreateOrderPage = () => {
                 disabled={loading}
                 className={`${btnPrimary} sm:flex-1 ${loading ? "cursor-not-allowed opacity-60" : ""}`}
               >
-                {loading
-                  ? "Processing..."
-                  : paymentMethod === "bkash_online"
-                    ? "Create order & pay online"
-                    : "Create order"}
+                {staffSubmitButtonLabel(paymentMethod, loading)}
               </button>
               <button
                 type="button"

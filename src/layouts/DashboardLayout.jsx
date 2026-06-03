@@ -179,6 +179,7 @@ const DashboardLayout = () => {
             category: t("dashboard.menu.finance"),
             items: [
                 { path: "/dashboard/finance-management", icon: Settings, label: t("dashboard.menu.finance") },
+                { path: "/dashboard/payment-gateways", icon: Wallet, label: t("dashboard.menu.paymentGateways") },
                 { path: "/dashboard/provider-due-list", icon: Wallet, label: t("dashboard.menu.providerDue") },
             ],
         },

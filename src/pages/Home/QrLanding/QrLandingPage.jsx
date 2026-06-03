@@ -21,13 +21,25 @@ const QrLandingPage = () => {
         const res = await axios.get(
           `${API_BASE_URL}/api/qr/code/${encodeURIComponent(code)}`
         );
-        const { qr, vehicle: v } = res.data;
+        const { qr, vehicle: v, scanAccess } = res.data;
 
         if (cancelled) return;
 
         if (!qr?.isAssigned || qr.status !== "assigned" || !v) {
           setVehicle(null);
           setPhase("unassigned");
+          return;
+        }
+
+        if (scanAccess?.subscriptionExpired || scanAccess?.reason === "expired") {
+          setVehicle(null);
+          setPhase("expired");
+          return;
+        }
+
+        if (scanAccess && scanAccess.allowContact === false && scanAccess.reason !== "legacy") {
+          setVehicle(null);
+          setPhase("expired");
           return;
         }
 
@@ -105,6 +117,25 @@ const QrLandingPage = () => {
       title: "Something went wrong",
       message: errorMessage,
       tone: "danger",
+    });
+  }
+
+  if (phase === "expired") {
+    return statusCard({
+      title: "Subscription expired",
+      message:
+        "This QR tag’s subscription has ended. Contact details are hidden until the owner renews. If you own this vehicle, sign in and renew from Subscription in your account.",
+      tone: "warning",
+      footer: (
+        <p className="text-xs text-slate-500">
+          <Link
+            to="/login"
+            className="font-semibold text-amber-700 underline decoration-amber-400 underline-offset-2"
+          >
+            Sign in to renew
+          </Link>
+        </p>
+      ),
     });
   }
 

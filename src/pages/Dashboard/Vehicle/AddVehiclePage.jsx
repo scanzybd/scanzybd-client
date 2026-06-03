@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Car, UserPlus, Banknote, Smartphone, Globe, ShoppingBag } from "lucide-react";
+import { Car, UserPlus, ShoppingBag } from "lucide-react";
+import StaffPaymentMethodPicker from "../../../components/payment/StaffPaymentMethodPicker";
+import {
+  getStaffPaymentRedirect,
+  isStaffOnlinePayment,
+} from "../../../lib/staffPaymentUtils";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useMongoProfile from "../../../hooks/useMongoProfile";
@@ -207,8 +212,9 @@ const AddVehiclePage = () => {
 
       const orderRes = await axiosSecure.post("/api/order/staff-create", orderPayload);
 
-      if (paymentMethod === "bkash_online" && orderRes.data?.bkashURL) {
-        window.location.href = orderRes.data.bkashURL;
+      const payUrl = getStaffPaymentRedirect(orderRes.data);
+      if (isStaffOnlinePayment(paymentMethod) && payUrl) {
+        window.location.href = payUrl;
         return;
       }
 
@@ -336,58 +342,14 @@ const AddVehiclePage = () => {
                   Total: ৳ {orderTotal.toLocaleString()}
                 </p>
 
-                <h3 className="text-xs font-bold uppercase tracking-wide text-slate-600">
-                  Payment method
-                </h3>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  {[
-                    { id: "cash", label: "Cash", icon: Banknote },
-                    { id: "bkash_manual", label: "Manual bKash", icon: Smartphone },
-                    { id: "bkash_online", label: "bKash Online", icon: Globe },
-                  ].map(({ id, label, icon: Icon }) => (
-                    <label
-                      key={id}
-                      className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border p-3 text-center text-xs font-semibold transition ${
-                        paymentMethod === id
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-900"
-                          : "border-slate-200 bg-white text-slate-600"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value={id}
-                        checked={paymentMethod === id}
-                        onChange={() => setPaymentMethod(id)}
-                        className="sr-only"
-                      />
-                      <Icon className="h-5 w-5" />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-
-                {paymentMethod === "bkash_manual" && (
-                  <div>
-                    <label className="text-xs font-semibold text-slate-600">
-                      bKash Transaction ID
-                    </label>
-                    <input
-                      type="text"
-                      value={transactionId}
-                      onChange={(e) => setTransactionId(e.target.value)}
-                      placeholder="e.g. DEC60OP75K"
-                      className="input input-bordered mt-1 w-full rounded-xl text-sm"
-                    />
-                  </div>
-                )}
-
-                <input
-                  type="text"
-                  value={orderNote}
-                  onChange={(e) => setOrderNote(e.target.value)}
-                  placeholder="Payment note (optional)"
-                  className="input input-bordered w-full rounded-xl text-sm"
+                <StaffPaymentMethodPicker
+                  value={paymentMethod}
+                  onChange={setPaymentMethod}
+                  transactionId={transactionId}
+                  onTransactionIdChange={setTransactionId}
+                  orderNote={orderNote}
+                  onOrderNoteChange={setOrderNote}
+                  titleClassName="text-xs font-bold uppercase tracking-wide text-slate-600"
                 />
               </div>
             )}

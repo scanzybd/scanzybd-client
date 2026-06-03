@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { TrendingUp, TrendingDown, Wallet, Receipt, Plus, HandCoins } from "lucide-react";
 import Swal from "sweetalert2";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import { formatOrderKind } from "../../../lib/orderDisplayFormat";
 
 const fmt = (n) => `৳ ${Number(n || 0).toLocaleString()}`;
 
@@ -526,6 +527,7 @@ const FinanceManagement = () => {
                   <tr className="text-left text-sm">
                     <th className="font-semibold">Date</th>
                     <th className="font-semibold">Order</th>
+                    <th className="font-semibold">Type</th>
                     <th className="font-semibold">Amount</th>
                     <th className="font-semibold">Payment</th>
                   </tr>
@@ -533,7 +535,7 @@ const FinanceManagement = () => {
                 <tbody>
                   {paidOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-10 text-center text-slate-500">
+                      <td colSpan={5} className="py-10 text-center text-slate-500">
                         No paid orders yet.
                       </td>
                     </tr>
@@ -547,6 +549,9 @@ const FinanceManagement = () => {
                         </td>
                         <td className="font-mono text-xs text-slate-700">
                           {o.orderNo || String(o._id).slice(-8)}
+                        </td>
+                        <td className="text-xs text-slate-600">
+                          {formatOrderKind(o.orderKind)}
                         </td>
                         <td className="font-semibold tabular-nums text-emerald-700">
                           {fmt(o.totalAmount)}

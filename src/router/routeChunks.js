@@ -48,6 +48,8 @@ export const loadAddProducts = () => import("../pages/Dashboard/Product/AddProdu
 export const loadAllQR = () => import("../pages/Dashboard/QR/AllQR.jsx");
 export const loadGenerateQR = () => import("../pages/Dashboard/QR/GenerateQR.jsx");
 export const loadFinanceManagement = () => import("../pages/Dashboard/Finance/FinanceManagement.jsx");
+export const loadPaymentGatewaySettings = () =>
+  import("../pages/Dashboard/Settings/PaymentGatewaySettings.jsx");
 export const loadProviderFinance = () => import("../pages/Dashboard/Finance/ProviderFinance.jsx");
 export const loadProviderDueList = () => import("../pages/Dashboard/Finance/ProviderDueList.jsx");
 export const loadAllPackages = () => import("../pages/Dashboard/Package/AllPackages.jsx");
@@ -97,6 +99,7 @@ export const allRouteChunkLoaders = [
   loadAllQR,
   loadGenerateQR,
   loadFinanceManagement,
+  loadPaymentGatewaySettings,
   loadProviderFinance,
   loadProviderDueList,
   loadAllPackages,

@@ -81,6 +81,7 @@
       "packages": "Packages",
       "orders": "Orders",
       "finance": "Finance",
+      "paymentGateways": "Payment gateways",
       "providerDue": "Provider Due",
       "qr": "QR",
       "support": "Reviews & messages",
@@ -231,8 +232,21 @@
       "start": "Start",
       "end": "End",
       "notTracked": "Not tracked",
-      "renew": "Renew (add to cart)",
-      "renewNote": "A new period will run from the date payment is confirmed."
+      "renewCart": "Buy again (cart)",
+      "renewTag": "Renew tag (bKash)",
+      "renewNote": "Validity starts on the day payment is confirmed.",
+      "qrTagsTitle": "Your QR tags",
+      "pendingQr": "Awaiting QR assign",
+      "assignQrFirst": "Staff must assign a QR to this vehicle before renewal.",
+      "renewModalTitle": "Choose renewal type",
+      "renewSameQr": "Same QR — extend validity",
+      "renewSameQrHint": "Keep this code; validity resets from payment date.",
+      "renewNewQr": "New QR tag",
+      "renewNewQrHint": "Old QR is unlinked; staff ships and assigns a new one.",
+      "renewFailed": "Could not start renewal payment.",
+      "redirectingBkash": "Opening bKash…",
+      "missingProductId": "This order line has no product ID. Run subscription backfill or contact support.",
+      "noGateway": "Online payment is not available right now."
     }
   },
   "nav": {

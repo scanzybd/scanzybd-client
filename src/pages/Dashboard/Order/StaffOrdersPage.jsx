@@ -31,6 +31,8 @@ const methodLabel = (m) => {
     cash: "Cash",
     bkash_manual: "Manual bKash",
     bkash_online: "bKash Online",
+    sslcommerz_online: "SSL Commerz",
+    sslcommerz: "SSL Commerz",
     bkash: "bKash",
   };
   return map[String(m || "").toLowerCase()] || m || "—";

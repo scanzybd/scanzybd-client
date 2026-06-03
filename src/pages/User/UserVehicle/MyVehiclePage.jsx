@@ -1,18 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Pencil, Trash2, Car, QrCode, Phone, UserRound, AlertCircle } from "lucide-react";
+import { Pencil, Trash2, Car, Phone, UserRound, AlertCircle } from "lucide-react";
 import Switch from "react-switch";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 import SmartLoader from "../../../components/SmartLoader";
-import VehicleQrPreview from "../../../components/VehicleQrPreview";
-import { getVehicleQrIds, qrAssignmentLabel } from "../../../lib/vehicleQr";
+import { qrAssignmentLabel } from "../../../lib/vehicleQr";
 
 const CONTACT_OFF_HEX = "#d1d9e3";
 const CONTACT_ON_HEX = { green: "#059669", blue: "#2563eb", red: "#dc2626" };
-
-const switchIconBase =
-  "flex h-full w-full items-center text-[8px] font-bold uppercase tracking-wide text-white";
 
 const ContactToggle = ({ label, checked, onClick, disabled = false, tone = "green" }) => (
   <Switch
@@ -23,16 +19,12 @@ const ContactToggle = ({ label, checked, onClick, disabled = false, tone = "gree
     offColor={CONTACT_OFF_HEX}
     onHandleColor="#f1f5f9"
     offHandleColor="#f1f5f9"
-    height={22}
-    width={48}
-    borderRadius={11}
-    handleDiameter={18}
-    uncheckedIcon={
-      <div className={`${switchIconBase} justify-end pr-1`}>OFF</div>
-    }
-    checkedIcon={
-      <div className={`${switchIconBase} justify-start pl-1`}>ON</div>
-    }
+    uncheckedIcon={false}
+    checkedIcon={false}
+    height={26}
+    width={52}
+    borderRadius={13}
+    handleDiameter={22}
     aria-label={label}
   />
 );
@@ -43,19 +35,32 @@ const fieldClass =
   "input input-bordered w-full rounded-xl border-slate-200 bg-white text-sm dark:border-slate-600 dark:bg-slate-800";
 
 function ContactRow({ icon: Icon, label, tone, vehicle, fieldKey, saving, onToggle }) {
+  const isOn = Boolean(vehicle[fieldKey]);
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/50">
-      <div className="flex min-w-0 items-center gap-2">
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/50">
+      <div className="flex shrink-0 items-center gap-2.5">
         <Icon className="h-4 w-4 shrink-0 text-slate-400" />
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{label}</span>
+        <span className="whitespace-nowrap text-sm font-medium text-slate-700 dark:text-slate-200">
+          {label}
+        </span>
       </div>
-      <ContactToggle
-        label={label}
-        checked={Boolean(vehicle[fieldKey])}
-        onClick={() => onToggle(vehicle, fieldKey)}
-        disabled={Boolean(saving[`${vehicle._id}:${fieldKey}`])}
-        tone={tone}
-      />
+      <div className="flex shrink-0 items-center gap-2.5">
+        <span
+          className={`text-xs font-semibold tabular-nums ${
+            isOn ? "text-emerald-700 dark:text-emerald-400" : "text-slate-400"
+          }`}
+          aria-hidden
+        >
+          {isOn ? "Visible" : "Hidden"}
+        </span>
+        <ContactToggle
+          label={`${label} contact ${isOn ? "visible" : "hidden"} on QR scan`}
+          checked={isOn}
+          onClick={() => onToggle(vehicle, fieldKey)}
+          disabled={Boolean(saving[`${vehicle._id}:${fieldKey}`])}
+          tone={tone}
+        />
+      </div>
     </div>
   );
 }
@@ -70,7 +75,6 @@ const MyVehiclePage = () => {
   const [roleLoading, setRoleLoading] = useState(true);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
 
-  const [qrMap, setQrMap] = useState({});
   const [toggleSaving, setToggleSaving] = useState({});
   const [inlineEditor, setInlineEditor] = useState({});
   const [uiError, setUiError] = useState("");
@@ -99,15 +103,6 @@ const MyVehiclePage = () => {
       const res = await axiosSecure.get("/api/vehicle/my");
       const data = res.data.data || [];
       setVehicles(data);
-
-      const qrRes = await axiosSecure.get("/api/qr/allQR");
-      const payload = qrRes.data;
-      const allQr = Array.isArray(payload) ? payload : payload?.data ?? [];
-      const map = {};
-      for (const q of allQr) {
-        if (q?._id) map[String(q._id)] = q;
-      }
-      setQrMap(map);
     } catch (err) {
       console.log(err);
     } finally {
@@ -363,8 +358,6 @@ const MyVehiclePage = () => {
   };
 
   const renderVehicleCard = (v) => {
-    const vehicleQrIds = getVehicleQrIds(v);
-
     return (
       <article
         key={v._id}
@@ -372,19 +365,16 @@ const MyVehiclePage = () => {
       >
         {/* ——— Mobile header ——— */}
         <div className="border-b border-slate-100 p-4 lg:hidden dark:border-slate-800">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate text-lg font-bold text-slate-900 dark:text-white">
-                {v.vehicleName}
-              </h2>
-              <p className="mt-0.5 font-mono text-sm text-emerald-700 dark:text-emerald-400">
-                {v.plate}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                {v.model} · {qrAssignmentLabel(v)}
-              </p>
-            </div>
-            <VehicleQrPreview vehicle={v} qrMap={qrMap} compact />
+          <div className="min-w-0">
+            <h2 className="truncate text-lg font-bold text-slate-900 dark:text-white">
+              {v.vehicleName}
+            </h2>
+            <p className="mt-0.5 font-mono text-sm text-emerald-700 dark:text-emerald-400">
+              {v.plate}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              {v.model} · {qrAssignmentLabel(v)}
+            </p>
           </div>
           <div className="mt-3 flex gap-2">
             <button
@@ -422,20 +412,10 @@ const MyVehiclePage = () => {
                   {v.plate}
                 </span>
               </p>
-              <span
-                className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                  vehicleQrIds.length > 0
-                    ? "bg-emerald-50 text-emerald-800"
-                    : "bg-rose-50 text-rose-700"
-                }`}
-              >
-                <QrCode className="h-3 w-3" />
-                {qrAssignmentLabel(v)}
-              </span>
+              <p className="mt-1 text-xs text-slate-500">{qrAssignmentLabel(v)}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <VehicleQrPreview vehicle={v} qrMap={qrMap} />
             <div className="flex flex-col gap-2">
               <button
                 type="button"
@@ -489,7 +469,7 @@ const MyVehiclePage = () => {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Public visibility (QR scan)
           </p>
-          <div className="space-y-2 lg:grid lg:grid-cols-3 lg:gap-3">
+          <div className="space-y-2">
             <ContactRow
               icon={Phone}
               label="Owner"
@@ -541,13 +521,14 @@ const MyVehiclePage = () => {
         {loadingVehicles ? (
           <SmartLoader label="Loading vehicles..." />
         ) : vehicles.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-            No vehicles yet.
-            <Link
-              to="/user/user-add-vehicle"
-              className="mt-3 block font-medium text-emerald-700"
-            >
-              Add a vehicle
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900">
+            <Car className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+            <p className="font-medium text-slate-700 dark:text-slate-300">No vehicles yet</p>
+            <p className="mt-2 text-xs leading-relaxed">
+              Vehicles appear here after you purchase a QR tag and complete checkout.
+            </p>
+            <Link to="/Products" className="mt-4 inline-block text-sm font-medium text-emerald-700 hover:underline">
+              Browse products
             </Link>
           </div>
         ) : (
@@ -573,12 +554,6 @@ const MyVehiclePage = () => {
           <div className="text-right">
             <p className="text-2xl font-bold text-slate-900 dark:text-white">{vehicles.length}</p>
             <p className="text-xs text-slate-500">registered</p>
-            <Link
-              to="/user/user-add-vehicle"
-              className="btn btn-primary btn-sm mt-3 rounded-xl"
-            >
-              Add vehicle
-            </Link>
           </div>
         </header>
         {loadingVehicles ? (
@@ -586,11 +561,14 @@ const MyVehiclePage = () => {
             <SmartLoader label="Loading vehicles..." />
           </div>
         ) : vehicles.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center">
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center dark:border-slate-700 dark:bg-slate-900">
             <Car className="mx-auto h-12 w-12 text-slate-300" />
-            <p className="mt-3 font-medium text-slate-700">No vehicles yet</p>
-            <Link to="/user/user-add-vehicle" className="btn btn-primary mt-4 rounded-xl">
-              Add your first vehicle
+            <p className="mt-3 font-medium text-slate-700 dark:text-slate-300">No vehicles yet</p>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500">
+              Vehicles appear here after you purchase a QR tag and complete checkout.
+            </p>
+            <Link to="/Products" className="btn btn-primary btn-sm mt-6 rounded-xl">
+              Browse products
             </Link>
           </div>
         ) : (

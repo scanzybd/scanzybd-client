@@ -15,6 +15,8 @@ import {
   textHeading,
 } from "../../../lib/uiClasses";
 import useTagTypes from "../../../hooks/useTagTypes";
+import usePaymentGateways from "../../../hooks/usePaymentGateways";
+import PaymentGatewayPicker from "../../../components/payment/PaymentGatewayPicker";
 import { isCycleTagType } from "../../../lib/tagTypeUtils";
 
 function normalizeBrtaOptions(raw) {
@@ -69,6 +71,8 @@ const Checkout = () => {
   const { user } = useAuth();
   const { cartItems } = useCart();
   const { data: tagTypes = [] } = useTagTypes();
+  const { data: gateways } = usePaymentGateways();
+  const [selectedGateway, setSelectedGateway] = useState("bkash");
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -117,6 +121,13 @@ const Checkout = () => {
   useEffect(() => {
     if (cartItems.length === 0) setStep(1);
   }, [cartItems.length]);
+
+  useEffect(() => {
+    if (!gateways) return;
+    if (gateways.bkash && !gateways.sslcommerz) setSelectedGateway("bkash");
+    else if (!gateways.bkash && gateways.sslcommerz) setSelectedGateway("sslcommerz");
+    else setSelectedGateway(gateways.defaultGateway || "bkash");
+  }, [gateways]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -423,9 +434,13 @@ const Checkout = () => {
 
       if (!orderId) throw new Error("Order failed");
 
+      if (!gateways?.hasOnlinePayment) {
+        throw new Error("No online payment gateway is enabled");
+      }
+
       const paymentRes = await axiosSecure.post(
         "/api/payment/create",
-        { orderId },
+        { orderId, gateway: selectedGateway },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -433,7 +448,7 @@ const Checkout = () => {
         }
       );
 
-      const url = paymentRes?.data?.bkashURL;
+      const url = paymentRes?.data?.redirectURL || paymentRes?.data?.bkashURL;
 
       if (!url) throw new Error("Payment failed");
 
@@ -1094,14 +1109,26 @@ const Checkout = () => {
               })}
             </div>
 
+            {gateways ? (
+              <PaymentGatewayPicker
+                gateways={gateways}
+                value={selectedGateway}
+                onChange={setSelectedGateway}
+              />
+            ) : null}
+
             <div className="flex flex-col gap-3 sm:flex-row-reverse">
               <button
                 type="button"
                 onClick={handlePayment}
-                disabled={loading}
+                disabled={loading || !gateways?.hasOnlinePayment}
                 className={`${btnPrimary} sm:flex-1 ${loading ? "cursor-not-allowed opacity-60" : ""}`}
               >
-                {loading ? "Processing..." : "Pay with bKash"}
+                {loading
+                  ? "Processing..."
+                  : selectedGateway === "sslcommerz"
+                    ? "Pay with SSL Commerz"
+                    : "Pay with bKash"}
               </button>
               <button
                 type="button"
