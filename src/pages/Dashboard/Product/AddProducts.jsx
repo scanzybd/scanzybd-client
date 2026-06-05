@@ -245,7 +245,7 @@ const AddProducts = () => {
             name="price"
             value={form.price}
             onChange={handleChange}
-            placeholder="Price"
+            placeholder="Discount price"
             className="w-full p-3 border rounded mb-3"
           />
 

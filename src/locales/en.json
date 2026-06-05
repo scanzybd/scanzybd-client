@@ -105,11 +105,40 @@
       "reports": "Reports",
       "allQr": "QR Codes",
       "generateQr": "Generate QR",
+      "qrFrameSettings": "QR frame settings",
       "reviews": "Reviews",
       "messages": "Messages",
       "userManagement": "Users",
       "addUser": "Add user",
-      "addProvider": "Add provider"
+      "addProvider": "Add provider",
+      "settingsCategory": "Settings",
+      "settings": "Settings"
+    },
+    "settings": {
+      "title": "Dashboard settings",
+      "subtitle": "Your preferences for the admin panel.",
+      "subtitleAdmin": "Appearance, account, and shortcuts to workspace tools.",
+      "subtitleProvider": "Appearance, account, and payout details for settlements.",
+      "loading": "Loading…",
+      "preferences": "Preferences",
+      "mode": "Mode",
+      "modeLight": "Light",
+      "modeDark": "Dark",
+      "language": "Language",
+      "account": "Account",
+      "email": "Email",
+      "emailHint": "Email is tied to your account and cannot be edited here.",
+      "provider": {
+        "payoutTitle": "Payout details",
+        "payoutHint": "Used when you request settlement from admin. Save here so you do not re-enter each time.",
+        "method": "Preferred payment method",
+        "savePayout": "Save payout details",
+        "paymentSaved": "Payout details saved."
+      },
+      "admin": {
+        "workspaceTitle": "Workspace",
+        "workspaceHint": "Admin-only configuration pages."
+      }
     },
     "logout": {
       "confirmTitle": "Are you sure?",

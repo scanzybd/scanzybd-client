@@ -1,52 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { jsPDF } from "jspdf";
-import { Bike, Car, Download, Eye, FileDown, Loader2, QrCode } from "lucide-react";
+import { Bike, Box, Car, Download, Eye, FileDown, Loader2, QrCode } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import { useQrFrameTemplates } from "../../../hooks/useQrFrameTemplates";
+import { getFrameTemplate, resolvePageInset } from "../../../lib/qrFrameRuntime";
+import { companyNameSlug } from "../../../config/company";
 import {
-  companyNameSlug,
-} from "../../../config/company";
-import {
-  CARD_SIZE,
   computeSinglePageStickerOrigin,
   drawVectorStickerWithLabelBelow,
   getStickerSizeMm,
   PDF_PAGE_INSET_BATCH,
   placeVectorStickerOnPage,
-  QR_FRAME_URL,
 } from "./qrStickerPdf";
+import QrStickerPreview, { ringClassForTemplate } from "./QrStickerPreview";
 
-/** Visual layout only — labels come from i18n (`dashboard.qr.generate.types.*`). */
-const QR_TYPE_LAYOUT = {
-  bike: {
-    Icon: Bike,
-    ringClass: "ring-2 ring-emerald-600/90",
-  },
-  car: {
-    Icon: Car,
-    ringClass: "ring-2 ring-blue-700/90",
-  },
-};
-
-const QR_FRAME_ASSET = {
-  bike: QR_FRAME_URL.bike,
-  car: QR_FRAME_URL.car,
-};
-
-const QR_OVERLAY_LAYOUT = {
-  bike: { top: "50%", left: "26%", size: "35%" },
-  car: { top: "40%", left: "50%", size: "65%" },
-};
-
-const FRAME_ZOOM_LAYOUT = {
-  bike: 1,
-  car: 1,
-};
-
-const FRAME_OFFSET_LAYOUT = {
-  bike: { x: "0%", y: "0%" },
-  car: { x: "0%", y: "0%" },
-};
+const TYPE_ICONS = { bike: Bike, car: Car, box: Box };
 
 const PDF_LAYOUT_OPTIONS = [
   { value: "p", label: "Portrait" },
@@ -104,54 +73,14 @@ function getPdfFormat(pageSize, customWidthMm, customHeightMm) {
   return [width, height];
 }
 
-function PrintCardFrame({ item, qrType }) {
-  const frameSrc = QR_FRAME_ASSET[qrType] || QR_FRAME_ASSET.bike;
-  const overlay = QR_OVERLAY_LAYOUT[qrType] || QR_OVERLAY_LAYOUT.bike;
-  const frameZoom = FRAME_ZOOM_LAYOUT[qrType] || FRAME_ZOOM_LAYOUT.bike;
-  const frameOffset = FRAME_OFFSET_LAYOUT[qrType] || FRAME_OFFSET_LAYOUT.bike;
-
-  return (
-    <div className="relative h-full w-full overflow-hidden">
-      <img
-        src={frameSrc}
-        alt=""
-        className="absolute left-1/2 top-1/2 h-full w-full object-contain"
-        style={{
-          left: `calc(50% + ${frameOffset.x})`,
-          top: `calc(50% + ${frameOffset.y})`,
-          transform: `translate(-50%, -50%) scale(${frameZoom})`,
-          transformOrigin: "center center",
-        }}
-        draggable={false}
-      />
-      <img
-        src={item.qrCode}
-        alt=""
-        className="absolute aspect-square -translate-x-1/2 -translate-y-1/2 mix-blend-multiply"
-        style={{ top: overlay.top, left: overlay.left, width: overlay.size }}
-        crossOrigin="anonymous"
-        draggable={false}
-      />
-    </div>
-  );
-}
-
-function QrPrintSurface({ item, qrType }) {
-  const size = CARD_SIZE[qrType] || CARD_SIZE.bike;
-
-  return (
-    <div
-      className="overflow-hidden bg-white"
-      style={{ width: size.width, height: size.height }}
-    >
-      <PrintCardFrame item={item} qrType={qrType} />
-    </div>
-  );
+function QrPrintSurface({ item, template }) {
+  return <QrStickerPreview template={template} qrImageUrl={item.qrCode} />;
 }
 
 const QRGenerator = () => {
   const { t } = useTranslation();
   const axiosSecure = useAxiosSecure();
+  const { data: frameCatalog, isLoading: framesLoading } = useQrFrameTemplates();
 
   const [qrList, setQrList] = useState([]);
   const [selectedType, setSelectedType] = useState("bike");
@@ -165,7 +94,40 @@ const QRGenerator = () => {
   const [downloadingSingleIndex, setDownloadingSingleIndex] = useState(null);
   const [error, setError] = useState(null);
 
-  const typeKeys = Object.keys(QR_TYPE_LAYOUT);
+  const typeKeys = useMemo(
+    () => (frameCatalog?.list ?? []).map((x) => x.slug),
+    [frameCatalog]
+  );
+
+  useEffect(() => {
+    if (typeKeys.length === 0) return;
+    if (!typeKeys.includes(selectedType)) {
+      setSelectedType(typeKeys[0]);
+    }
+  }, [typeKeys, selectedType]);
+
+  const resolveTemplate = (slug) => getFrameTemplate(frameCatalog, slug);
+
+  const typeLabel = (slug) => {
+    const key = `dashboard.qr.generate.types.${slug}.label`;
+    const translated = t(key);
+    if (translated !== key) return translated;
+    return resolveTemplate(slug).label || slug;
+  };
+
+  const typeDescription = (slug) => {
+    const key = `dashboard.qr.generate.types.${slug}.description`;
+    const translated = t(key);
+    if (translated !== key) return translated;
+    return "";
+  };
+
+  const typeSub = (slug) => {
+    const key = `dashboard.qr.generate.types.${slug}.sub`;
+    const translated = t(key);
+    if (translated !== key) return translated;
+    return "";
+  };
 
   const generateQR = async () => {
     const raw = document.getElementById("qr-count")?.value;
@@ -200,7 +162,8 @@ const QRGenerator = () => {
       const item = qrList[index];
       const code = item?.code || index;
       const type = item?.qrType || selectedType;
-      const sticker = getStickerSizeMm(type);
+      const template = resolveTemplate(type);
+      const sticker = getStickerSizeMm(template);
       const pdfFormat = getPdfFormat(
         selectedPdfPageSize,
         customPdfWidthMm,
@@ -221,7 +184,7 @@ const QRGenerator = () => {
         pageW,
         pageH,
         sticker,
-        PDF_PAGE_INSET_BATCH
+        resolvePageInset(template)
       );
       const qrCodeLabel = code ? `QR - ${code}` : "QR";
       await drawVectorStickerWithLabelBelow(
@@ -230,7 +193,7 @@ const QRGenerator = () => {
         x,
         y,
         sticker,
-        type,
+        template,
         qrCodeLabel
       );
       pdf.save(`${companyNameSlug()}-QR-${type}-${code}-${pdfPageLabel}.pdf`);
@@ -273,16 +236,19 @@ const QRGenerator = () => {
       unit: "mm",
       format: pdfFormat,
     });
+    const batchTemplate = resolveTemplate(selectedType);
+    const batchInset = resolvePageInset(batchTemplate);
     let cursor = {
-      x: PDF_PAGE_INSET_BATCH.left,
-      y: PDF_PAGE_INSET_BATCH.top,
+      x: batchInset.left,
+      y: batchInset.top,
       rowHeight: 0,
     };
 
     for (let i = 0; i < qrList.length; i++) {
       const item = qrList[i];
       const type = item?.qrType || selectedType;
-      const sticker = getStickerSizeMm(type);
+      const template = resolveTemplate(type);
+      const sticker = getStickerSizeMm(template);
       const qrCodeLabel = item?.code ? `QR - ${item.code}` : "QR";
       cursor = await placeVectorStickerOnPage(
         pdf,
@@ -292,7 +258,7 @@ const QRGenerator = () => {
         pdfFormat,
         selectedPdfLayout,
         qrCodeLabel,
-        type,
+        template,
         PDF_PAGE_INSET_BATCH
       );
     }
@@ -351,11 +317,18 @@ const QRGenerator = () => {
         </p>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+            {framesLoading && typeKeys.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
+                Loading frame types…
+              </p>
+            ) : null}
             {typeKeys.map((key) => {
-              const cfg = QR_TYPE_LAYOUT[key];
-              const Icon = cfg.Icon;
+              const tmpl = resolveTemplate(key);
+              const Icon = TYPE_ICONS[tmpl.icon] || Box;
               const active = selectedType === key;
-              const sub = t(`dashboard.qr.generate.types.${key}.sub`);
+              const sub = typeSub(key);
+              const desc = typeDescription(key);
               return (
                 <button
                   key={key}
@@ -376,14 +349,12 @@ const QRGenerator = () => {
                   </div>
                   <div>
                     <p className="font-bold text-slate-900">
-                      {t(`dashboard.qr.generate.types.${key}.label`)}
+                      {typeLabel(key)}
                       {sub ? (
                         <span className="font-normal text-slate-500"> ({sub})</span>
                       ) : null}
                     </p>
-                    <p className="mt-1 text-xs text-slate-600">
-                      {t(`dashboard.qr.generate.types.${key}.description`)}
-                    </p>
+                    {desc ? <p className="mt-1 text-xs text-slate-600">{desc}</p> : null}
                   </div>
                 </button>
               );
@@ -544,14 +515,14 @@ const QRGenerator = () => {
           <div className="grid grid-cols-1 gap-8 justify-items-center sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {qrList.map((item, index) => {
               const currentType = item.qrType || selectedType;
-              const cfg = QR_TYPE_LAYOUT[currentType] || QR_TYPE_LAYOUT.bike;
+              const template = resolveTemplate(currentType);
               return (
                 <div
                   key={item._id || item.code || index}
                   className="flex w-full max-w-[320px] flex-col items-center gap-3"
                 >
-                  <div className={`origin-top shadow-2xl ${cfg.ringClass}`}>
-                    <QrPrintSurface item={item} qrType={currentType} />
+                  <div className={`origin-top shadow-2xl ${ringClassForTemplate(template)}`}>
+                    <QrPrintSurface item={item} template={template} />
                   </div>
                   <p className="w-full truncate text-center font-mono text-xs text-slate-600">
                     {item.code}

@@ -21,6 +21,7 @@ import {
     Building2,
     Mail,
     Star,
+    SlidersHorizontal,
 } from "lucide-react";
 import dashboardLogo from "../assets/logo/Logo Double Line.svg";
 import useAuth from "../hooks/useAuth";
@@ -189,6 +190,11 @@ const DashboardLayout = () => {
             items: [
                 { path: "/dashboard/all-qr", icon: Award, label: t("dashboard.menu.allQr") },
                 { path: "/dashboard/generate-qr", icon: FileText, label: t("dashboard.menu.generateQr") },
+                {
+                    path: "/dashboard/qr-frame-settings",
+                    icon: Settings,
+                    label: t("dashboard.menu.qrFrameSettings", "QR frame settings"),
+                },
             ],
         },
         {
@@ -204,6 +210,16 @@ const DashboardLayout = () => {
                 { path: "/dashboard/user-management", icon: UserCog, label: t("dashboard.menu.userManagement") },
                 { path: "/dashboard/add-user", icon: UserPlus, label: t("dashboard.menu.addUser") },
                 { path: "/dashboard/add-provider", icon: Building2, label: t("dashboard.menu.addProvider") },
+            ],
+        },
+        {
+            category: t("dashboard.menu.settingsCategory"),
+            items: [
+                {
+                    path: "/dashboard/settings",
+                    icon: SlidersHorizontal,
+                    label: t("dashboard.menu.settings"),
+                },
             ],
         },
     ];
@@ -253,6 +269,16 @@ const DashboardLayout = () => {
             category: t("dashboard.menu.users"),
             items: [
                 { path: "/dashboard/add-user", icon: UserPlus, label: t("dashboard.menu.addUser") },
+            ],
+        },
+        {
+            category: t("dashboard.menu.settingsCategory"),
+            items: [
+                {
+                    path: "/dashboard/settings",
+                    icon: SlidersHorizontal,
+                    label: t("dashboard.menu.settings"),
+                },
             ],
         },
     ];
@@ -381,22 +407,16 @@ const DashboardLayout = () => {
                                         </p>
                                         <p className="truncate text-xs text-slate-500 dark:text-slate-400">{userEmail}</p>
                                     </div>
-                                    <Link
-                                        to="/user/user-settings"
-                                        onClick={() => setProfileOpen(false)}
-                                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                                    >
-                                        <Settings size={16} />
-                                        {t("user.menu.settings")}
-                                    </Link>
-                                    <Link
-                                        to="/"
-                                        onClick={() => setProfileOpen(false)}
-                                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                                    >
-                                        <Home size={16} />
-                                        {t("dashboard.logout.home")}
-                                    </Link>
+                                    {userRole !== "provider" ? (
+                                        <Link
+                                            to="/"
+                                            onClick={() => setProfileOpen(false)}
+                                            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        >
+                                            <Home size={16} />
+                                            {t("dashboard.logout.home")}
+                                        </Link>
+                                    ) : null}
                                     <button
                                         type="button"
                                         onClick={async () => {

@@ -1,18 +1,25 @@
 import QRCode from "qrcode";
 import "svg2pdf.js";
+import { LEGACY_QR_FRAMES } from "../../../lib/qrFrameDefaults";
+import {
+  DEFAULT_PAGE_INSET,
+  normalizeFrameTemplate,
+  resolveFrameSvgUrl,
+  resolvePageInset,
+} from "../../../lib/qrFrameRuntime";
 
 /**
  * Shared sticker mm sizes and PDF helpers for GenerateQR + AllQR.
- * Sticker artwork uses STICKER_SIZE_MM; QR code label is drawn below the sticker box.
+ * Prefer dynamic templates from API; LEGACY_* used as fallback.
  */
 
-/** Public paths for frame SVGs (fetch at runtime). */
+/** @deprecated use API templates — kept for fallback */
 export const QR_FRAME_URL = {
   bike: "/qr-frame/bike.svg",
   car: "/qr-frame/car.svg",
 };
 
-/** QR overlay on frame — percentages match GenerateQR QR_OVERLAY_LAYOUT. */
+/** @deprecated */
 export const QR_OVERLAY_LAYOUT = {
   bike: { top: 50, left: 26, size: 28 },
   car: { top: 40, left: 50, size: 52 },
@@ -49,13 +56,7 @@ export const QR_TEXT_FONT_SIZE_PT = 8;
 export const QR_TEXT_BLOCK_MM = 0;
 
 /** Batch PDF: top/bottom/side insets; `gap` = horizontal space between stickers in a row. */
-export const PDF_PAGE_INSET_BATCH = {
-  top: 6,
-  bottom: 6,
-  left: 4,
-  right: 4,
-  gap: 2,
-};
+export const PDF_PAGE_INSET_BATCH = { ...DEFAULT_PAGE_INSET };
 
 /** All QR list PDF: same + horizontal gap between columns. */
 export const PDF_PAGE_INSET_ALL_QR = {
@@ -66,12 +67,19 @@ export const PDF_PAGE_INSET_ALL_QR = {
   gap: 4,
 };
 
-export function getStickerSizeMm(type) {
-  return STICKER_SIZE_MM[type] || STICKER_SIZE_MM.bike;
+export function getStickerSizeMm(typeOrTemplate) {
+  if (typeOrTemplate && typeof typeOrTemplate === "object" && typeOrTemplate.stickerMm) {
+    return typeOrTemplate.stickerMm;
+  }
+  return STICKER_SIZE_MM[typeOrTemplate] || STICKER_SIZE_MM.bike;
 }
 
-function cardAspectRatio(qrType) {
-  const c = CARD_SIZE[qrType] || CARD_SIZE.bike;
+function cardAspectRatio(typeOrTemplate) {
+  if (typeOrTemplate && typeof typeOrTemplate === "object" && typeOrTemplate.cardSize) {
+    const c = typeOrTemplate.cardSize;
+    return c.width / c.height;
+  }
+  const c = CARD_SIZE[typeOrTemplate] || CARD_SIZE.bike;
   return c.width / c.height;
 }
 
@@ -220,19 +228,20 @@ function parsePercent(value) {
   return parseFloat(String(value).replace("%", "")) || 0;
 }
 
-function overlayMetrics(stickerMm, qrType) {
-  const overlay = QR_OVERLAY_LAYOUT[qrType] || QR_OVERLAY_LAYOUT.bike;
+function overlayMetrics(stickerMm, template) {
+  const overlay = template?.overlay || QR_OVERLAY_LAYOUT.bike;
   const sizePct = parsePercent(overlay.size) / 100;
   const qrSizeMm = stickerMm.w * sizePct;
-  const centerX =
-    parsePercent(overlay.left) / 100;
-  const centerY =
-    parsePercent(overlay.top) / 100;
+  const centerX = parsePercent(overlay.left) / 100;
+  const centerY = parsePercent(overlay.top) / 100;
   return { qrSizeMm, centerX, centerY };
 }
 
-async function fetchFrameSvgTemplate(qrType) {
-  const url = QR_FRAME_URL[qrType] || QR_FRAME_URL.bike;
+async function fetchFrameSvgFromTemplate(template) {
+  const t = template?.slug
+    ? template
+    : normalizeFrameTemplate(LEGACY_QR_FRAMES[0]);
+  const url = resolveFrameSvgUrl(t);
   if (!frameSvgTemplateCache.has(url)) {
     const res = await fetch(url);
     if (!res.ok) {
@@ -269,13 +278,13 @@ export async function buildQrSvgElement(qrLink) {
 /**
  * Draw frame + QR overlay as vector graphics at (xMm, yMm) in mm.
  */
-export async function drawVectorSticker(pdf, item, xMm, yMm, stickerMm, qrType) {
+export async function drawVectorSticker(pdf, item, xMm, yMm, stickerMm, template) {
   const qrLink = item?.qrLink;
   if (!qrLink) {
     throw new Error("qrLink required for vector sticker");
   }
 
-  const frameSvg = await fetchFrameSvgTemplate(qrType);
+  const frameSvg = await fetchFrameSvgFromTemplate(template);
   await pdf.svg(frameSvg, {
     x: xMm,
     y: yMm,
@@ -283,7 +292,7 @@ export async function drawVectorSticker(pdf, item, xMm, yMm, stickerMm, qrType) 
     height: stickerMm.h,
   });
 
-  const { qrSizeMm, centerX, centerY } = overlayMetrics(stickerMm, qrType);
+  const { qrSizeMm, centerX, centerY } = overlayMetrics(stickerMm, template);
   const qrCenterXMm = xMm + stickerMm.w * centerX;
   const qrCenterYMm = yMm + stickerMm.h * centerY;
   const qrX = qrCenterXMm - qrSizeMm / 2;
@@ -304,10 +313,10 @@ export async function drawVectorStickerWithLabelBelow(
   xMm,
   yMm,
   stickerMm,
-  qrType,
+  template,
   codeText
 ) {
-  await drawVectorSticker(pdf, item, xMm, yMm, stickerMm, qrType);
+  await drawVectorSticker(pdf, item, xMm, yMm, stickerMm, template);
   // drawQrLabelBelowSticker(pdf, codeText, xMm, yMm, stickerMm);
 }
 
@@ -322,12 +331,13 @@ export async function placeVectorStickerOnPage(
   pageSize,
   pageLayout,
   codeText,
-  qrType,
+  template,
   pageLayoutMm = PDF_PAGE_INSET_BATCH
 ) {
+  const inset = template?.pageInset ? resolvePageInset(template) : pageLayoutMm;
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
-  const { top, bottom, left, right, gap } = normalizePageInsets(pageLayoutMm);
+  const { top, bottom, left, right, gap } = normalizePageInsets(inset);
 
   let { x, y, rowHeight } = cursor;
 
@@ -346,7 +356,7 @@ export async function placeVectorStickerOnPage(
     rowHeight = 0;
   }
 
-  await drawVectorSticker(pdf, item, x, y, stickerMm, qrType);
+  await drawVectorSticker(pdf, item, x, y, stickerMm, template);
   // drawQrLabelBelowSticker(pdf, codeText, x, y, stickerMm);
 
   rowHeight = Math.max(rowHeight, blockHeight);

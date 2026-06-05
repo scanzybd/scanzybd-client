@@ -19,41 +19,15 @@ import {
   Loader2,
 } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import { useQrFrameTemplates } from "../../../hooks/useQrFrameTemplates";
+import { getFrameTemplate, resolvePageInset } from "../../../lib/qrFrameRuntime";
 import SmartLoader from "../../../components/SmartLoader";
 import {
-  CARD_SIZE,
   getStickerSizeMm,
   PDF_PAGE_INSET_BATCH,
   placeVectorStickerOnPage,
-  QR_FRAME_URL,
 } from "./qrStickerPdf";
-
-const QR_FRAME_ASSET = QR_FRAME_URL;
-
-const QR_OVERLAY_LAYOUT = {
-  bike: { top: "50%", left: "26%", size: "35%" },
-  car: { top: "40%", left: "50%", size: "65%" },
-};
-
-const FRAME_ZOOM_LAYOUT = {
-  bike: 1,
-  car: 1,
-};
-
-const FRAME_OFFSET_LAYOUT = {
-  bike: { x: "0%", y: "0%" },
-  car: { x: "0%", y: "0%" },
-};
-
-const LIST_PREVIEW_SCALE = {
-  bike: 0.48,
-  car: 0.35,
-};
-
-const LIST_PREVIEW_HEIGHT = {
-  bike: 124,
-  car: 190,
-};
+import QrStickerPreview, { listPreviewStyle } from "./QrStickerPreview";
 
 const PAGE_FORMATS = [
   { label: "A0", value: "a0", w: 841, h: 1189 },
@@ -105,39 +79,11 @@ const PAGE_ORIENTATIONS = [
   { label: "Landscape", value: "l" },
 ];
 
-function StickerFramePreview({ qrCode, qrType }) {
-  const frameSrc = QR_FRAME_ASSET[qrType] || QR_FRAME_ASSET.bike;
-  const overlay = QR_OVERLAY_LAYOUT[qrType] || QR_OVERLAY_LAYOUT.bike;
-  const frameZoom = FRAME_ZOOM_LAYOUT[qrType] || FRAME_ZOOM_LAYOUT.bike;
-  const frameOffset = FRAME_OFFSET_LAYOUT[qrType] || FRAME_OFFSET_LAYOUT.bike;
-  const size = CARD_SIZE[qrType] || CARD_SIZE.bike;
-
+function StickerFramePreview({ qrCode, template }) {
+  const { scale, height } = listPreviewStyle(template);
   return (
-    <div
-      className="relative overflow-hidden bg-white"
-      style={{ width: size.width, height: size.height }}
-    >
-      <img
-        src={frameSrc}
-        alt=""
-        className="absolute left-1/2 top-1/2 h-full w-full object-contain"
-        style={{
-          left: `calc(50% + ${frameOffset.x})`,
-          top: `calc(50% + ${frameOffset.y})`,
-          transform: `translate(-50%, -50%) scale(${frameZoom})`,
-          transformOrigin: "center center",
-        }}
-        crossOrigin="anonymous"
-        draggable={false}
-      />
-      <img
-        src={qrCode}
-        alt=""
-        className="absolute aspect-square -translate-x-1/2 -translate-y-1/2 mix-blend-multiply"
-        style={{ top: overlay.top, left: overlay.left, width: overlay.size }}
-        crossOrigin="anonymous"
-        draggable={false}
-      />
+    <div style={{ transform: `scale(${scale})`, transformOrigin: "top center", height }}>
+      <QrStickerPreview template={template} qrImageUrl={qrCode} />
     </div>
   );
 }
@@ -175,6 +121,9 @@ function getPdfFormat(pageSize, customWidthMm, customHeightMm) {
 const AllQR = () => {
   const { t, i18n } = useTranslation();
   const axiosSecure = useAxiosSecure();
+  const { data: frameCatalog } = useQrFrameTemplates();
+  const resolveTemplate = (slug) => getFrameTemplate(frameCatalog, slug);
+  const frameTypeOptions = frameCatalog?.list ?? [];
 
   const yearOptions = useMemo(() => {
     const y = new Date().getFullYear();
@@ -241,16 +190,19 @@ const AllQR = () => {
       format: pdfFormat,
     });
 
+    const firstType = qrCodes[0]?.qrType || "bike";
+    const firstInset = resolvePageInset(resolveTemplate(firstType));
     let cursor = {
-      x: PDF_PAGE_INSET_BATCH.left,
-      y: PDF_PAGE_INSET_BATCH.top,
+      x: firstInset.left,
+      y: firstInset.top,
       rowHeight: 0,
     };
 
     for (let i = 0; i < qrCodes.length; i++) {
       const item = qrCodes[i];
       const type = item?.qrType || "bike";
-      const sticker = getStickerSizeMm(type);
+      const template = resolveTemplate(type);
+      const sticker = getStickerSizeMm(template);
       const qrCodeLabel = item?.code ? `QR - ${item.code}` : "QR";
       cursor = await placeVectorStickerOnPage(
         pdf,
@@ -260,7 +212,7 @@ const AllQR = () => {
         pdfFormat,
         pdfPageOrientation,
         qrCodeLabel,
-        type,
+        template,
         PDF_PAGE_INSET_BATCH
       );
     }
@@ -437,8 +389,11 @@ const AllQR = () => {
               required
             >
               <option value="">{t("dashboard.qr.all.allTypes")}</option>
-              <option value="bike">{t("dashboard.qr.all.bike")}</option>
-              <option value="car">{t("dashboard.qr.all.car")}</option>
+              {frameTypeOptions.map((tm) => (
+                <option key={tm.slug} value={tm.slug}>
+                  {tm.label || tm.slug}
+                </option>
+              ))}
             </select>
           </label>
 
@@ -666,8 +621,10 @@ const AllQR = () => {
           {qrCodes.map((qr) => {
             const isAssigned = qr.status === "assigned" || qr.isAssigned;
             const type = qr.qrType || "bike";
-            const previewScale = LIST_PREVIEW_SCALE[type] || LIST_PREVIEW_SCALE.bike;
-            const previewHeight = LIST_PREVIEW_HEIGHT[type] || LIST_PREVIEW_HEIGHT.bike;
+            const template = resolveTemplate(type);
+            const { height: previewHeight } = listPreviewStyle(template);
+            const typeBadge =
+              template.label || (type === "car" ? "Car" : type === "bike" ? "Bike" : type);
             return (
               <article
                 key={qr._id}
@@ -678,22 +635,17 @@ const AllQR = () => {
                     className="mx-auto flex w-full items-center justify-center overflow-hidden"
                     style={{ height: previewHeight }}
                   >
-                    <div
-                      className="origin-center"
-                      style={{ transform: `scale(${previewScale})` }}
-                    >
-                      <StickerFramePreview qrCode={qr.qrCode} qrType={type} />
-                    </div>
+                    <StickerFramePreview qrCode={qr.qrCode} template={template} />
                   </div>
                   <div className="absolute right-3 top-3 flex gap-1">
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                        type === "car"
+                        template.category === "car" || template.icon === "car"
                           ? "bg-slate-800 text-white"
                           : "bg-emerald-600 text-white"
                       }`}
                     >
-                      {type === "car" ? "Car" : "Bike"}
+                      {typeBadge}
                     </span>
                   </div>
                 </div>

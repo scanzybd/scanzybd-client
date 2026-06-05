@@ -1,10 +1,21 @@
 import React, { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { TrendingUp, TrendingDown, Wallet, Receipt, Plus, HandCoins } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+  Receipt,
+  Plus,
+  HandCoins,
+  FileSpreadsheet,
+  Loader2,
+  BarChart3,
+} from "lucide-react";
 import Swal from "sweetalert2";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import { formatOrderKind } from "../../../lib/orderDisplayFormat";
+import { downloadFinanceReportExcel } from "../../../lib/financeReportExcel";
 
 const fmt = (n) => `৳ ${Number(n || 0).toLocaleString()}`;
 
@@ -28,6 +39,41 @@ const FinanceManagement = () => {
 
   const [settlementFilter, setSettlementFilter] = useState("pending");
   const [selectedSettlementId, setSelectedSettlementId] = useState(null);
+
+  const currentYear = new Date().getFullYear();
+  const [reportYear, setReportYear] = useState(String(currentYear));
+  const [reportMonth, setReportMonth] = useState(String(new Date().getMonth() + 1));
+  const [reportScope, setReportScope] = useState("monthly");
+  const [downloadingReport, setDownloadingReport] = useState(false);
+
+  const reportYearOptions = useMemo(() => {
+    const out = [];
+    for (let y = currentYear + 1; y >= currentYear - 7; y -= 1) {
+      out.push(y);
+    }
+    return out;
+  }, [currentYear]);
+
+  const {
+    data: financeReport,
+    isLoading: loadingReport,
+    isError: reportError,
+    refetch: refetchReport,
+  } = useQuery({
+    queryKey: ["finance-report", reportYear, reportScope, reportMonth],
+    queryFn: async () => {
+      const params = new URLSearchParams({ year: reportYear });
+      if (reportScope === "monthly" && reportMonth) {
+        params.set("month", reportMonth);
+      }
+      const res = await axiosSecure.get(`/api/finance/admin/reports?${params}`);
+      return res.data?.report;
+    },
+    enabled: Boolean(reportYear),
+    retry: 1,
+  });
+
+  const reportSummary = financeReport?.summary;
 
   const {
     data: paidOrders = [],
@@ -188,6 +234,33 @@ const FinanceManagement = () => {
     expenseMutation.mutate();
   };
 
+  const handleDownloadReport = async () => {
+    setDownloadingReport(true);
+    try {
+      let report = financeReport;
+      if (!report) {
+        const params = new URLSearchParams({ year: reportYear });
+        if (reportScope === "monthly" && reportMonth) {
+          params.set("month", reportMonth);
+        }
+        const res = await axiosSecure.get(`/api/finance/admin/reports?${params}`);
+        report = res.data?.report;
+      }
+      if (!report) {
+        throw new Error("No report data");
+      }
+      downloadFinanceReportExcel(report);
+    } catch (err) {
+      Swal.fire(
+        "Export failed",
+        err?.response?.data?.message || err.message || "Could not export Excel",
+        "error"
+      );
+    } finally {
+      setDownloadingReport(false);
+    }
+  };
+
   const detailRequest = settlementDetail?.request;
   const detailOrders = settlementDetail?.orders || [];
   const paymentSnap = detailRequest?.paymentSnapshot;
@@ -221,6 +294,185 @@ const FinanceManagement = () => {
             Refresh the page or restart the server if finance API was recently added.
           </div>
         )}
+
+        <section className="mt-8 rounded-2xl border border-violet-100 bg-white p-5 shadow-sm md:p-6">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+            <BarChart3 className="h-5 w-5 text-violet-600" />
+            Monthly &amp; yearly reports
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Paid orders (income), expenses, and accepted settlements for the selected period.
+            Download as Excel (.xlsx).
+          </p>
+
+          <div className="mt-4 flex flex-wrap items-end gap-3">
+            <label className="form-control w-28">
+              <span className="label-text text-xs">Year</span>
+              <select
+                className="select select-bordered select-sm rounded-xl"
+                value={reportYear}
+                onChange={(e) => setReportYear(e.target.value)}
+              >
+                {reportYearOptions.map((y) => (
+                  <option key={y} value={String(y)}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="form-control w-36">
+              <span className="label-text text-xs">Report</span>
+              <select
+                className="select select-bordered select-sm rounded-xl"
+                value={reportScope}
+                onChange={(e) => setReportScope(e.target.value)}
+              >
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </label>
+
+            {reportScope === "monthly" ? (
+              <label className="form-control w-36">
+                <span className="label-text text-xs">Month</span>
+                <select
+                  className="select select-bordered select-sm rounded-xl"
+                  value={reportMonth}
+                  onChange={(e) => setReportMonth(e.target.value)}
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                    <option key={m} value={String(m)}>
+                      {new Date(2000, m - 1, 1).toLocaleString("en", { month: "long" })}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+
+            <button
+              type="button"
+              className="btn btn-outline btn-sm rounded-xl"
+              disabled={loadingReport}
+              onClick={() => refetchReport()}
+            >
+              {loadingReport ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-primary btn-sm gap-2 rounded-xl"
+              disabled={downloadingReport || loadingReport}
+              onClick={handleDownloadReport}
+            >
+              {downloadingReport ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="h-4 w-4" />
+              )}
+              Download Excel
+            </button>
+          </div>
+
+          {reportError ? (
+            <p className="mt-4 text-sm text-rose-600">Could not load report for this period.</p>
+          ) : null}
+
+          {loadingReport ? (
+            <div className="mt-6 flex items-center gap-2 text-sm text-slate-500">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading report…
+            </div>
+          ) : financeReport ? (
+            <>
+              <p className="mt-4 text-sm font-medium text-violet-800">
+                {financeReport.period?.label}
+                <span className="ml-2 font-normal text-slate-500">
+                  ({financeReport.period?.type === "yearly" ? "full year" : "monthly"})
+                </span>
+              </p>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
+                  <p className="text-xs font-semibold uppercase text-emerald-800">Income</p>
+                  <p className="mt-1 text-xl font-bold text-slate-900">
+                    {fmt(reportSummary?.totalIncome)}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {reportSummary?.orderCount ?? 0} paid · {reportSummary?.allOrderCount ?? 0} total
+                  </p>
+                </div>
+                <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-4">
+                  <p className="text-xs font-semibold uppercase text-rose-800">Expenses</p>
+                  <p className="mt-1 text-xl font-bold text-slate-900">
+                    {fmt(reportSummary?.totalExpenses)}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {reportSummary?.expenseCount ?? 0} entries
+                  </p>
+                </div>
+                <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4">
+                  <p className="text-xs font-semibold uppercase text-amber-900">Settlements</p>
+                  <p className="mt-1 text-xl font-bold text-slate-900">
+                    {fmt(reportSummary?.settlementsPaid)}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {reportSummary?.settlementCount ?? 0} accepted
+                  </p>
+                </div>
+                <div className="rounded-xl border border-violet-100 bg-violet-50/50 p-4">
+                  <p className="text-xs font-semibold uppercase text-violet-800">Net</p>
+                  <p
+                    className={`mt-1 text-xl font-bold ${
+                      (reportSummary?.netProfit ?? 0) >= 0
+                        ? "text-emerald-700"
+                        : "text-rose-700"
+                    }`}
+                  >
+                    {fmt(reportSummary?.netProfit)}
+                  </p>
+                  <p className="text-xs text-slate-500">Income − expenses</p>
+                </div>
+              </div>
+
+              {Array.isArray(financeReport.monthlyBreakdown) &&
+              financeReport.monthlyBreakdown.length > 0 ? (
+                <div className="mt-6 overflow-hidden rounded-xl border border-slate-200">
+                  <div className="max-h-64 overflow-auto">
+                    <table className="table table-sm w-full">
+                      <thead className="sticky top-0 bg-slate-50">
+                        <tr className="text-xs uppercase text-slate-500">
+                          <th>Month</th>
+                          <th>Income</th>
+                          <th>Expenses</th>
+                          <th>Settlements</th>
+                          <th>Net</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {financeReport.monthlyBreakdown.map((row) => (
+                          <tr key={row.month}>
+                            <td className="font-medium">{row.label}</td>
+                            <td>{fmt(row.totalIncome)}</td>
+                            <td>{fmt(row.totalExpenses)}</td>
+                            <td>{fmt(row.settlementsPaid)}</td>
+                            <td
+                              className={
+                                row.netProfit >= 0 ? "text-emerald-700" : "text-rose-700"
+                              }
+                            >
+                              {fmt(row.netProfit)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </section>
 
         <section className="mt-8">
           <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">

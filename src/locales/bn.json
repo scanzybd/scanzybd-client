@@ -105,11 +105,40 @@
       "reports": "রিপোর্ট",
       "allQr": "QR কোড",
       "generateQr": "QR তৈরি",
+      "qrFrameSettings": "QR ফ্রেম সেটিংস",
       "reviews": "রিভিউ",
       "messages": "মেসেজ",
       "userManagement": "ইউজার",
       "addUser": "ইউজার যোগ করুন",
-      "addProvider": "প্রোভাইডার যোগ করুন"
+      "addProvider": "প্রোভাইডার যোগ করুন",
+      "settingsCategory": "সেটিংস",
+      "settings": "সেটিংস"
+    },
+    "settings": {
+      "title": "ড্যাশবোর্ড সেটিংস",
+      "subtitle": "অ্যাডমিন প্যানেলের পছন্দসমূহ।",
+      "subtitleAdmin": "থিম, অ্যাকাউন্ট এবং ওয়ার্কস্পেস টুলের লিংক।",
+      "subtitleProvider": "থিম, অ্যাকাউন্ট এবং সেটেলমেন্টের payout বিবরণ।",
+      "loading": "লোড হচ্ছে…",
+      "preferences": "পছন্দ",
+      "mode": "মোড",
+      "modeLight": "লাইট",
+      "modeDark": "ডার্ক",
+      "language": "ভাষা",
+      "account": "অ্যাকাউন্ট",
+      "email": "ইমেইল",
+      "emailHint": "ইমেইল অ্যাকাউন্টের সাথে যুক্ত; এখানে পরিবর্তন করা যায় না।",
+      "provider": {
+        "payoutTitle": "Payout বিবরণ",
+        "payoutHint": "অ্যাডমিনের কাছে সেটেলমেন্ট চাইলে ব্যবহার হয়। এখানে সেভ করলে বারবার লিখতে হবে না।",
+        "method": "পেমেন্ট পদ্ধতি",
+        "savePayout": "Payout সেভ করুন",
+        "paymentSaved": "Payout বিবরণ সেভ হয়েছে।"
+      },
+      "admin": {
+        "workspaceTitle": "ওয়ার্কস্পেস",
+        "workspaceHint": "শুধু অ্যাডমিনের কনফিগারেশন পেজ।"
+      }
     },
     "logout": {
       "confirmTitle": "আপনি কি নিশ্চিত?",

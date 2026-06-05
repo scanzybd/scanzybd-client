@@ -47,6 +47,8 @@ const AllProducts = lazyPage(chunks.loadAllProducts);
 const AddProductsLazy = lazyImport(chunks.loadAddProducts);
 const AllQR = lazyPage(chunks.loadAllQR);
 const GenerateQR = lazyPage(chunks.loadGenerateQR);
+const QrFrameSettings = lazyPage(chunks.loadQrFrameSettings);
+const DashboardSettings = lazyPage(chunks.loadDashboardSettings);
 const FinanceManagement = lazyPage(chunks.loadFinanceManagement);
 const PaymentGatewaySettings = lazyPage(chunks.loadPaymentGatewaySettings);
 const ProviderFinance = lazyPage(chunks.loadProviderFinance);
@@ -228,6 +230,10 @@ const router = createBrowserRouter([
         Component: DashboardHome,
       },
       {
+        path: "settings",
+        Component: DashboardSettings,
+      },
+      {
         path: "all-products",
         Component: AllProducts,
       },
@@ -344,6 +350,14 @@ const router = createBrowserRouter([
       {
         path: "generate-qr",
         Component: GenerateQR,
+      },
+      {
+        path: "qr-frame-settings",
+        element: (
+          <AdminRoute>
+            <QrFrameSettings />
+          </AdminRoute>
+        ),
       },
       {
         path: "reviews",
