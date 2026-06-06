@@ -1,8 +1,9 @@
-import React from 'react';
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, ArrowRight } from 'lucide-react';
-import { FaTiktok } from "react-icons/fa";
+import React, { useMemo } from 'react';
+import { Mail, MapPin, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
+import { usePublicSocialMedia } from '../../../../hooks/useSocialMediaSettings';
+import { buildFooterSocialLinks } from '../../../../lib/socialMediaConfig';
 import footerLogo from "../../../../assets/logo/Logo Double Line.svg";
 import {
   BRAND_FULL,
@@ -13,7 +14,13 @@ import {
 
 const Footer = () => {
   const { t } = useTranslation();
+  const { data: socialData } = usePublicSocialMedia();
   const currentYear = new Date().getFullYear();
+
+  const socialLinks = useMemo(
+    () => buildFooterSocialLinks(socialData),
+    [socialData]
+  );
 
   const quickLinks = [
     { label: 'About Us', to: '/about' },
@@ -37,11 +44,6 @@ const Footer = () => {
     // { label: 'Documentation', to: '/documentation' },
     { label: 'Community', to: '/community' },
   ];
-
-  const socialLinks = [
-    { icon: Facebook, label: 'Facebook', href: 'https://www.facebook.com/people/Scanzybd/61589104403859/?rdid=coosJR9pQ9TYxmvu&share_url=https%3A%2F%2Fok.com%2Fshare%2F18Wm7KVz1i%2F' },
-    { icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/scanzybdofficial?igsh=MWU5YjQ4M29lZTBpeQ%3D%3D' },
-    { icon: FaTiktok, label: 'TikTok', href: 'https://tiktok.com' },  ];
 
   return (
     <footer className="mt-16 w-full border-t-2 border-slate-200 bg-linear-to-b from-slate-100 via-white to-slate-100 pt-16 text-slate-800 transition-colors dark:border-slate-700 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 dark:text-slate-100 sm:mt-20 sm:pt-20">
@@ -96,12 +98,14 @@ const Footer = () => {
               
               {/* Social Links */}
               <div className="flex gap-4">
-                {socialLinks.map((social, idx) => {
-                  const Icon = social.icon;
+                {socialLinks.map((social) => {
+                  const Icon = social.Icon;
                   return (
                     <a
-                      key={idx}
+                      key={social.id}
                       href={social.href}
+                      target="_blank"
+                      rel="noreferrer noopener"
                       aria-label={social.label}
                       className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 transition hover:scale-110 hover:bg-amber-500 dark:bg-slate-700"
                     >
@@ -192,9 +196,19 @@ const Footer = () => {
           {/* Bottom Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             <div className="text-center text-sm text-slate-600 dark:text-slate-400 md:text-left">
-              <p>© {currentYear} {BRAND_FULL}. {t("footer.copyright")}.</p>
-              <p className="mt-2">
-                {COMPANY_LEGAL_NAME} | {t("footer.extraNote")}
+              <p>
+                © {currentYear} {BRAND_FULL}. {t("footer.copyright")}. | {COMPANY_LEGAL_NAME}
+              </p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">
+                {t("footer.extraNote")} · {t("footer.developedBy")}{" "}
+                <a
+                  href="https://abdullah-protfolio-client.vercel.app/"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="font-medium text-amber-600 transition hover:underline dark:text-amber-400"
+                >
+                  {t("footer.developerName")}
+                </a>
               </p>
             </div>
 

@@ -137,7 +137,12 @@
       },
       "admin": {
         "workspaceTitle": "Workspace",
-        "workspaceHint": "Admin-only configuration pages."
+        "workspaceHint": "Admin-only configuration pages.",
+        "socialTitle": "Footer social media",
+        "socialHint": "Links shown in the website footer. Disable or leave URL empty to hide an icon.",
+        "socialShowInFooter": "Show in footer",
+        "socialSave": "Save social links",
+        "socialSaved": "Footer social links updated."
       }
     },
     "logout": {
@@ -362,7 +367,9 @@
     "support": "Support",
     "contact": "Get in Touch",
     "copyright": "All rights reserved",
-    "extraNote": "Smart Safety for Every Vehicle"
+    "extraNote": "Smart Safety for Every Vehicle",
+    "developedBy": "Developed by",
+    "developerName": "Abdullah"
   },
   "policies": {
     "termsTitle": "Terms of Use",
