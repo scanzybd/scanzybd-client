@@ -13,8 +13,8 @@ const SocialLogin = () => {
             const destination =
                 role === "admin" || role === "provider" ? "/dashboard" : "/";
             navigate(destination, { replace: true });
-        } catch (error) {
-            console.log(error);
+        } catch {
+            /* sign-in failed — user stays on page */
         }
     };
 

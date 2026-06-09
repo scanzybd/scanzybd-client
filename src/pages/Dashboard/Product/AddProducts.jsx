@@ -46,6 +46,7 @@ const AddProducts = () => {
     rating: "",
     reviews: "",
     inStock: true,
+    isActive: true,
 
     features: [""],
 
@@ -184,9 +185,8 @@ const AddProducts = () => {
         createdAt: new Date(),
       };
 
-      const res = await axiosSecure.post("/api/products", productData);
+      await axiosSecure.post("/api/products", productData);
 
-      console.log(res.data);
       alert("Product Added Successfully 🔥");
       setUploadError(null);
 
@@ -203,6 +203,7 @@ const AddProducts = () => {
         rating: "",
         reviews: "",
         inStock: true,
+        isActive: true,
         features: [""],
         specifications: {
           material: "",
@@ -212,8 +213,7 @@ const AddProducts = () => {
           waterproof: "",
         },
       });
-    } catch (err) {
-      console.log(err);
+    } catch {
       alert("Failed to add product");
     }
   };

@@ -56,8 +56,8 @@ const AssignVehiclebyId = () => {
           }
           setVehicles(available);
         }
-      } catch (err) {
-        console.log(err);
+      } catch {
+        /* load failed */
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -88,7 +88,6 @@ const AssignVehiclebyId = () => {
         replace: true,
       });
     } catch (err) {
-      console.log(err);
       alert(err?.response?.data?.message || "Assignment failed.");
     } finally {
       setAssigning(false);

@@ -65,8 +65,7 @@ const AddPackage = () => {
         highlight: false,
         category: "starter",
       });
-    } catch (error) {
-      console.log(error);
+    } catch {
       alert("Failed to add package");
     }
   };

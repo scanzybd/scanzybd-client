@@ -46,8 +46,8 @@ const UserAddVehiclePage = () => {
       try {
         const res = await axiosSecure.get("/api/auth/me");
         setMongoUser(res.data);
-      } catch (err) {
-        console.log(err);
+      } catch {
+        /* profile load failed */
       } finally {
         setRoleLoading(false);
       }
@@ -89,7 +89,6 @@ const UserAddVehiclePage = () => {
       setForm(createEmptyVehicleForm());
       setScannedQR(null);
     } catch (err) {
-      console.log(err);
       alert(err?.response?.data?.message || "Failed to add vehicle.");
     }
   };

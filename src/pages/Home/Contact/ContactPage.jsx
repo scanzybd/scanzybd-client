@@ -41,8 +41,7 @@ const ContactPage = () => {
         email: "",
         message: "",
       });
-    } catch (error) {
-      console.log(error);
+    } catch {
       alert(t("contactPage.error"));
     }
   };

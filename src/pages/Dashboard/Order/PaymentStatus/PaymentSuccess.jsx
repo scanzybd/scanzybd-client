@@ -33,8 +33,7 @@ const PaymentSuccess = () => {
         } else {
           setStatus("failed");
         }
-      } catch (error) {
-        console.log(error);
+      } catch {
         setStatus("failed");
       } finally {
         setLoading(false);

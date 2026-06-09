@@ -91,6 +91,7 @@
       "addVehicle": "Add Vehicle",
       "createOrder": "Create Order",
       "ordersList": "Orders",
+      "unpaidOrders": "Unpaid orders",
       "assign": "Assign",
       "scanAssign": "Scan & Assign",
       "productList": "Product List",

@@ -101,7 +101,6 @@ const AssignVehiclePage = () => {
         alert(count >= 2 ? "Both QR slots filled for this vehicle." : "Assigned successfully.");
       }
     } catch (err) {
-      console.log(err);
       setSelectedVehicle(vehicleSnapshot);
       await queryClient.invalidateQueries({ queryKey: ["dashboard", "vehicles"] });
       alert(err?.response?.data?.message || "Assign failed. Try again.");

@@ -36,6 +36,7 @@ const emptyForm = () => ({
   rating: "",
   reviews: "",
   inStock: true,
+  isActive: true,
   features: [""],
   specifications: {
     material: "",
@@ -61,6 +62,7 @@ function productToForm(p) {
     rating: p.rating != null ? String(p.rating) : "",
     reviews: p.reviews != null ? String(p.reviews) : "",
     inStock: Boolean(p.inStock),
+    isActive: p.isActive !== false,
     features:
       Array.isArray(p.features) && p.features.length > 0 ? p.features : [""],
     specifications: {
@@ -174,6 +176,7 @@ const EditProductModal = ({ product, onClose, onSaved }) => {
         rating: Number(form.rating) || 0,
         reviews: Number(form.reviews) || 0,
         inStock: form.inStock,
+        isActive: form.isActive,
         features,
         specifications: {
           material: form.specifications.material?.trim() || "",
@@ -323,16 +326,28 @@ const EditProductModal = ({ product, onClose, onSaved }) => {
             />
           </div>
 
-          <label className="flex cursor-pointer items-center gap-2">
-            <input
-              name="inStock"
-              type="checkbox"
-              checked={form.inStock}
-              onChange={handleChange}
-              className="checkbox checkbox-sm"
-            />
-            <span className="text-sm">In stock</span>
-          </label>
+          <div className="flex flex-wrap gap-4">
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                name="isActive"
+                type="checkbox"
+                checked={form.isActive}
+                onChange={handleChange}
+                className="checkbox checkbox-sm checkbox-success"
+              />
+              <span className="text-sm font-medium">Active (visible to customers)</span>
+            </label>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                name="inStock"
+                type="checkbox"
+                checked={form.inStock}
+                onChange={handleChange}
+                className="checkbox checkbox-sm"
+              />
+              <span className="text-sm">In stock</span>
+            </label>
+          </div>
 
           <textarea
             name="description"

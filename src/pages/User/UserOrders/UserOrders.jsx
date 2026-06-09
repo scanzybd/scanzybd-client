@@ -1,10 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import Swal from "sweetalert2";
 import {
   ChevronDown,
   ChevronUp,
-  CreditCard,
   MapPin,
   Package,
   ShoppingBag,
@@ -12,8 +10,6 @@ import {
 } from "lucide-react";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
-import usePaymentGateways from "../../../hooks/usePaymentGateways";
-import PaymentGatewayPicker from "../../../components/payment/PaymentGatewayPicker";
 import SmartLoader from "../../../components/SmartLoader";
 import InvoiceDownloadButton from "../../../components/InvoiceDownloadButton";
 import InfoRow from "../../../components/order/InfoRow";
@@ -51,17 +47,7 @@ function orderSummaryLine(order) {
   return parts.length ? parts.join(" · ") : "No line items";
 }
 
-function OrderDetailsPanel({
-  order,
-  customer,
-  gateways,
-  checkoutOrderId,
-  onStartPay,
-  onConfirmPay,
-  selectedGateway,
-  onGatewayChange,
-  paying,
-}) {
+function OrderDetailsPanel({ order, customer }) {
   const ship = order.shippingAddress || {};
   const items = order.items || [];
   const tags = order.tagAssignments || [];
@@ -121,10 +107,10 @@ function OrderDetailsPanel({
                         </div>
                       </td>
                       <td className="px-3 py-3 text-center tabular-nums">{qty}</td>
-                      <td className="px-3 py-3 text-right tabular-nums">
+                      <td className="whitespace-nowrap px-3 py-3 text-right tabular-nums">
                         {formatBdt(price)}
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                      <td className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                         {formatBdt(lineTotal)}
                       </td>
                     </tr>
@@ -139,7 +125,7 @@ function OrderDetailsPanel({
                   >
                     Order total
                   </td>
-                  <td className="px-4 py-3 text-right text-base font-bold text-emerald-700 dark:text-emerald-400">
+                  <td className="whitespace-nowrap px-4 py-3 text-right text-base font-bold text-emerald-700 dark:text-emerald-400">
                     {formatBdt(order.totalAmount)}
                   </td>
                 </tr>
@@ -190,62 +176,11 @@ function OrderDetailsPanel({
       )}
 
       <div className="flex flex-col gap-3 border-t border-slate-200/80 pt-4 dark:border-slate-700">
-        {order.paymentStatus === "paid" && (
-          <div className="flex flex-wrap items-center gap-3">
-            <InvoiceDownloadButton
-              order={order}
-              customer={customer}
-              className="btn btn-outline btn-sm gap-1.5 rounded-xl border-emerald-300 text-emerald-800 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
-            />
-          </div>
-        )}
-        {order.paymentStatus === "unpaid" && (
-          <>
-            {checkoutOrderId === order._id ? (
-              <div className="space-y-3 rounded-xl border border-amber-200/80 bg-amber-50/50 p-4 dark:border-amber-900/50 dark:bg-amber-950/20">
-                {gateways?.bkash && gateways?.sslcommerz ? (
-                  <PaymentGatewayPicker
-                    gateways={gateways}
-                    value={selectedGateway}
-                    onChange={onGatewayChange}
-                  />
-                ) : null}
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-sm gap-1.5 rounded-xl"
-                    disabled={paying || !gateways?.hasOnlinePayment}
-                    onClick={() => onConfirmPay(order._id)}
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    {paying
-                      ? "Opening payment…"
-                      : gateways?.bkash && gateways?.sslcommerz
-                        ? "Continue to payment"
-                        : "Pay online"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm rounded-xl"
-                    disabled={paying}
-                    onClick={() => onStartPay(null)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="btn btn-primary btn-sm w-fit gap-1.5 rounded-xl"
-                onClick={() => onStartPay(order._id)}
-              >
-                <CreditCard className="h-4 w-4" />
-                Pay online
-              </button>
-            )}
-          </>
-        )}
+        <InvoiceDownloadButton
+          order={order}
+          customer={customer}
+          className="btn btn-outline btn-sm w-fit gap-1.5 rounded-xl border-emerald-300 text-emerald-800 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+        />
       </div>
     </div>
   );
@@ -254,19 +189,8 @@ function OrderDetailsPanel({
 const UserOrders = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
-  const { data: gateways } = usePaymentGateways();
-  const [selectedGateway, setSelectedGateway] = useState("bkash");
-  const [checkoutOrderId, setCheckoutOrderId] = useState(null);
-  const [paying, setPaying] = useState(false);
   const [expanded, setExpanded] = useState({});
   const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    if (!gateways) return;
-    if (gateways.bkash && !gateways.sslcommerz) setSelectedGateway("bkash");
-    else if (!gateways.bkash && gateways.sslcommerz) setSelectedGateway("sslcommerz");
-    else setSelectedGateway(gateways.defaultGateway || "bkash");
-  }, [gateways]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["my-orders", page],
@@ -274,7 +198,8 @@ const UserOrders = () => {
       const res = await axiosSecure.get(`/api/order/my-orders?page=${page}&limit=10`);
       const body = res.data;
       if (Array.isArray(body)) {
-        return { orders: body, total: body.length, page: 1 };
+        const paid = body.filter((o) => o.paymentStatus === "paid");
+        return { orders: paid, total: paid.length, page: 1 };
       }
       return body;
     },
@@ -291,37 +216,6 @@ const UserOrders = () => {
 
   const toggleExpanded = (id) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const handleCheckout = async (orderId) => {
-    setPaying(true);
-    try {
-      if (!gateways?.hasOnlinePayment) {
-        Swal.fire("Unavailable", "Online payment is disabled.", "warning");
-        return;
-      }
-      const gateway =
-        gateways.bkash && !gateways.sslcommerz
-          ? "bkash"
-          : gateways.sslcommerz && !gateways.bkash
-            ? "sslcommerz"
-            : selectedGateway;
-
-      const res = await axiosSecure.post("/api/payment/create", {
-        orderId,
-        gateway,
-      });
-      const url = res.data?.redirectURL || res.data?.bkashURL;
-      if (url) {
-        window.location.assign(url);
-      } else {
-        Swal.fire("Error", "Payment failed", "error");
-      }
-    } catch (err) {
-      Swal.fire("Error", err?.response?.data?.message || "Payment failed", "error");
-    } finally {
-      setPaying(false);
-    }
   };
 
   if (isLoading) {
@@ -342,10 +236,10 @@ const UserOrders = () => {
         <div className={`mx-auto max-w-xl p-10 ${cardSurface}`}>
           <Package className="mx-auto mb-4 h-12 w-12 text-slate-300" />
           <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            No orders yet
+            No paid orders yet
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            Orders you place will appear here.
+            Orders appear here after payment is successful.
           </p>
         </div>
       </div>
@@ -359,7 +253,7 @@ const UserOrders = () => {
           My orders
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          {total} order{total !== 1 ? "s" : ""} — tap a card to view full details
+          {total} paid order{total !== 1 ? "s" : ""} — tap a card to view full details
         </p>
       </header>
 
@@ -392,7 +286,7 @@ const UserOrders = () => {
                   </div>
                 </div>
 
-                <p className="shrink-0 text-xl font-bold tabular-nums text-slate-900 dark:text-slate-50">
+                <p className="shrink-0 whitespace-nowrap text-xl font-bold tabular-nums text-slate-900 dark:text-slate-50">
                   {formatBdt(order.totalAmount)}
                 </p>
               </div>
@@ -417,31 +311,7 @@ const UserOrders = () => {
               </button>
 
               {open && (
-                <OrderDetailsPanel
-                  order={order}
-                  customer={customer}
-                  gateways={gateways}
-                  checkoutOrderId={checkoutOrderId}
-                  onStartPay={(id) => {
-                    if (id == null) {
-                      setCheckoutOrderId(null);
-                      return;
-                    }
-                    if (!gateways?.hasOnlinePayment) {
-                      Swal.fire("Unavailable", "Online payment is disabled.", "warning");
-                      return;
-                    }
-                    if (gateways.bkash && gateways.sslcommerz) {
-                      setCheckoutOrderId(id);
-                      return;
-                    }
-                    handleCheckout(id);
-                  }}
-                  onConfirmPay={handleCheckout}
-                  selectedGateway={selectedGateway}
-                  onGatewayChange={setSelectedGateway}
-                  paying={paying}
-                />
+                <OrderDetailsPanel order={order} customer={customer} />
               )}
             </article>
           );

@@ -67,6 +67,7 @@ const AddProviderPageLazy = lazyImport(chunks.loadAddProviderPage);
 const ReviewManagement = lazyPage(chunks.loadReviewManagement);
 const ContactInbox = lazyPage(chunks.loadContactInbox);
 const StaffOrdersPage = lazyPage(chunks.loadStaffOrders);
+const UnpaidOrdersPage = lazyPage(chunks.loadUnpaidOrders);
 const ConfirmedOrder = lazyPage(chunks.loadConfirmedOrder);
 const OrderDetailPage = lazyPage(chunks.loadOrderDetail);
 
@@ -264,6 +265,16 @@ const router = createBrowserRouter([
       {
         path: "orders",
         Component: StaffOrdersPage,
+      },
+      {
+        path: "unpaid-orders",
+        element: (
+          <AdminRoute>
+            <Suspense fallback={<RouteFallback />}>
+              <UnpaidOrdersPage />
+            </Suspense>
+          </AdminRoute>
+        ),
       },
       {
         path: "orders/:orderId",

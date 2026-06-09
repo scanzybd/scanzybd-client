@@ -44,7 +44,7 @@ const emptyVehicleForm = () => ({
   ownerPhone: "",
   ownerContactVisible: true,
   emergencyPhone: "",
-  emergencyContactVisible: false,
+  emergencyContactVisible: true,
   driverContactVisible: false,
   addDriver: false,
   driverName: "",
@@ -64,6 +64,25 @@ function RequiredStar() {
       *
     </span>
   );
+}
+
+function phoneDigitsOnly(value) {
+  return String(value || "").replace(/\D/g, "").slice(0, 11);
+}
+
+function digitsOnly(value, maxLen = 20) {
+  return String(value || "").replace(/\D/g, "").slice(0, maxLen);
+}
+
+/** Registration number: auto `XX-` after first 2 digits (e.g. 12-3322) */
+function formatRegNumberInput(value) {
+  const digits = digitsOnly(value, 8);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+}
+
+function regNumberDigits(value) {
+  return String(value || "").replace(/\D/g, "");
 }
 
 const Checkout = () => {
@@ -274,11 +293,6 @@ const Checkout = () => {
       const v = vehicles[i];
       const isCycleTag = isCycleTagType(slots[i]?.type, tagTypes);
 
-      if (!v.model?.trim()) {
-        alert(`Tag ${i + 1}: add manufacture year.`);
-        return false;
-      }
-
       if (isCycleTag) {
         if (!v.plate?.trim()) {
           alert(`Tag ${i + 1}: add chassis number.`);
@@ -286,27 +300,35 @@ const Checkout = () => {
         }
       } else {
         if (!v.zone || !v.series || !v.regNumber?.trim()) {
-          alert(
-            `Tag ${i + 1}: fill zone, series, registration number, chassis and engine last 4 digits.`
-          );
+          alert(`Tag ${i + 1}: fill zone, series, and registration number.`);
           return false;
         }
-        if (!/^\d{4}$/.test(String(v.chassisLast4 || ""))) {
-          alert(
-            `Tag ${i + 1}: fill zone, series, registration number, chassis and engine last 4 digits.`
-          );
+        const regDigits = regNumberDigits(v.regNumber);
+        if (regDigits.length < 3) {
+          alert(`Tag ${i + 1}: registration number must be at least 3 digits (e.g. 12-3322).`);
           return false;
         }
-        if (!/^\d{4}$/.test(String(v.engineLast4 || ""))) {
-          alert(
-            `Tag ${i + 1}: fill zone, series, registration number, chassis and engine last 4 digits.`
-          );
+        if (v.chassisLast4 && !/^\d{4}$/.test(String(v.chassisLast4))) {
+          alert(`Tag ${i + 1}: chassis last 4 digits must be exactly 4 numbers.`);
+          return false;
+        }
+        if (v.engineLast4 && !/^\d{4}$/.test(String(v.engineLast4))) {
+          alert(`Tag ${i + 1}: engine last 4 digits must be exactly 4 numbers.`);
           return false;
         }
       }
 
+      if (v.model?.trim() && !/^\d+$/.test(v.model.trim())) {
+        alert(`Tag ${i + 1}: manufacture year must contain numbers only.`);
+        return false;
+      }
+
       if (!v.ownerPhone?.trim()) {
         alert(`Tag ${i + 1}: add owner phone.`);
+        return false;
+      }
+      if (!/^\d{11}$/.test(v.ownerPhone.trim())) {
+        alert(`Tag ${i + 1}: owner phone must be 11 digits.`);
         return false;
       }
       if (!v.emergencyPhone?.trim()) {
@@ -324,6 +346,10 @@ const Checkout = () => {
       ) {
         if (!v.driverName?.trim() || !v.driverPhone?.trim()) {
           alert(`Tag ${i + 1}: add driver name and phone, or turn off driver.`);
+          return false;
+        }
+        if (!/^\d{11}$/.test(v.driverPhone.trim())) {
+          alert(`Tag ${i + 1}: driver phone must be 11 digits.`);
           return false;
         }
       }
@@ -886,9 +912,13 @@ const Checkout = () => {
                               className={`${fieldInput} font-mono`}
                               value={v.regNumber}
                               onChange={(e) =>
-                                updateVehicle(index, { regNumber: e.target.value })
+                                updateVehicle(index, {
+                                  regNumber: formatRegNumberInput(e.target.value),
+                                })
                               }
                               placeholder="e.g. 12-3322"
+                              inputMode="numeric"
+                              maxLength={9}
                             />
                           </label>
                         </>
@@ -896,15 +926,19 @@ const Checkout = () => {
                       <label className="block">
                         <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
                           Manufacture Year
-                          <RequiredStar />
+                          <span className="ml-1 font-normal text-slate-400">(optional)</span>
                         </span>
                         <input
                           className={fieldInput}
                           value={v.model}
                           onChange={(e) =>
-                            updateVehicle(index, { model: e.target.value })
+                            updateVehicle(index, {
+                              model: digitsOnly(e.target.value, 4),
+                            })
                           }
                           placeholder="e.g. 2019"
+                          inputMode="numeric"
+                          maxLength={4}
                         />
                       </label>
                       {!isCycleTag && (
@@ -912,7 +946,7 @@ const Checkout = () => {
                           <label className="block">
                             <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
                               Chassis No. (last 4 digits)
-                              <RequiredStar />
+                              <span className="ml-1 font-normal text-slate-400">(optional)</span>
                             </span>
                             <input
                               className={`${fieldInput} font-mono`}
@@ -932,7 +966,7 @@ const Checkout = () => {
                           <label className="block">
                             <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
                               Engine No. (last 4 digits)
-                              <RequiredStar />
+                              <span className="ml-1 font-normal text-slate-400">(optional)</span>
                             </span>
                             <input
                               className={`${fieldInput} font-mono`}
@@ -960,10 +994,12 @@ const Checkout = () => {
                           className={fieldInput}
                           value={v.ownerPhone}
                           onChange={(e) =>
-                            updateVehicle(index, { ownerPhone: e.target.value })
+                            updateVehicle(index, {
+                              ownerPhone: phoneDigitsOnly(e.target.value),
+                            })
                           }
                           placeholder="01XXXXXXXXX"
-                          inputMode="tel"
+                          inputMode="numeric"
                           maxLength={11}
                         />
                       </label>
@@ -977,11 +1013,11 @@ const Checkout = () => {
                           value={v.emergencyPhone}
                           onChange={(e) =>
                             updateVehicle(index, {
-                              emergencyPhone: e.target.value.replace(/\D/g, "").slice(0, 11),
+                              emergencyPhone: phoneDigitsOnly(e.target.value),
                             })
                           }
                           placeholder="01XXXXXXXXX"
-                          inputMode="tel"
+                          inputMode="numeric"
                           maxLength={11}
                         />
                       </label>
@@ -1090,14 +1126,15 @@ const Checkout = () => {
                               </span>
                               <input
                                 className={fieldInput}
-                                placeholder="Driver phone"
+                                placeholder="01XXXXXXXXX"
                                 value={v.driverPhone}
                                 onChange={(e) =>
                                   updateVehicle(index, {
-                                    driverPhone: e.target.value,
+                                    driverPhone: phoneDigitsOnly(e.target.value),
                                   })
                                 }
-                                inputMode="tel"
+                                inputMode="numeric"
+                                maxLength={11}
                               />
                             </label>
                           </div>

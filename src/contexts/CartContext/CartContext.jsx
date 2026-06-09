@@ -65,6 +65,7 @@ export const CartProvider = ({ children }) => {
   }, [cartItems]);
 
   const addToCart = (item) => {
+    if (item?.isActive === false) return;
     const normalized = normalizeCartItem(item);
     if (!normalized) return;
 

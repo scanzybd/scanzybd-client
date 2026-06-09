@@ -42,6 +42,7 @@ export const loadShippedOrders = () => import("../pages/Dashboard/Order/ShippedO
 export const loadDeliveredOrders = () => import("../pages/Dashboard/Order/DeliveredOrders.jsx");
 export const loadReturnedOrders = () => import("../pages/Dashboard/Order/ReturnedOrders.jsx");
 export const loadStaffOrders = () => import("../pages/Dashboard/Order/StaffOrdersPage.jsx");
+export const loadUnpaidOrders = () => import("../pages/Dashboard/Order/UnpaidOrdersPage.jsx");
 export const loadOrderDetail = () => import("../pages/Dashboard/Order/OrderDetailPage.jsx");
 export const loadAllProducts = () => import("../pages/Dashboard/Product/AllProducts.jsx");
 export const loadAddProducts = () => import("../pages/Dashboard/Product/AddProducts.jsx");
@@ -96,6 +97,7 @@ export const allRouteChunkLoaders = [
   loadMyPurchases,
   loadDashboardHome,
   loadStaffOrders,
+  loadUnpaidOrders,
   loadOrderDetail,
   loadAllProducts,
   loadAddProducts,

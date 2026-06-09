@@ -84,8 +84,8 @@ const MyVehiclePage = () => {
       try {
         const res = await axiosSecure.get("/api/auth/me");
         setMongoUser(res.data);
-      } catch (err) {
-        console.log(err);
+      } catch {
+        /* profile load failed */
       } finally {
         setRoleLoading(false);
       }
@@ -103,8 +103,8 @@ const MyVehiclePage = () => {
       const res = await axiosSecure.get("/api/vehicle/my");
       const data = res.data.data || [];
       setVehicles(data);
-    } catch (err) {
-      console.log(err);
+    } catch {
+      /* vehicle list load failed */
     } finally {
       setLoadingVehicles(false);
     }
@@ -170,8 +170,8 @@ const MyVehiclePage = () => {
     try {
       await axiosSecure.delete(`/api/vehicle/delete/${id}`);
       await loadVehicles();
-    } catch (err) {
-      console.log(err);
+    } catch {
+      /* delete failed */
     }
   };
 

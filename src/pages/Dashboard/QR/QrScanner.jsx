@@ -40,7 +40,7 @@ const QrScanner = ({ onResult }) => {
           qrCodeScanner.stop();
         }
       )
-      .catch((err) => console.log(err));
+      .catch(() => {});
 
     return () => {
       qrCodeScanner.stop().catch(() => {});

@@ -23,43 +23,55 @@ const AuthProvider = ({ children }) => {
     const [userRole, setUserRole] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const registerUser = (name, email, password) => {
+    const registerUser = async (name, email, password) => {
         setLoading(true);
-        return axios.post(`${API_BASE_URL}/api/auth/register`, { name, email, password });
+        try {
+            return await axios.post(`${API_BASE_URL}/api/auth/register`, {
+                name,
+                email,
+                password,
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     const signInUser = async (email, password) => {
         setLoading(true);
-        const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
-        if (res.data?.token && res.data?.expiresAt != null) {
-            setAppJwt(res.data.token, res.data.expiresAt);
+        try {
+            const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
+            if (res.data?.token && res.data?.expiresAt != null) {
+                setAppJwt(res.data.token, res.data.expiresAt);
+            }
+            const u = res.data?.user ?? null;
+            setUser(u ? { ...u, role: normalizeRole(u.role) } : null);
+            setUserRole(normalizeRole(u?.role));
+            return res;
+        } finally {
+            setLoading(false);
         }
-        const u = res.data?.user ?? null;
-        setUser(u ? { ...u, role: normalizeRole(u.role) } : null);
-        setUserRole(normalizeRole(u?.role));
-        setLoading(false);
-        return res;
     };
 
     const signInGoogle = async () => {
         setLoading(true);
-        const result = await signInWithPopup(auth, googleProvider);
-        const socialUser = result.user;
-        const res = await axios.post(`${API_BASE_URL}/api/auth/social`, {
-            email: socialUser.email,
-            name: socialUser.displayName || "Social User",
-            photo: socialUser.photoURL || null,
-            provider: "google",
-            providerId: socialUser.uid,
-        });
-        if (res.data?.token && res.data?.expiresAt != null) {
-            setAppJwt(res.data.token, res.data.expiresAt);
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const socialUser = result.user;
+            const idToken = await socialUser.getIdToken();
+            const res = await axios.post(`${API_BASE_URL}/api/auth/social`, {
+                idToken,
+                provider: "google",
+            });
+            if (res.data?.token && res.data?.expiresAt != null) {
+                setAppJwt(res.data.token, res.data.expiresAt);
+            }
+            const u = res.data?.user ?? null;
+            setUser(u ? { ...u, role: normalizeRole(u.role) } : null);
+            setUserRole(normalizeRole(u?.role));
+            return res;
+        } finally {
+            setLoading(false);
         }
-        const u = res.data?.user ?? null;
-        setUser(u ? { ...u, role: normalizeRole(u.role) } : null);
-        setUserRole(normalizeRole(u?.role));
-        setLoading(false);
-        return res;
     };
 
     const logOut = async () => {

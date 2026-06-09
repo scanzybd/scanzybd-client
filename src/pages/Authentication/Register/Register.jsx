@@ -22,9 +22,7 @@ const Register = () => {
     const onSubmit = async (data) => {
     try {
 
-        const res = await registerUser(data.name, data.email, data.password);
-
-        console.log("REGISTER SUCCESS:", res.data);
+        await registerUser(data.name, data.email, data.password);
 
         const loginRes = await signInUser(data.email, data.password);
         const role = String(loginRes?.data?.user?.role || "").toLowerCase();

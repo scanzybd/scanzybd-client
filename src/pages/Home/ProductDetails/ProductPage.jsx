@@ -195,6 +195,14 @@ const ProductPage = () => {
   }, [products, searchTerm, filterPrice]);
 
   const handleAddToCart = (product) => {
+    if (product?.isActive === false || product?.inStock === false) {
+      setNotification({
+        type: "error",
+        message: "This product is not available.",
+      });
+      setTimeout(() => setNotification(null), 3200);
+      return;
+    }
     addToCart(product);
     setNotification({
       type: "success",
@@ -241,6 +249,22 @@ const ProductPage = () => {
   }, [selectedProduct]);
 
   if (isLoading || selectedLoading) return <SmartLoader fullPage label="Loading products..." />;
+
+  if (id && !selectedProduct && !selectedLoading) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 text-center">
+        <p className="text-lg font-semibold text-slate-800 dark:text-slate-100">Product not found</p>
+        <p className="mt-2 text-sm text-slate-500">This item may be unavailable or has been removed.</p>
+        <button
+          type="button"
+          onClick={() => navigate("/Products")}
+          className="btn mt-6 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+        >
+          Back to products
+        </button>
+      </div>
+    );
+  }
 
   if (id && selectedProduct) {
     return (

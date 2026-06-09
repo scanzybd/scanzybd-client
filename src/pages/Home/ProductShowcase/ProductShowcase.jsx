@@ -110,6 +110,10 @@ const ProductShowcase = () => {
   };
 
   const handleAddToCart = (product) => {
+    if (product?.isActive === false) {
+      showNotification("error", "This product is not available.");
+      return;
+    }
     addToCart(product);
     showNotification("success", `${product.title} added to cart`);
   };

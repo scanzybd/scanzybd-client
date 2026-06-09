@@ -91,6 +91,7 @@
       "addVehicle": "যানবাহন যোগ করুন",
       "createOrder": "অর্ডার তৈরি",
       "ordersList": "অর্ডার",
+      "unpaidOrders": "আনপেইড অর্ডার",
       "assign": "অ্যাসাইন",
       "scanAssign": "স্ক্যান ও অ্যাসাইন",
       "productList": "প্রোডাক্ট তালিকা",
