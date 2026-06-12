@@ -47,12 +47,12 @@ createRoot(document.getElementById('root')).render(
         }}
       >
         <GlobalFetchingBar />
-        <AuthProvider>
-          <CartProvider>
+        <CartProvider>
+          <AuthProvider>
             <RoutePrefetch />
             <RouterProvider router={router} />
-          </CartProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </CartProvider>
       </PersistQueryClientProvider>
     </ThemeProvider>
   </StrictMode>

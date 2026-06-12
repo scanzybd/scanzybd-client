@@ -8,6 +8,7 @@ import { setAppJwt, clearAppJwt, getAppJwtIfValid } from '../../utils/appJwtStor
 import { QUERY_CACHE_STORAGE_KEY } from '../../lib/queryPersister';
 import { API_BASE_URL } from '../../config/api';
 import { auth } from '../../firebase/firebase.init';
+import useCart from '../../hooks/useCart';
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -19,6 +20,7 @@ const normalizeRole = (raw) => {
 
 const AuthProvider = ({ children }) => {
     const queryClient = useQueryClient();
+    const { reloadCart, resetCartView } = useCart();
     const [user, setUser] = useState(null);
     const [userRole, setUserRole] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -46,6 +48,7 @@ const AuthProvider = ({ children }) => {
             const u = res.data?.user ?? null;
             setUser(u ? { ...u, role: normalizeRole(u.role) } : null);
             setUserRole(normalizeRole(u?.role));
+            await reloadCart();
             return res;
         } finally {
             setLoading(false);
@@ -68,6 +71,7 @@ const AuthProvider = ({ children }) => {
             const u = res.data?.user ?? null;
             setUser(u ? { ...u, role: normalizeRole(u.role) } : null);
             setUserRole(normalizeRole(u?.role));
+            await reloadCart();
             return res;
         } finally {
             setLoading(false);
@@ -79,6 +83,7 @@ const AuthProvider = ({ children }) => {
         clearAppJwt();
         setUser(null);
         setUserRole(null);
+        resetCartView();
         queryClient.clear();
         try {
             localStorage.removeItem(QUERY_CACHE_STORAGE_KEY);
@@ -152,10 +157,12 @@ const AuthProvider = ({ children }) => {
             const payload = response.data ?? null;
             setUser(payload ? { ...payload, role } : null);
             setUserRole(role);
+            await reloadCart();
         } catch {
             setUser(null);
             setUserRole(null);
             clearAppJwt();
+            resetCartView();
         }
     };
 
