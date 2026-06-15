@@ -1,9 +1,15 @@
 import React, { useMemo } from 'react';
-import { Mail, MapPin, ArrowRight } from 'lucide-react';
+import { Mail, MapPin, Phone, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 import { usePublicSocialMedia } from '../../../../hooks/useSocialMediaSettings';
+import { usePublicContactInfo } from '../../../../hooks/useContactInfo';
 import { buildFooterSocialLinks } from '../../../../lib/socialMediaConfig';
+import {
+  DEFAULT_CONTACT_INFO,
+  formatPhoneDisplay,
+  phoneTelHref,
+} from '../../../../lib/contactInfoConfig';
 import footerLogo from "../../../../assets/logo/Logo Double Line.svg";
 import {
   BRAND_FULL,
@@ -15,6 +21,8 @@ import {
 const Footer = () => {
   const { t } = useTranslation();
   const { data: socialData } = usePublicSocialMedia();
+  const { data: contactData } = usePublicContactInfo();
+  const contact = contactData || DEFAULT_CONTACT_INFO;
   const currentYear = new Date().getFullYear();
 
   const socialLinks = useMemo(
@@ -174,16 +182,27 @@ const Footer = () => {
             <div>
               <h3 className="mb-6 text-lg font-semibold text-slate-900 dark:text-white">{t("footer.contact")}</h3>
               <div className="space-y-4">
-                
-                <a href={`mailto:${t("contactPage.email")}`} className="group flex items-start gap-3 text-sm text-slate-600 transition hover:text-amber-600 dark:text-slate-400 dark:hover:text-yellow-400">
+                {contact.phoneEnabled !== false && contact.phone ? (
+                  <a
+                    href={phoneTelHref(contact.phone)}
+                    className="group flex items-start gap-3 text-sm text-slate-600 transition hover:text-amber-600 dark:text-slate-400 dark:hover:text-yellow-400"
+                  >
+                    <Phone className="mt-0.5 h-5 w-5 shrink-0 group-hover:text-yellow-400" />
+                    <span>{formatPhoneDisplay(contact.phone)}</span>
+                  </a>
+                ) : null}
+                <a
+                  href={`mailto:${contact.email || t("contactPage.email")}`}
+                  className="group flex items-start gap-3 text-sm text-slate-600 transition hover:text-amber-600 dark:text-slate-400 dark:hover:text-yellow-400"
+                >
                   <Mail className="mt-0.5 h-5 w-5 shrink-0 group-hover:text-yellow-400" />
-                  <span>{t("contactPage.email")}</span>
+                  <span>{contact.email || t("contactPage.email")}</span>
                 </a>
                 <div className="group flex items-start gap-3 text-sm text-slate-600 transition hover:text-amber-600 dark:text-slate-400 dark:hover:text-yellow-400">
                   <MapPin className="mt-0.5 h-5 w-5 shrink-0 group-hover:text-yellow-400" />
                   <div>
-                    <div>{t("contactPage.address1")}</div>
-                    <div>{t("contactPage.address2")}</div>
+                    <div>{contact.addressLine1 || t("contactPage.address1")}</div>
+                    <div>{contact.addressLine2 || t("contactPage.address2")}</div>
                   </div>
                 </div>
               </div>

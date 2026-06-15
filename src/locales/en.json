@@ -143,7 +143,16 @@
         "socialHint": "Links shown in the website footer. Disable or leave URL empty to hide an icon.",
         "socialShowInFooter": "Show in footer",
         "socialSave": "Save social links",
-        "socialSaved": "Footer social links updated."
+        "socialSaved": "Footer social links updated.",
+        "contactTitle": "Public contact info",
+        "contactHint": "Shown on the Contact page and website footer.",
+        "contactPhone": "Phone number",
+        "contactShowOnSite": "Show on site",
+        "contactAddress1": "Address line 1",
+        "contactAddress2": "Address line 2",
+        "contactHours": "Business hours",
+        "contactSave": "Save contact info",
+        "contactSaved": "Contact information updated."
       }
     },
     "logout": {
@@ -341,7 +350,7 @@
     "subheading": "We are always here for you.",
     "leadTitle": "Get in touch",
     "leadText": "For support, orders, business queries, or urgent issues, send us a message and our team will respond.",
-    "phone": "+8801XXXXXXXXX",
+    "phone": "01850000000",
     "whatsapp": "+8801XXXXXXXXX",
     "email": "scanzybd@gmail.com",
     "address1": "Dhaka",

@@ -31,7 +31,12 @@ function getCartItemId(itemOrId) {
 function normalizeCartItem(item) {
     const id = getCartItemId(item);
     if (!id) return null;
-    return { ...item, _id: id, quantity: Math.max(1, Number(item.quantity) || 1) };
+    return {
+        ...item,
+        _id: id,
+        productId: id,
+        quantity: Math.max(1, Number(item.quantity) || 1),
+    };
 }
 
 export const CartProvider = ({ children }) => {
@@ -70,6 +75,11 @@ export const CartProvider = ({ children }) => {
         const cfg = authConfig();
         if (!cfg) return false;
         try {
+            if (!items.length) {
+                await cartApi.delete("/api/cart", cfg);
+                setCartItems([]);
+                return true;
+            }
             const res = await cartApi.put("/api/cart", { items }, cfg);
             setCartItems(Array.isArray(res.data?.items) ? res.data.items : []);
             return true;
@@ -86,6 +96,7 @@ export const CartProvider = ({ children }) => {
             const next = updater(itemsRef.current)
                 .map(normalizeCartItem)
                 .filter(Boolean);
+            itemsRef.current = next;
             setCartItems(next);
             return persistItems(next);
         },

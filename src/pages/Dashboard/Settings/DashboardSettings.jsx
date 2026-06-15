@@ -9,6 +9,7 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
 import AccountPreferencesPanel from "../../../components/settings/AccountPreferencesPanel";
 import SocialMediaControlPanel from "../../../components/settings/SocialMediaControlPanel";
+import ContactInfoControlPanel from "../../../components/settings/ContactInfoControlPanel";
 
 function validatePaymentForm(form) {
   const method = form.preferredMethod;
@@ -225,6 +226,8 @@ export default function DashboardSettings() {
           )}
         </section>
       ) : null}
+
+      {isAdmin ? <ContactInfoControlPanel /> : null}
 
       {isAdmin ? <SocialMediaControlPanel /> : null}
 

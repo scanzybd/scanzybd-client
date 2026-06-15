@@ -1,10 +1,12 @@
-import React from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Package, Plus, Sparkles, Check } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Package, Plus, Sparkles, Check, Pencil, Trash2 } from "lucide-react";
+import Swal from "sweetalert2";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 import SmartLoader from "../../../components/SmartLoader";
+import EditPackageModal from "../../../components/package/EditPackageModal";
 
 function normalizePackages(raw) {
   if (Array.isArray(raw)) return raw;
@@ -12,9 +14,17 @@ function normalizePackages(raw) {
   return [];
 }
 
+const CATEGORY_LABELS = {
+  starter: "Starter",
+  standard: "Standard",
+  premium: "Premium",
+};
+
 const AllPackages = () => {
   const axiosSecure = useAxiosSecure();
+  const queryClient = useQueryClient();
   const { userRole } = useAuth();
+  const [editingPkg, setEditingPkg] = useState(null);
 
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ["dashboard-packages"],
@@ -23,6 +33,49 @@ const AllPackages = () => {
       return normalizePackages(res.data);
     },
   });
+
+  const { mutateAsync: deletePackage, isPending: isDeleting } = useMutation({
+    mutationFn: (id) => axiosSecure.delete(`/api/package/${id}`),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["dashboard-packages"] });
+      await queryClient.invalidateQueries({ queryKey: ["homePackages"] });
+    },
+  });
+
+  const handleDelete = async (pkg) => {
+    const result = await Swal.fire({
+      title: "Delete package?",
+      html: `<strong>${pkg.title}</strong> will be removed from the homepage Offer Showcase.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Yes, delete",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deletePackage(pkg._id);
+      if (editingPkg?._id === pkg._id) {
+        setEditingPkg(null);
+      }
+      Swal.fire({
+        title: "Deleted",
+        text: "Package removed.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire(
+        "Failed",
+        err?.response?.data?.message || "Could not delete package",
+        "error"
+      );
+    }
+  };
 
   if (isLoading) {
     return (
@@ -44,7 +97,7 @@ const AllPackages = () => {
             Package list
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Pricing bundles and feature lists shown to customers.
+            Pricing bundles shown on the homepage Offer Showcase.
           </p>
         </div>
         {userRole === "admin" && (
@@ -82,7 +135,10 @@ const AllPackages = () => {
                 </span>
               )}
 
-              <div className="border-b border-slate-100 bg-gradient-to-br from-emerald-50/80 to-white px-5 py-4">
+              <div className="border-b border-slate-100 bg-linear-to-br from-emerald-50/80 to-white px-5 py-4">
+                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                  {CATEGORY_LABELS[pkg.category] || pkg.category || "Package"}
+                </div>
                 <h2 className="text-lg font-bold text-slate-900">{pkg.title}</h2>
                 <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600">
                   {pkg.description}
@@ -110,17 +166,38 @@ const AllPackages = () => {
                 </ul>
 
                 {userRole === "admin" && (
-                  <Link
-                    to="/dashboard/add-package"
-                    className="btn btn-block mt-6 rounded-xl border border-slate-200 bg-white font-semibold text-slate-800 hover:border-emerald-300 hover:bg-emerald-50/50"
-                  >
-                    Add / manage in form
-                  </Link>
+                  <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={() => setEditingPkg(pkg)}
+                      className="btn flex-1 gap-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-800 hover:border-emerald-300 hover:bg-emerald-50/50"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(pkg)}
+                      disabled={isDeleting}
+                      className="btn flex-1 gap-2 rounded-xl border border-red-200 bg-white font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </button>
+                  </div>
                 )}
               </div>
             </li>
           ))}
         </ul>
+      )}
+
+      {editingPkg && (
+        <EditPackageModal
+          pkg={editingPkg}
+          onClose={() => setEditingPkg(null)}
+          onSaved={() => setEditingPkg(null)}
+        />
       )}
     </div>
   );

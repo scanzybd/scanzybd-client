@@ -1,156 +1,168 @@
-import React, { useState } from "react";
-import useAuth from "../../../hooks/useAuth";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Eye, Package } from "lucide-react";
+import Swal from "sweetalert2";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import PackageFormFields from "../../../components/package/PackageFormFields";
+import PackageOfferPreview from "../../../components/package/PackageOfferPreview";
+import {
+  buildPackagePayload,
+  emptyPackageForm,
+  validatePackageForm,
+} from "../../../lib/packageFormUtils";
+import {
+  btnPrimaryInline,
+  btnSecondaryInline,
+  cardSurface,
+  dashboardBadge,
+  dashboardPageHeader,
+  dashboardPageSubtitle,
+  dashboardPageTitle,
+  textMuted,
+} from "../../../lib/uiClasses";
 
 const AddPackage = () => {
   const axiosSecure = useAxiosSecure();
-  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [form, setForm] = useState(emptyPackageForm);
+  const [errors, setErrors] = useState({});
 
-  const [form, setForm] = useState({
-    title: "",
-    price: "",
-    description: "",
-    features: "",
-    highlight: false,
-    category: "starter",
-  });
-
-  const handleChange = (e) => {
+  const handleFieldChange = (e) => {
     const { name, value, type, checked } = e.target;
-
-    setForm({
-      ...form,
+    setForm((prev) => ({
+      ...prev,
       [name]: type === "checkbox" ? checked : value,
-    });
+    }));
+    if (errors[name]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
+
+  const handleFeatureChange = (index, value) => {
+    setForm((prev) => {
+      const features = [...prev.features];
+      features[index] = value;
+      return { ...prev, features };
+    });
+    if (errors.features) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.features;
+        return next;
+      });
+    }
+  };
+
+  const addFeature = () => {
+    setForm((prev) => ({ ...prev, features: [...prev.features, ""] }));
+  };
+
+  const removeFeature = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index),
+    }));
+  };
+
+  const { mutateAsync: createPackage, isPending } = useMutation({
+    mutationFn: async (payload) => {
+      const res = await axiosSecure.post("/api/package", payload);
+      return res.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["dashboard-packages"] });
+      await queryClient.invalidateQueries({ queryKey: ["homePackages"] });
+    },
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const packageData = {
-      title: form.title,
-      price: Number(form.price),
-      description: form.description,
-
-      // comma separated → array convert
-      features: form.features
-        .split(",")
-        .map((item) => item.trim())
-        .filter((item) => item),
-
-      highlight: form.highlight,
-      category: form.category,
-
-      currency: "BDT",
-
-      createdBy: {
-        name: user?.displayName,
-        email: user?.email,
-        uid: user?.uid,
-      },
-
-      createdAt: new Date(),
-    };
+    const validation = validatePackageForm(form);
+    if (!validation.valid) {
+      setErrors(validation.errors);
+      return;
+    }
 
     try {
-      await axiosSecure.post("/api/package", packageData);
-
-      alert("Package Added Successfully 🚀");
-
-      setForm({
-        title: "",
-        price: "",
-        description: "",
-        features: "",
-        highlight: false,
-        category: "starter",
+      await createPackage(buildPackagePayload(form, validation.features));
+      await Swal.fire({
+        title: "Package added",
+        text: "It will appear on the homepage Offer Showcase.",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
       });
-    } catch {
-      alert("Failed to add package");
+      setForm(emptyPackageForm());
+      setErrors({});
+      navigate("/dashboard/all-packages");
+    } catch (err) {
+      Swal.fire(
+        "Failed",
+        err?.response?.data?.message || "Could not add package",
+        "error"
+      );
     }
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gray-50 p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-xl bg-white shadow-lg rounded-2xl p-6"
-      >
-        <h2 className="text-2xl font-bold mb-6 text-purple-600">
-          Add New Package
-        </h2>
-
-        {/* Title */}
-        <input
-          type="text"
-          name="title"
-          placeholder="Package Title"
-          value={form.title}
-          onChange={handleChange}
-          className="w-full border p-3 rounded mb-3"
-        />
-
-        {/* Price */}
-        <input
-          type="number"
-          name="price"
-          placeholder="Price (e.g. 2999)"
-          value={form.price}
-          onChange={handleChange}
-          className="w-full border p-3 rounded mb-3"
-        />
-
-        {/* Description */}
-        <textarea
-          name="description"
-          placeholder="Package Description"
-          value={form.description}
-          onChange={handleChange}
-          rows={4}
-          className="w-full border p-3 rounded mb-3"
-        />
-
-        {/* Features */}
-        <input
-          type="text"
-          name="features"
-          placeholder="Features (comma separated)"
-          value={form.features}
-          onChange={handleChange}
-          className="w-full border p-3 rounded mb-3"
-        />
-
-        {/* Category */}
-        <select
-          name="category"
-          value={form.category}
-          onChange={handleChange}
-          className="w-full border p-3 rounded mb-3"
+    <div className="min-h-[60vh]">
+      <div className={dashboardPageHeader}>
+        <Link
+          to="/dashboard/all-packages"
+          className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-emerald-700 hover:underline"
         >
-          <option value="starter">Starter</option>
-          <option value="standard">Standard</option>
-          <option value="premium">Premium</option>
-        </select>
+          <ArrowLeft className="h-4 w-4" />
+          Back to package list
+        </Link>
+        <div className={dashboardBadge}>
+          <Package className="h-3.5 w-3.5" />
+          Homepage offers
+        </div>
+        <h1 className={dashboardPageTitle}>Add new package</h1>
+        <p className={dashboardPageSubtitle}>
+          This package is shown on the homepage Offer Showcase section.
+        </p>
+      </div>
 
-        {/* Highlight */}
-        <label className="flex items-center gap-2 mb-4">
-          <input
-            type="checkbox"
-            name="highlight"
-            checked={form.highlight}
-            onChange={handleChange}
+      <div className="grid gap-8 xl:grid-cols-2">
+        <form onSubmit={handleSubmit} className={`p-6 ${cardSurface}`}>
+          <PackageFormFields
+            form={form}
+            errors={errors}
+            onFieldChange={handleFieldChange}
+            onFeatureChange={handleFeatureChange}
+            onAddFeature={addFeature}
+            onRemoveFeature={removeFeature}
+            idPrefix="add-pkg"
           />
-          Highlight Package
-        </label>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700"
-        >
-          Add Package
-        </button>
-      </form>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <Link to="/dashboard/all-packages" className={btnSecondaryInline}>
+              Cancel
+            </Link>
+            <button type="submit" className={btnPrimaryInline} disabled={isPending}>
+              {isPending ? "Saving..." : "Add package"}
+            </button>
+          </div>
+        </form>
+
+        <aside className={`p-6 ${cardSurface} xl:sticky xl:top-6 xl:self-start`}>
+          <div className="mb-4 flex items-center gap-2">
+            <Eye className="h-5 w-5 text-amber-600" />
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Live Preview</h2>
+          </div>
+          <p className={`mb-5 text-sm ${textMuted}`}>
+            Homepage Offer Showcase card — updates as you type.
+          </p>
+          <PackageOfferPreview form={form} />
+        </aside>
+      </div>
     </div>
   );
 };

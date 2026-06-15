@@ -4,6 +4,7 @@ import About from "../About/About";
 import Banner from "../Banner/Banner";
 import ProductShowcase from "../ProductShowcase/ProductShowcase";
 import Reviews from "../Reviews/Reviews";
+import OfferShowcase from "../OfferShowcase/OfferShowcase";
 
 const Home = () => {
   useEffect(() => {
@@ -19,7 +20,9 @@ const Home = () => {
       <div data-aos="fade-up" data-aos-delay="80" data-aos-duration="700">
         <ProductShowcase></ProductShowcase>
       </div>
-      {/* <OfferShowcase></OfferShowcase> */}
+      <div data-aos="fade-up" data-aos-delay="100" data-aos-duration="700">
+        <OfferShowcase />
+      </div>
       <div data-aos="fade-up" data-aos-delay="120" data-aos-duration="700">
         <About></About>
       </div>

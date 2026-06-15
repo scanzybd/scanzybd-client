@@ -143,7 +143,16 @@
         "socialHint": "ওয়েবসাইট ফুটারে যে লিংক দেখাবে। URL খালি বা বন্ধ করলে আইকন লুকাবে।",
         "socialShowInFooter": "ফুটারে দেখান",
         "socialSave": "সোশ্যাল লিংক সেভ",
-        "socialSaved": "ফুটার সোশ্যাল লিংক আপডেট হয়েছে।"
+        "socialSaved": "ফুটার সোশ্যাল লিংক আপডেট হয়েছে।",
+        "contactTitle": "পাবলিক যোগাযোগ তথ্য",
+        "contactHint": "Contact পেজ এবং ওয়েবসাইট ফুটারে দেখাবে।",
+        "contactPhone": "ফোন নম্বর",
+        "contactShowOnSite": "সাইটে দেখান",
+        "contactAddress1": "ঠিকানা লাইন ১",
+        "contactAddress2": "ঠিকানা লাইন ২",
+        "contactHours": "ব্যবসার সময়",
+        "contactSave": "যোগাযোগ তথ্য সেভ",
+        "contactSaved": "যোগাযোগ তথ্য আপডেট হয়েছে।"
       }
     },
     "logout": {
@@ -341,7 +350,7 @@
     "subheading": "আমরা সবসময় আপনার পাশে আছি",
     "leadTitle": "যোগাযোগ করুন",
     "leadText": "সাপোর্ট, অর্ডার, ব্যবসায়িক প্রশ্ন বা জরুরি সহায়তার জন্য আমাদের মেসেজ দিন।",
-    "phone": "+8801XXXXXXXXX",
+    "phone": "01850000000",
     "whatsapp": "+8801XXXXXXXXX",
     "email": "scanzybd@gmail.com",
     "address1": "ঢাকা",

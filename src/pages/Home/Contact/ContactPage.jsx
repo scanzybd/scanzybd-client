@@ -1,7 +1,15 @@
 import React, { useState } from "react";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import { useTranslation } from "react-i18next";
+import { usePublicContactInfo } from "../../../hooks/useContactInfo";
+import {
+  DEFAULT_CONTACT_INFO,
+  formatPhoneDisplay,
+  phoneTelHref,
+  whatsappHref,
+} from "../../../lib/contactInfoConfig";
 import {
   shellPage,
   cardSurface,
@@ -14,6 +22,8 @@ import {
 const ContactPage = () => {
   const { t } = useTranslation();
   const axiosSecure = useAxiosSecure();
+  const { data: contactData } = usePublicContactInfo();
+  const contact = contactData || DEFAULT_CONTACT_INFO;
 
   const [form, setForm] = useState({
     name: "",
@@ -49,9 +59,15 @@ const ContactPage = () => {
   const iconClass =
     "h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400";
 
+  const displayEmail = contact.email || t("contactPage.email");
+  const address1 = contact.addressLine1 || t("contactPage.address1");
+  const address2 = contact.addressLine2 || t("contactPage.address2");
+  const hours = contact.businessHours || t("contactPage.hours");
+  const showPhone = contact.phoneEnabled !== false && contact.phone;
+  const showWhatsapp = contact.whatsappEnabled && contact.whatsapp;
+
   return (
     <div className={`min-h-screen ${shellPage}`}>
-      {/* Hero */}
       <div className="border-b border-slate-200 bg-linear-to-br from-slate-100 via-white to-slate-50 py-14 text-center dark:border-slate-800 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
         <h1 className={`text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl ${textHeading}`}>
           {t("contactPage.heading")}
@@ -62,7 +78,6 @@ const ContactPage = () => {
       </div>
 
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-2 md:gap-12">
-        {/* Info */}
         <div className="space-y-6">
           <h2 className={`text-xl font-bold sm:text-2xl ${textHeading}`}>{t("contactPage.leadTitle")}</h2>
 
@@ -71,22 +86,52 @@ const ContactPage = () => {
           </p>
 
           <ul className="space-y-4">
+            {showPhone ? (
+              <li className="flex items-start gap-3">
+                <Phone className={iconClass} aria-hidden />
+                <a
+                  href={phoneTelHref(contact.phone)}
+                  className={`${textHeading} hover:text-amber-700 dark:hover:text-amber-400`}
+                >
+                  {formatPhoneDisplay(contact.phone)}
+                </a>
+              </li>
+            ) : null}
+
+            {showWhatsapp ? (
+              <li className="flex items-start gap-3">
+                <FaWhatsapp className={iconClass} aria-hidden />
+                <a
+                  href={whatsappHref(contact.whatsapp)}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className={`${textHeading} hover:text-amber-700 dark:hover:text-amber-400`}
+                >
+                  {formatPhoneDisplay(contact.whatsapp)}
+                </a>
+              </li>
+            ) : null}
+
             <li className="flex items-start gap-3">
               <Mail className={iconClass} aria-hidden />
-              <span className={textHeading}>{t("contactPage.email")}</span>
+              <a
+                href={`mailto:${displayEmail}`}
+                className={`${textHeading} hover:text-amber-700 dark:hover:text-amber-400`}
+              >
+                {displayEmail}
+              </a>
             </li>
-            
+
             <li className="flex items-start gap-3">
               <MapPin className={iconClass} aria-hidden />
               <span className={textHeading}>
-                {t("contactPage.address1")}, {t("contactPage.address2")}
+                {address1}, {address2}
               </span>
             </li>
-            <li className={`text-sm ${textMuted}`}>{t("contactPage.hours")}</li>
+            <li className={`text-sm ${textMuted}`}>{hours}</li>
           </ul>
         </div>
 
-        {/* Form */}
         <div className={`p-6 sm:p-8 ${cardSurface}`}>
           <h2 className={`mb-6 text-xl font-bold ${textHeading}`}>
             {t("contactPage.formTitle")}
