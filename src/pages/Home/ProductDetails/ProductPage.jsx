@@ -33,6 +33,8 @@ const HIDDEN_DETAIL_KEYS = new Set([
   "updatedat",
   "__v",
   "v",
+  "reviews",
+  "displayorder",
 ]);
 
 function toLabel(key) {
@@ -203,7 +205,20 @@ const ProductPage = () => {
       setTimeout(() => setNotification(null), 3200);
       return;
     }
-    addToCart(product);
+    if (!user) {
+      navigate("/login", {
+        state: { from: { pathname: id ? `/Products/${id}` : "/Products" } },
+      });
+      return;
+    }
+    if (!addToCart(product)) {
+      setNotification({
+        type: "error",
+        message: "Please sign in to add items to your cart.",
+      });
+      setTimeout(() => setNotification(null), 3200);
+      return;
+    }
     setNotification({
       type: "success",
       message: `${product.title} added to cart`,

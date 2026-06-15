@@ -93,9 +93,10 @@ export const CartProvider = ({ children }) => {
     );
 
     const addToCart = (item) => {
-        if (item?.isActive === false) return;
+        if (item?.isActive === false) return false;
         const normalized = normalizeCartItem(item);
-        if (!normalized) return;
+        if (!normalized) return false;
+        if (!authConfig()) return false;
 
         void applyCartUpdate((prev) => {
             const id = normalized._id;
@@ -109,6 +110,7 @@ export const CartProvider = ({ children }) => {
             }
             return [...prev, normalized];
         });
+        return true;
     };
 
     const increaseQty = (id) => {

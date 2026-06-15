@@ -114,7 +114,14 @@ const ProductShowcase = () => {
       showNotification("error", "This product is not available.");
       return;
     }
-    addToCart(product);
+    if (!user) {
+      navigate("/login", { state: { from: { pathname: "/Products" } } });
+      return;
+    }
+    if (!addToCart(product)) {
+      showNotification("error", "Please sign in to add items to your cart.");
+      return;
+    }
     showNotification("success", `${product.title} added to cart`);
   };
 
