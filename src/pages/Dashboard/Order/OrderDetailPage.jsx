@@ -257,6 +257,42 @@ const OrderDetailPage = () => {
                 <p>{payment.note}</p>
               </div>
             )}
+            {payment.processedBy?.name && (
+              <div className="flex justify-between">
+                <span className={textMuted}>Marked paid by</span>
+                <span>{payment.processedBy.name}</span>
+              </div>
+            )}
+            {isAdmin && (payment.statusUpdates?.length ?? 0) > 0 && (
+              <div className="mt-4 border-t border-slate-200 pt-3">
+                <span className={`block text-xs font-semibold uppercase tracking-wide ${textMuted}`}>
+                  Admin payment log
+                </span>
+                <ul className="mt-2 space-y-2">
+                  {[...(payment.statusUpdates || [])].reverse().map((entry, i) => (
+                    <li key={i} className="rounded-lg bg-slate-50 px-3 py-2 text-xs">
+                      <p className="font-medium text-slate-800">
+                        {entry.updatedBy?.name || "Admin"}{" "}
+                        <span className="font-normal text-slate-500">
+                          {entry.updatedAt
+                            ? new Date(entry.updatedAt).toLocaleString()
+                            : ""}
+                        </span>
+                      </p>
+                      <p className="text-slate-600">
+                        Payment: {entry.fromPaymentStatus || "—"} → {entry.toPaymentStatus || "—"}
+                        {" · "}
+                        Order: {entry.fromOrderPaymentStatus || "—"} → {entry.toOrderPaymentStatus || "—"}
+                      </p>
+                      {entry.transactionId && (
+                        <p className="font-mono text-slate-500">Trx: {entry.transactionId}</p>
+                      )}
+                      {entry.note && <p className="text-slate-500">{entry.note}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </dl>
         </div>
       )}

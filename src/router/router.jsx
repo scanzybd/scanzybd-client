@@ -33,7 +33,6 @@ const PaymentSuccessLazy = lazyImport(chunks.loadPaymentSuccess);
 // ——— User area ———
 const Payment = lazyPage(chunks.loadPayment);
 const MyVehiclePage = lazyPage(chunks.loadMyVehiclePage);
-const UserAddVehiclePage = lazyPage(chunks.loadUserAddVehiclePage);
 const MyCart = lazyPage(chunks.loadMyCart);
 const Checkout = lazyPage(chunks.loadCheckout);
 const UserProfile = lazyPage(chunks.loadUserProfile);
@@ -185,7 +184,7 @@ const router = createBrowserRouter([
       },
       {
         path: "user-add-vehicle",
-        Component: UserAddVehiclePage,
+        element: <Navigate to="/user/my-vehiclePage" replace />,
       },
       {
         path: "my-cart",

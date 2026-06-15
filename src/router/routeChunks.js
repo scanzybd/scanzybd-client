@@ -24,7 +24,6 @@ export const loadPaymentSuccess = () =>
 
 export const loadPayment = () => import("../pages/User/Payment/Payment.jsx");
 export const loadMyVehiclePage = () => import("../pages/User/UserVehicle/MyVehiclePage.jsx");
-export const loadUserAddVehiclePage = () => import("../pages/User/UserVehicle/UserAddVehiclePage.jsx");
 export const loadMyCart = () => import("../pages/User/Cart/MyCart.jsx");
 export const loadCheckout = () => import("../pages/Dashboard/Order/Checkout.jsx");
 export const loadUserProfile = () => import("../pages/User/Profile/UserProfile.jsx");
@@ -88,7 +87,6 @@ export const allRouteChunkLoaders = [
   loadPaymentSuccess,
   loadPayment,
   loadMyVehiclePage,
-  loadUserAddVehiclePage,
   loadMyCart,
   loadCheckout,
   loadUserProfile,
