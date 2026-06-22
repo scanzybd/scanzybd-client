@@ -4,8 +4,10 @@ import { Pencil, Trash2, Car, Phone, UserRound, AlertCircle } from "lucide-react
 import Switch from "react-switch";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
+import useTagTypes from "../../../hooks/useTagTypes";
 import SmartLoader from "../../../components/SmartLoader";
 import { qrAssignmentLabel } from "../../../lib/vehicleQr";
+import { isDriverlessTagType } from "../../../lib/tagTypeUtils";
 
 const CONTACT_OFF_HEX = "#d1d9e3";
 const CONTACT_ON_HEX = { green: "#059669", blue: "#2563eb", red: "#dc2626" };
@@ -68,6 +70,7 @@ function ContactRow({ icon: Icon, label, tone, vehicle, fieldKey, saving, onTogg
 const MyVehiclePage = () => {
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
+  const { data: tagTypes = [] } = useTagTypes();
 
   const [vehicles, setVehicles] = useState([]);
   const [editVehicle, setEditVehicle] = useState(null);
@@ -96,6 +99,10 @@ const MyVehiclePage = () => {
   const role = mongoUser?.role;
   const isAdmin = role === "admin";
 
+  // Cycle + bike tags have no driver — hide driver fields, toggle, and display.
+  const isDriverless = (vehicle) =>
+    isDriverlessTagType(vehicle?.tagType, tagTypes);
+
   const loadVehicles = useCallback(async () => {
     if (!user?.email) return;
     setLoadingVehicles(true);
@@ -117,6 +124,7 @@ const MyVehiclePage = () => {
   const openEdit = (v) => {
     setEditVehicle({
       _id: v._id,
+      tagType: v.tagType || "",
       ownerPhone: v.ownerPhone || "",
       emergencyPhone: v.emergencyPhone || "",
       driverName: v.driver?.name || "",
@@ -373,7 +381,7 @@ const MyVehiclePage = () => {
               {v.plate}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              {v.model} · {qrAssignmentLabel(v)}
+              {qrAssignmentLabel(v)}
             </p>
           </div>
           <div className="mt-3 flex gap-2">
@@ -407,7 +415,6 @@ const MyVehiclePage = () => {
             <div>
               <h2 className="text-xl font-bold text-slate-900 dark:text-white">{v.vehicleName}</h2>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                {v.model} ·{" "}
                 <span className="font-mono font-medium text-emerald-700 dark:text-emerald-400">
                   {v.plate}
                 </span>
@@ -453,7 +460,7 @@ const MyVehiclePage = () => {
               Emergency: <span className="font-mono font-medium">{v.emergencyPhone}</span>
             </p>
           ) : null}
-          {v.driver?.name || v.driver?.phone ? (
+          {!isDriverless(v) && (v.driver?.name || v.driver?.phone) ? (
             <p className="flex items-center gap-2 text-sm text-slate-600 lg:col-span-2 dark:text-slate-300">
               <UserRound className="h-4 w-4 text-blue-600" />
               Driver: {v.driver.name}{" "}
@@ -479,15 +486,17 @@ const MyVehiclePage = () => {
               saving={toggleSaving}
               onToggle={handleToggleVisibility}
             />
-            <ContactRow
-              icon={UserRound}
-              label="Driver"
-              tone="blue"
-              vehicle={v}
-              fieldKey="driverContactVisible"
-              saving={toggleSaving}
-              onToggle={handleToggleVisibility}
-            />
+            {!isDriverless(v) && (
+              <ContactRow
+                icon={UserRound}
+                label="Driver"
+                tone="blue"
+                vehicle={v}
+                fieldKey="driverContactVisible"
+                saving={toggleSaving}
+                onToggle={handleToggleVisibility}
+              />
+            )}
             <ContactRow
               icon={AlertCircle}
               label="Emergency"
@@ -628,37 +637,41 @@ const MyVehiclePage = () => {
                   }
                 />
               </label>
-              <label className="block text-sm">
-                <span className="font-medium text-slate-700 dark:text-slate-300">
-                  Driver name
-                </span>
-                <input
-                  className={`${fieldClass} mt-1`}
-                  placeholder="Optional"
-                  value={editVehicle.driverName}
-                  onChange={(e) =>
-                    setEditVehicle((prev) => ({ ...prev, driverName: e.target.value }))
-                  }
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="font-medium text-slate-700 dark:text-slate-300">
-                  Driver phone
-                </span>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  className={`${fieldClass} mt-1`}
-                  placeholder="01XXXXXXXXX"
-                  value={editVehicle.driverPhone}
-                  onChange={(e) =>
-                    setEditVehicle((prev) => ({
-                      ...prev,
-                      driverPhone: phoneDigits(e.target.value),
-                    }))
-                  }
-                />
-              </label>
+              {!isDriverlessTagType(editVehicle.tagType, tagTypes) && (
+                <>
+                  <label className="block text-sm">
+                    <span className="font-medium text-slate-700 dark:text-slate-300">
+                      Driver name
+                    </span>
+                    <input
+                      className={`${fieldClass} mt-1`}
+                      placeholder="Optional"
+                      value={editVehicle.driverName}
+                      onChange={(e) =>
+                        setEditVehicle((prev) => ({ ...prev, driverName: e.target.value }))
+                      }
+                    />
+                  </label>
+                  <label className="block text-sm">
+                    <span className="font-medium text-slate-700 dark:text-slate-300">
+                      Driver phone
+                    </span>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      className={`${fieldClass} mt-1`}
+                      placeholder="01XXXXXXXXX"
+                      value={editVehicle.driverPhone}
+                      onChange={(e) =>
+                        setEditVehicle((prev) => ({
+                          ...prev,
+                          driverPhone: phoneDigits(e.target.value),
+                        }))
+                      }
+                    />
+                  </label>
+                </>
+              )}
             </div>
 
             <div className="mt-6 flex gap-2">

@@ -122,6 +122,7 @@ const AddVehiclePage = () => {
     productId: String(productRow?.product?._id || productRow?.product?.id || ""),
     productTitle: productRow?.product?.title || form.model || "Vehicle",
     vehicleId,
+    tagType: form.tagType || "",
     model: form.model,
     plate: isCycle
       ? form.plate

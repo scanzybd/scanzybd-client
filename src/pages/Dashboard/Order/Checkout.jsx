@@ -17,7 +17,7 @@ import {
 import useTagTypes from "../../../hooks/useTagTypes";
 import usePaymentGateways from "../../../hooks/usePaymentGateways";
 import PaymentGatewayPicker from "../../../components/payment/PaymentGatewayPicker";
-import { isCycleTagType } from "../../../lib/tagTypeUtils";
+import { isCycleTagType, isDriverlessTagType } from "../../../lib/tagTypeUtils";
 
 function normalizeBrtaOptions(raw) {
   const list = Array.isArray(raw)
@@ -74,9 +74,9 @@ function digitsOnly(value, maxLen = 20) {
   return String(value || "").replace(/\D/g, "").slice(0, maxLen);
 }
 
-/** Registration number: auto `XX-` after first 2 digits (e.g. 12-3322) */
+/** Registration number: `XX-` after first 2 digits, then up to 4 digits (e.g. 12-3322) */
 function formatRegNumberInput(value) {
-  const digits = digitsOnly(value, 8);
+  const digits = digitsOnly(value, 6);
   if (digits.length <= 2) return digits;
   return `${digits.slice(0, 2)}-${digits.slice(2)}`;
 }
@@ -339,9 +339,9 @@ const Checkout = () => {
         alert(`Tag ${i + 1}: emergency contact phone must be 11 digits.`);
         return false;
       }
-      // Only require/add driver info for non cycle tags
+      // Only require/add driver info for tags that have a driver (not cycle/bike)
       if (
-        !isCycleTagType(slots[i]?.type, tagTypes) &&
+        !isDriverlessTagType(slots[i]?.type, tagTypes) &&
         v.addDriver
       ) {
         if (!v.driverName?.trim() || !v.driverPhone?.trim()) {
@@ -399,8 +399,9 @@ const Checkout = () => {
       const tagAssignments = slots.map((slot, i) => {
         const v = vehicles[i];
         const isCycleTag = isCycleTagType(slot.type, tagTypes);
+        const hideDriver = isDriverlessTagType(slot.type, tagTypes);
         const driver =
-          !isCycleTag && v.addDriver && v.driverName?.trim() && v.driverPhone?.trim()
+          !hideDriver && v.addDriver && v.driverName?.trim() && v.driverPhone?.trim()
             ? {
                 name: v.driverName.trim(),
                 phone: v.driverPhone.trim(),
@@ -414,6 +415,7 @@ const Checkout = () => {
         return {
           productId: slot.productId,
           productTitle: slot.title,
+          tagType: slot.type || "",
           model: v.model.trim(),
           plate,
           ...(!isCycleTag
@@ -426,7 +428,7 @@ const Checkout = () => {
           ownerContactVisible: Boolean(v.ownerContactVisible),
           emergencyPhone: v.emergencyPhone.trim(),
           emergencyContactVisible: Boolean(v.emergencyContactVisible),
-          driverContactVisible: !isCycleTag && Boolean(v.driverContactVisible),
+          driverContactVisible: !hideDriver && Boolean(v.driverContactVisible),
           ...(driver ? { driver } : {}),
         };
       });
@@ -513,6 +515,20 @@ const Checkout = () => {
     <div
       className={`flex min-h-screen justify-center p-4 pb-12 sm:p-6 ${shellPage}`}
     >
+      {/* ✅ এই ব্লকটা যুক্ত করুন */}
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="rounded-2xl bg-white px-8 py-6 text-center shadow-xl dark:bg-slate-800">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-amber-600 border-t-transparent"></div>
+            <p className="mt-3 font-semibold text-slate-800 dark:text-slate-100">
+              Connecting to payment gateway...
+            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Please don&apos;t close or refresh this page
+            </p>
+          </div>
+        </div>
+      )}
       <div className="w-full max-w-3xl space-y-6">
         <div>
           <h1 className={`text-2xl font-bold tracking-tight ${textHeading}`}>
@@ -811,6 +827,8 @@ const Checkout = () => {
                 const v = vehicles[index] || emptyVehicleForm();
                 // type could be undefined or empty string; defensively check
                 const isCycleTag = isCycleTagType(slot.type, tagTypes);
+                // Cycle + bike tags have no driver concept.
+                const hideDriver = isDriverlessTagType(slot.type, tagTypes);
                 return (
                   <div key={slot.key} className={`p-5 ${cardSurface}`}>
                     <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
@@ -920,7 +938,7 @@ const Checkout = () => {
                               }
                               placeholder="e.g. 12-3322"
                               inputMode="numeric"
-                              maxLength={9}
+                              maxLength={7}
                             />
                           </label>
                         </>
@@ -1059,8 +1077,8 @@ const Checkout = () => {
                           Allow page to show emergency contact
                         </label>
                       </label>
-                      {/* Driver contact permission should only show for non-cycle tags */}
-                      {!isCycleTag && (
+                      {/* Driver contact permission only for tags with a driver (not cycle/bike) */}
+                      {!hideDriver && (
                         <label className="block sm:col-span-2">
                           <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
                             Driver contact permission
@@ -1082,8 +1100,8 @@ const Checkout = () => {
                       )}
                     </div>
 
-                    {/* Hide Driver (optional) entry for "Cycle Tag" */}
-                    {!isCycleTag && (
+                    {/* Hide Driver (optional) entry for cycle + bike tags */}
+                    {!hideDriver && (
                       <div className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700">
                         <button
                           type="button"

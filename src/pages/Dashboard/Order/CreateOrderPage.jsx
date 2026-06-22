@@ -19,6 +19,7 @@ import {
 } from "../../../lib/uiClasses";
 import useTagTypes from "../../../hooks/useTagTypes";
 import { isCycleTagType } from "../../../lib/tagTypeUtils";
+import { formatRegNumberInput } from "../../../lib/vehicleFormUtils";
 
 function normalizeBrtaOptions(raw) {
   const list = Array.isArray(raw)
@@ -946,9 +947,13 @@ const CreateOrderPage = () => {
                               className={`${fieldInput} font-mono`}
                               value={v.regNumber}
                               onChange={(e) =>
-                                updateVehicle(index, { regNumber: e.target.value })
+                                updateVehicle(index, {
+                                  regNumber: formatRegNumberInput(e.target.value),
+                                })
                               }
                               placeholder="e.g. 12-3322"
+                              inputMode="numeric"
+                              maxLength={7}
                             />
                           </label>
                         </>

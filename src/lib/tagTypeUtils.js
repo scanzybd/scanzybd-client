@@ -14,6 +14,22 @@ export function isCycleTagType(tagTypeName, tagTypes = []) {
   return name.toLowerCase() === "cycle tag";
 }
 
+/** @param {string} tagTypeName — true for bike tag types (no driver concept). */
+export function isBikeTagType(tagTypeName) {
+  const name = String(tagTypeName || "").trim().toLowerCase();
+  if (!name) return false;
+  return name.includes("bike");
+}
+
+/**
+ * Tag types that should not collect a driver (cycle + bike).
+ * @param {string} tagTypeName
+ * @param {Array<{ name?: string, isCycle?: boolean }>} [tagTypes]
+ */
+export function isDriverlessTagType(tagTypeName, tagTypes = []) {
+  return isCycleTagType(tagTypeName, tagTypes) || isBikeTagType(tagTypeName);
+}
+
 /** @param {unknown} payload */
 export function normalizeTagTypesList(payload) {
   const rows = Array.isArray(payload)

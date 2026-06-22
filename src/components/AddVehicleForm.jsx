@@ -3,8 +3,8 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import useAxiosSecure from "../hooks/useAxiosSecure";
 import { fieldInput, textMuted } from "../lib/uiClasses";
 import useTagTypes from "../hooks/useTagTypes";
-import { isCycleTagType } from "../lib/tagTypeUtils";
-import { normalizeBrtaOptions } from "../lib/vehicleFormUtils";
+import { isCycleTagType, isDriverlessTagType } from "../lib/tagTypeUtils";
+import { normalizeBrtaOptions, formatRegNumberInput } from "../lib/vehicleFormUtils";
 
 function RequiredStar() {
   return (
@@ -48,29 +48,40 @@ const AddVehicleForm = ({
     ? isCycleTagType(form.tagType, tagTypes)
     : Boolean(isCycleTagProp);
 
+  // Cycle + bike tags have no driver concept — hide the whole driver section.
+  const hideDriver = showTagTypeSelector
+    ? isDriverlessTagType(form.tagType, tagTypes)
+    : Boolean(isCycleTagProp);
+
   const fieldsReady = !showTagTypeSelector || Boolean(form.tagType);
 
   const handleTagTypeChange = (tagType) => {
+    if (tagType === form.tagType) return;
     const nextCycle = isCycleTagType(tagType, tagTypes);
     const prevCycle = isCycleTagType(form.tagType, tagTypes);
-    if (tagType === form.tagType) return;
+    const nextDriverless = isDriverlessTagType(tagType, tagTypes);
+    const prevDriverless = isDriverlessTagType(form.tagType, tagTypes);
+
+    const next = { tagType };
     if (nextCycle !== prevCycle) {
-      patch({
-        tagType,
+      Object.assign(next, {
         zone: "",
         series: "",
         regNumber: "",
         chassisLast4: "",
         engineLast4: "",
         plate: "",
+      });
+    }
+    if (nextDriverless && !prevDriverless) {
+      Object.assign(next, {
         addDriver: false,
         driverName: "",
         driverPhone: "",
         driverContactVisible: false,
       });
-    } else {
-      patch({ tagType });
     }
+    patch(next);
   };
 
   useEffect(() => {
@@ -210,8 +221,10 @@ const AddVehicleForm = ({
             <input
               className={`${fieldInput} font-mono`}
               value={form.regNumber || ""}
-              onChange={(e) => patch({ regNumber: e.target.value })}
+              onChange={(e) => patch({ regNumber: formatRegNumberInput(e.target.value) })}
               placeholder="e.g. 12-3322"
+              inputMode="numeric"
+              maxLength={7}
             />
           </label>
         </>
@@ -339,7 +352,7 @@ const AddVehicleForm = ({
         </label>
       </label>
 
-      {!isCycleTag && (
+      {!hideDriver && (
         <label className="block sm:col-span-2">
           <span className={`mb-1 block text-xs font-medium ${textMuted}`}>
             Driver contact permission
@@ -356,7 +369,7 @@ const AddVehicleForm = ({
         </label>
       )}
 
-      {showDriverSection && !isCycleTag && (
+      {showDriverSection && !hideDriver && (
         <div className="mt-1 border-t border-slate-200 pt-3 sm:col-span-2 dark:border-slate-700">
           <button
             type="button"

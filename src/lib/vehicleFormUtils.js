@@ -1,4 +1,7 @@
-import { isCycleTagType as isCycleTagTypeFromDb } from "./tagTypeUtils";
+import {
+  isCycleTagType as isCycleTagTypeFromDb,
+  isBikeTagType,
+} from "./tagTypeUtils";
 
 export { isCycleTagTypeFromDb as isCycleTagType };
 
@@ -14,6 +17,16 @@ export function normalizeBrtaOptions(raw) {
       value: String(row?.value ?? row?.label ?? "").trim(),
     }))
     .filter((row) => row.label && row.value);
+}
+
+/**
+ * Registration number input: 2 leading digits, then `-`, then up to 4 digits.
+ * e.g. "123322" -> "12-3322".
+ */
+export function formatRegNumberInput(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 6);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}-${digits.slice(2)}`;
 }
 
 export function createEmptyVehicleForm() {
@@ -38,6 +51,8 @@ export function createEmptyVehicleForm() {
 }
 
 export function buildVehicleAddPayload(form, isCycleTag) {
+  // Cycle + bike tags carry no driver.
+  const hideDriver = isCycleTag || isBikeTagType(form.tagType);
   const plate = isCycleTag
     ? String(form.plate || "").trim()
     : `${form.zone}-${form.series}-${String(form.regNumber || "").trim()}`;
@@ -45,12 +60,13 @@ export function buildVehicleAddPayload(form, isCycleTag) {
   const payload = {
     vehicleName: String(form.model || "").trim() || "Vehicle",
     model: String(form.model || "").trim(),
+    tagType: String(form.tagType || "").trim(),
     plate,
     ownerPhone: String(form.ownerPhone || "").trim(),
     emergencyPhone: String(form.emergencyPhone || "").trim(),
     ownerContactVisible: Boolean(form.ownerContactVisible),
     emergencyContactVisible: Boolean(form.emergencyContactVisible),
-    driverContactVisible: !isCycleTag && Boolean(form.driverContactVisible),
+    driverContactVisible: !hideDriver && Boolean(form.driverContactVisible),
   };
 
   if (!isCycleTag) {
@@ -58,7 +74,7 @@ export function buildVehicleAddPayload(form, isCycleTag) {
     payload.engineLast4 = String(form.engineLast4 || "").trim();
   }
 
-  if (!isCycleTag && form.addDriver && form.driverName?.trim() && form.driverPhone?.trim()) {
+  if (!hideDriver && form.addDriver && form.driverName?.trim() && form.driverPhone?.trim()) {
     payload.driver = {
       name: form.driverName.trim(),
       phone: form.driverPhone.trim(),
@@ -93,7 +109,8 @@ export function validateVehicleForm(form, isCycleTag) {
   if (!/^\d{11}$/.test(String(form.emergencyPhone || "").trim())) {
     return "Emergency contact phone must be 11 digits.";
   }
-  if (!isCycleTag && form.addDriver) {
+  const hideDriver = isCycleTag || isBikeTagType(form.tagType);
+  if (!hideDriver && form.addDriver) {
     if (!form.driverName?.trim() || !form.driverPhone?.trim()) {
       return "Add driver name and phone, or turn off driver.";
     }
