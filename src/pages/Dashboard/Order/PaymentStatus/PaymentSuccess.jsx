@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import useAxiosSecure from "../../../../hooks/useAxiosSecure";
+import useCart from "../../../../hooks/useCart";
 
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
   const axiosSecure = useAxiosSecure();
+  const { clearCart } = useCart();
   const [params] = useSearchParams();
   const paymentId = params.get("paymentId");
   const transactionId = params.get("trxID");
@@ -29,6 +31,7 @@ const PaymentSuccess = () => {
         });
 
         if (data?.success) {
+          await clearCart();
           setStatus("success");
         } else {
           setStatus("failed");
@@ -41,7 +44,7 @@ const PaymentSuccess = () => {
     };
 
     confirmPayment();
-  }, [paymentId, transactionId, axiosSecure]);
+  }, [paymentId, transactionId, axiosSecure, clearCart]);
 
   if (loading) {
     return (

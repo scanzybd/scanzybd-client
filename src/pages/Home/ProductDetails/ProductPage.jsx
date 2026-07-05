@@ -202,7 +202,7 @@ const ProductPage = () => {
         type: "error",
         message: "This product is not available.",
       });
-      setTimeout(() => setNotification(null), 3200);
+      setTimeout(() => setNotification(null), 2400);
       return;
     }
     if (!user) {
@@ -216,14 +216,14 @@ const ProductPage = () => {
         type: "error",
         message: "Please sign in to add items to your cart.",
       });
-      setTimeout(() => setNotification(null), 3200);
+      setTimeout(() => setNotification(null), 2400);
       return;
     }
     setNotification({
       type: "success",
       message: `${product.title} added to cart`,
     });
-    setTimeout(() => setNotification(null), 3200);
+    setTimeout(() => setNotification(null), 1200);
   };
 
   const handleRemove = (id) => {

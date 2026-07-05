@@ -106,7 +106,7 @@ const ProductShowcase = () => {
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
-    setTimeout(() => setNotification(null), 3200);
+    setTimeout(() => setNotification(null), 1200);
   };
 
   const handleAddToCart = (product) => {

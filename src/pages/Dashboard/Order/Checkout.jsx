@@ -88,7 +88,7 @@ function regNumberDigits(value) {
 const Checkout = () => {
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
-  const { cartItems, clearCart } = useCart();
+  const { cartItems } = useCart();
   const { data: tagTypes = [] } = useTagTypes();
   const { data: gateways } = usePaymentGateways();
   const [selectedGateway, setSelectedGateway] = useState("bkash");
@@ -461,8 +461,6 @@ const Checkout = () => {
       const orderId = orderRes?.data?.orderId;
 
       if (!orderId) throw new Error("Order failed");
-
-      await clearCart();
 
       if (!gateways?.hasOnlinePayment) {
         throw new Error("No online payment gateway is enabled");
