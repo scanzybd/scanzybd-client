@@ -23,6 +23,30 @@
 
     <link rel="canonical" href="https://scanzybd.com/" />
 
+    <meta name="application-name" content="ScanzyBD" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://scanzybd.com/#organization",
+            "name": "ScanzyBD",
+            "url": "https://scanzybd.com/",
+            "logo": "https://scanzybd.com/favicon.png"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://scanzybd.com/#website",
+            "name": "ScanzyBD",
+            "url": "https://scanzybd.com/",
+            "publisher": { "@id": "https://scanzybd.com/#organization" }
+          }
+        ]
+      }
+    </script>
+
     <!-- Favicon: Use both .ico and .png for full compatibility -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="icon" type="image/x-icon" sizes="32x32" href="/favicon.ico" />
