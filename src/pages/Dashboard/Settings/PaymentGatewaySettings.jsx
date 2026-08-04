@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { CreditCard, QrCode, Save, Smartphone, Upload } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
+import { compressImageFileForUpload } from "../../../lib/compressImageForUpload";
 
 const PaymentGatewaySettings = () => {
   const axiosSecure = useAxiosSecure();
@@ -117,13 +118,7 @@ const PaymentGatewaySettings = () => {
     setUploadingQr(true);
 
     try {
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("Could not read file"));
-        reader.readAsDataURL(file);
-      });
-
+      const dataUrl = await compressImageFileForUpload(file);
       const res = await axiosSecure.post("/api/upload/image", { image: dataUrl });
       const url = res.data?.url;
       if (!url) {
@@ -132,7 +127,12 @@ const PaymentGatewaySettings = () => {
 
       setQrImageUrl(url);
     } catch (err) {
-      setUploadError(err?.response?.data?.message || err.message || "Upload failed");
+      const msg = err?.response?.data?.message || err.message || "Upload failed";
+      setUploadError(
+        /network error/i.test(msg)
+          ? "Upload failed (file too large or connection). Try again."
+          : msg
+      );
     } finally {
       setUploadingQr(false);
     }

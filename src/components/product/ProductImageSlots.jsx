@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { PRODUCT_IMAGE_SLOTS } from "../../lib/productImages";
+import { compressImageFileForUpload } from "../../lib/compressImageForUpload";
 
 /**
- * Up to 4 product image slots — upload via /api/upload/image (Cloudinary).
+ * Up to 4 product image slots — compress client-side, upload via /api/upload/image (Cloudinary).
  * `images` is a length-4 string array; empty string = vacant slot.
  */
 export default function ProductImageSlots({
@@ -43,20 +44,18 @@ export default function ProductImageSlots({
     setUploadingIndex(index);
 
     try {
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("Could not read file"));
-        reader.readAsDataURL(file);
-      });
-
+      const dataUrl = await compressImageFileForUpload(file);
       const res = await axiosSecure.post("/api/upload/image", { image: dataUrl });
       const url = res.data?.url;
       if (!url) throw new Error(res.data?.message || "No URL returned");
       setSlot(index, url);
     } catch (err) {
+      const msg =
+        err.response?.data?.message || err.message || "Image upload failed";
       setError(
-        err.response?.data?.message || err.message || "Image upload failed"
+        /network error/i.test(msg)
+          ? "Upload failed (file too large or connection issue). Try again — images are compressed automatically."
+          : msg
       );
     } finally {
       setUploadingIndex(null);
@@ -70,6 +69,7 @@ export default function ProductImageSlots({
       </label>
       <p className="mb-3 text-xs text-gray-500">
         First image is the cover (lists, cart, spotlight). All four show on the product details page.
+        Photos are compressed in the browser, then uploaded to Cloudinary (URL saved in the database).
       </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {slots.map((url, index) => {
