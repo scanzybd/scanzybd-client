@@ -40,6 +40,12 @@ export const COMPANY_LEGAL_NAME = str(
 /** Hero / banner background — matches Banner.png & BannerVideo yellow */
 export const BRAND_YELLOW = str(import.meta.env.VITE_BRAND_YELLOW, "#FFD700");
 
+/** Hero banner video (Cloudinary or other CDN URL) */
+export const BANNER_VIDEO_URL = str(
+    import.meta.env.VITE_BANNER_VIDEO_URL,
+    "https://res.cloudinary.com/hrpgvoeg/video/upload/f_mp4,vc_h264,q_auto:eco,w_1280/v1785836481/BannerVideo0_iqprij.mp4"
+);
+
 /** Dashboard sidebar subtitle under “Dashboard” */
 export const COMPANY_TAGLINE = str(
     import.meta.env.VITE_COMPANY_TAGLINE,

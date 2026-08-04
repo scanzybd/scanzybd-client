@@ -3,27 +3,6 @@ import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useTagTypes from "../../../hooks/useTagTypes";
 
-/** Same encoding rules as server — direct to ImgBB if server upload fails */
-async function uploadToImgbbDirect(dataUrl, apiKey) {
-  let base64 = String(dataUrl).trim();
-  if (base64.includes("base64,")) {
-    base64 = base64.split("base64,")[1];
-  }
-  base64 = base64.replace(/\s/g, "");
-  const body = `key=${encodeURIComponent(apiKey)}&image=${encodeURIComponent(base64)}`;
-  const r = await fetch("https://api.imgbb.com/1/upload", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  const j = await r.json();
-  if (!j.success || !j.data?.url) {
-    const em = j?.error?.message || j?.status_txt || "ImgBB rejected the upload";
-    throw new Error(typeof em === "string" ? em : JSON.stringify(em));
-  }
-  return j.data.url;
-}
-
 const AddProducts = () => {
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
@@ -112,7 +91,7 @@ const AddProducts = () => {
       });
 
       try {
-        const res = await axiosSecure.post("/api/upload/imgbb", {
+        const res = await axiosSecure.post("/api/upload/image", {
           image: dataUrl,
         });
 
@@ -123,17 +102,6 @@ const AddProducts = () => {
 
         setForm((prev) => ({ ...prev, image: url }));
       } catch (serverErr) {
-        const viteKey = import.meta.env.VITE_image_host_key?.trim();
-        if (viteKey && dataUrl) {
-          try {
-            const url = await uploadToImgbbDirect(dataUrl, viteKey);
-            setForm((prev) => ({ ...prev, image: url }));
-            setUploadError(null);
-            return;
-          } catch (directErr) {
-            console.error("Direct ImgBB:", directErr);
-          }
-        }
         throw serverErr;
       }
     } catch (err) {
@@ -151,10 +119,15 @@ const AddProducts = () => {
         msg =
           "Your user account is not in the database — ask an admin to add your account.";
       } else if (status === 502 || status === 500) {
-        msg = msg || "Server or ImgBB error — check IMGBB_API_KEY in server .env and restart.";
+        msg =
+          msg ||
+          "Server or Cloudinary error — check CLOUDINARY_* keys in server .env and restart.";
       }
 
-      setUploadError(msg || "Upload failed — check ImgBB key on server (.env IMGBB_API_KEY)");
+      setUploadError(
+        msg ||
+          "Upload failed — check Cloudinary keys on server (.env CLOUDINARY_API_KEY / SECRET)"
+      );
     } finally {
       setUploadingImage(false);
       e.target.value = "";
@@ -258,7 +231,7 @@ const AddProducts = () => {
             className="w-full p-3 border rounded mb-3"
           />
 
-          {/* IMAGE — ImgBB via server */}
+          {/* IMAGE — Cloudinary via server */}
           <div className="mb-3 rounded-lg border border-dashed border-gray-300 bg-gray-50/80 p-3">
             <label className="mb-2 block text-sm font-medium text-gray-700">
               Product image
@@ -271,13 +244,13 @@ const AddProducts = () => {
               className="w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-white hover:file:bg-blue-700"
             />
             {uploadingImage && (
-              <p className="mt-2 text-sm text-blue-600">Uploading to ImgBB…</p>
+              <p className="mt-2 text-sm text-blue-600">Uploading to Cloudinary…</p>
             )}
             {uploadError && (
               <p className="mt-2 text-sm text-red-600">{uploadError}</p>
             )}
             <p className="mt-2 text-xs text-gray-500">
-              File is sent to your server, uploaded to ImgBB, then the returned URL is saved with
+              File is sent to your server, uploaded to Cloudinary, then the returned URL is saved with
               the product.
             </p>
           </div>

@@ -99,7 +99,7 @@ Copy `.env example` to `.env`. Restart dev server after changes.
 |----------|---------|
 | `VITE_LOGO_TEXT_COLOR` | Header wordmark color |
 | `VITE_BRAND_YELLOW` | Banner yellow (`#FFD700`) |
-| `VITE_image_host_key` | ImgBB direct upload fallback in product forms |
+| `VITE_BANNER_VIDEO_URL` | Homepage banner video (Cloudinary CDN URL) |
 | `VITE_FEATURED_PRODUCT_ID` | Home spotlight product (`featuredProduct.js`) |
 
 **Vite rule:** use static `import.meta.env.VITE_*` references — dynamic lookup is not replaced at build time.

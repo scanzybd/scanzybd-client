@@ -48,6 +48,7 @@ export function formatPaymentMethod(method) {
   const map = {
     cash: "Cash",
     bkash_manual: "Manual bKash",
+    manual_bkash: "Manual bKash",
     bkash_online: "bKash Online",
     sslcommerz_online: "SSL Commerz",
     sslcommerz: "SSL Commerz",
@@ -81,6 +82,14 @@ export function formatDateTime(value) {
     minute: "2-digit",
     hour12: true,
   });
+}
+
+/** Manual bKash trx input — last 8 letters or numbers. */
+export function sanitizeManualTransactionInput(raw) {
+  return String(raw || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 8);
 }
 
 /** Prefer final bKash trx; fall back to payment ID */

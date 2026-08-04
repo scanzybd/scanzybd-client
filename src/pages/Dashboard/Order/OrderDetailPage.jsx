@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Trash2 } from "lucide-react";
@@ -8,6 +8,7 @@ import useAuth from "../../../hooks/useAuth";
 import SmartLoader from "../../../components/SmartLoader";
 import { cardSurface, textHeading, textMuted } from "../../../lib/uiClasses";
 import { STAFF_ORDER_STATUS_OPTIONS, statusLabel } from "../../../lib/orderStatuses";
+import { formatPaymentMethod, sanitizeManualTransactionInput } from "../../../lib/orderDisplayFormat";
 
 const fmt = (n) => `৳ ${Number(n || 0).toLocaleString()}`;
 
@@ -35,6 +36,21 @@ const OrderDetailPage = () => {
   const order = data?.order;
   const payment = data?.payment;
 
+  useEffect(() => {
+    if (payment?.transactionId) {
+      setTrx(String(payment.transactionId));
+    }
+    if (payment?.note) {
+      setNote(String(payment.note));
+    }
+    if (order?.paymentStatus) {
+      const ps = String(order.paymentStatus).toLowerCase();
+      if (ps === "paid") setPayStatus("paid");
+      else if (ps === "failed") setPayStatus("failed");
+      else setPayStatus("unpaid");
+    }
+  }, [payment?.transactionId, payment?.note, order?.paymentStatus]);
+
   const deleteMutation = useMutation({
     mutationFn: () => axiosSecure.delete(`/api/order/${orderId}`),
     onSuccess: () => {
@@ -60,12 +76,21 @@ const OrderDetailPage = () => {
   });
 
   const paymentMutation = useMutation({
-    mutationFn: () =>
-      axiosSecure.patch(`/api/order/${orderId}/payment`, {
-        transactionId: trx,
-        paymentStatus: payStatus,
-        note,
-      }),
+    mutationFn: () => {
+      const manualBkash =
+        String(payment?.paymentMethod || order?.paymentMethod || "").toLowerCase() ===
+        "manual_bkash";
+      const body = { paymentStatus: payStatus, note };
+      if (payStatus === "paid" && trx.trim()) {
+        body.transactionId = trx.trim();
+      }
+      if (payStatus === "paid" && manualBkash && !trx.trim() && !payment?.transactionId) {
+        return Promise.reject(
+          new Error("Transaction ID is required to mark manual bKash as paid")
+        );
+      }
+      return axiosSecure.patch(`/api/order/${orderId}/payment`, body);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["order-detail", orderId] });
       alert("Payment updated.");
@@ -92,6 +117,18 @@ const OrderDetailPage = () => {
 
   const paymentUnpaid =
     String(order.paymentStatus || "").toLowerCase() === "unpaid";
+
+  const isManualBkash =
+    String(payment?.paymentMethod || order?.paymentMethod || "").toLowerCase() ===
+    "manual_bkash";
+
+  const handleTrxChange = (e) => {
+    if (isManualBkash) {
+      setTrx(sanitizeManualTransactionInput(e.target.value));
+    } else {
+      setTrx(e.target.value);
+    }
+  };
 
   const handleDelete = async () => {
     const result = await Swal.fire({
@@ -243,14 +280,27 @@ const OrderDetailPage = () => {
             </div>
             <div className="flex justify-between">
               <span className={textMuted}>Method</span>
-              <span>{payment.paymentMethod}</span>
+              <span>{formatPaymentMethod(payment.paymentMethod)}</span>
             </div>
-            {payment.transactionId && (
-              <div className="flex justify-between">
-                <span className={textMuted}>Trx ID</span>
-                <span className="font-mono text-xs">{payment.transactionId}</span>
-              </div>
-            )}
+            <div className="flex justify-between gap-3">
+              <span className={textMuted}>
+                {isManualBkash ? "Trx ID (last 8 characters)" : "Trx ID"}
+              </span>
+              <span
+                className={`font-mono text-xs ${
+                  payment.transactionId
+                    ? "text-slate-900 dark:text-slate-100"
+                    : "text-amber-600 dark:text-amber-400"
+                }`}
+              >
+                {payment.transactionId || "—"}
+              </span>
+            </div>
+            {!payment.transactionId && isManualBkash && isAdmin ? (
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Missing transaction ID — add it below and save.
+              </p>
+            ) : null}
             {payment.note && (
               <div>
                 <span className={textMuted}>Note</span>
@@ -301,13 +351,24 @@ const OrderDetailPage = () => {
         <div className={`${cardSurface} p-6`}>
           <h2 className={`text-lg font-bold ${textHeading}`}>Update payment (admin)</h2>
           <div className="mt-4 space-y-3">
-            <input
-              type="text"
-              value={trx}
-              onChange={(e) => setTrx(e.target.value)}
-              placeholder="Transaction ID"
-              className="input input-bordered w-full rounded-xl"
-            />
+            {payStatus === "paid" ? (
+              <label className="block">
+                <span className={`mb-1 block text-sm font-medium ${textHeading}`}>
+                  {isManualBkash ? "Transaction ID (last 8 characters)" : "Transaction ID"}
+                  {isManualBkash ? (
+                    <span className="text-rose-600 dark:text-rose-400"> *</span>
+                  ) : null}
+                </span>
+                <input
+                  type="text"
+                  maxLength={isManualBkash ? 8 : 40}
+                  value={trx}
+                  onChange={handleTrxChange}
+                  placeholder={isManualBkash ? "e.g. AB12CD34" : "Transaction ID"}
+                  className="input input-bordered w-full rounded-xl font-mono uppercase"
+                />
+              </label>
+            ) : null}
             <select
               value={payStatus}
               onChange={(e) => setPayStatus(e.target.value)}

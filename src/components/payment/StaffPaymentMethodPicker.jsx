@@ -101,7 +101,17 @@ export default function StaffPaymentMethodPicker({
           placeholder="Payment note (optional)"
         />
       ) : null}
-      {!gateways?.hasOnlinePayment && gateways && !isLoading ? (
+      {!gateways?.hasAnyPayment && gateways && !isLoading ? (
+        <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">
+          No payment method is enabled. Ask admin to enable bKash, SSL, or manual
+          bKash in Payment gateways.
+        </p>
+      ) : !gateways?.hasOnlinePayment && gateways?.manualBkash && !isLoading ? (
+        <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+          Online payment is off — customer checkout uses manual bKash QR. Staff can
+          still use cash or manual bKash below.
+        </p>
+      ) : !gateways?.hasOnlinePayment && gateways && !isLoading ? (
         <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">
           No online gateway is enabled. Use cash or manual bKash, or ask admin to
           enable bKash/SSL in Payment gateways.

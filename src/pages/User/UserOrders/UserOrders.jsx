@@ -47,6 +47,39 @@ function orderSummaryLine(order) {
   return parts.length ? parts.join(" · ") : "No line items";
 }
 
+/** Payment badge — manual bKash unpaid orders are awaiting admin review */
+function paymentBadge(order) {
+  const status = String(order.paymentStatus || "").toLowerCase();
+  const method = String(order.paymentMethod || "").toLowerCase();
+
+  if (status === "paid") {
+    return {
+      label: "Paid",
+      className:
+        "bg-emerald-100 text-emerald-800 ring-emerald-200/80 dark:bg-emerald-900/40 dark:text-emerald-300",
+    };
+  }
+  if (status === "failed") {
+    return {
+      label: "Failed",
+      className:
+        "bg-rose-100 text-rose-800 ring-rose-200/80 dark:bg-rose-900/40 dark:text-rose-300",
+    };
+  }
+  if (method === "manual_bkash") {
+    return {
+      label: "Pending verification",
+      className:
+        "bg-amber-100 text-amber-800 ring-amber-200/80 dark:bg-amber-900/40 dark:text-amber-300",
+    };
+  }
+  return {
+    label: "Unpaid",
+    className:
+      "bg-slate-100 text-slate-700 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-300",
+  };
+}
+
 function OrderDetailsPanel({ order, customer }) {
   const ship = order.shippingAddress || {};
   const items = order.items || [];
@@ -175,13 +208,15 @@ function OrderDetailsPanel({ order, customer }) {
         </section>
       )}
 
-      <div className="flex flex-col gap-3 border-t border-slate-200/80 pt-4 dark:border-slate-700">
-        <InvoiceDownloadButton
-          order={order}
-          customer={customer}
-          className="btn btn-outline btn-sm w-fit gap-1.5 rounded-xl border-emerald-300 text-emerald-800 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
-        />
-      </div>
+      {String(order.paymentStatus || "").toLowerCase() === "paid" ? (
+        <div className="flex flex-col gap-3 border-t border-slate-200/80 pt-4 dark:border-slate-700">
+          <InvoiceDownloadButton
+            order={order}
+            customer={customer}
+            className="btn btn-outline btn-sm w-fit gap-1.5 rounded-xl border-emerald-300 text-emerald-800 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -198,8 +233,7 @@ const UserOrders = () => {
       const res = await axiosSecure.get(`/api/order/my-orders?page=${page}&limit=10`);
       const body = res.data;
       if (Array.isArray(body)) {
-        const paid = body.filter((o) => o.paymentStatus === "paid");
-        return { orders: paid, total: paid.length, page: 1 };
+        return { orders: body, total: body.length, page: 1 };
       }
       return body;
     },
@@ -236,10 +270,10 @@ const UserOrders = () => {
         <div className={`mx-auto max-w-xl p-10 ${cardSurface}`}>
           <Package className="mx-auto mb-4 h-12 w-12 text-slate-300" />
           <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            No paid orders yet
+            No orders yet
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            Orders appear here after payment is successful.
+            Your orders will appear here after checkout.
           </p>
         </div>
       </div>
@@ -253,13 +287,14 @@ const UserOrders = () => {
           My orders
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          {total} paid order{total !== 1 ? "s" : ""} — tap a card to view full details
+          {total} order{total !== 1 ? "s" : ""} — tap a card to view full details
         </p>
       </header>
 
       <div className="space-y-4">
         {orders.map((order) => {
           const open = expanded[order._id];
+          const badge = paymentBadge(order);
 
           return (
             <article
@@ -272,9 +307,16 @@ const UserOrders = () => {
                     <Package className="h-5 w-5 sm:h-6 sm:w-6" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-lg font-bold tracking-tight text-emerald-700 dark:text-emerald-400 sm:text-xl">
-                      {formatOrderNo(order.orderNo)}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-lg font-bold tracking-tight text-emerald-700 dark:text-emerald-400 sm:text-xl">
+                        {formatOrderNo(order.orderNo)}
+                      </p>
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${badge.className}`}
+                      >
+                        {badge.label}
+                      </span>
+                    </div>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
                       {formatDateShort(order.createdAt)}
                     </p>

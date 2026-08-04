@@ -21,6 +21,8 @@ export const loadPaymentReject = () =>
   import("../pages/Dashboard/Order/PaymentStatus/PaymentReject.jsx");
 export const loadPaymentSuccess = () =>
   import("../pages/Dashboard/Order/PaymentStatus/PaymentSuccess.jsx");
+export const loadPaymentPending = () =>
+  import("../pages/Dashboard/Order/PaymentStatus/PaymentPending.jsx");
 
 export const loadPayment = () => import("../pages/User/Payment/Payment.jsx");
 export const loadMyVehiclePage = () => import("../pages/User/UserVehicle/MyVehiclePage.jsx");
@@ -85,6 +87,7 @@ export const allRouteChunkLoaders = [
   loadResetPassword,
   loadPaymentReject,
   loadPaymentSuccess,
+  loadPaymentPending,
   loadPayment,
   loadMyVehiclePage,
   loadMyCart,

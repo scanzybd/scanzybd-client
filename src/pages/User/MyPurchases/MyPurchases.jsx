@@ -19,6 +19,7 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useCart from "../../../hooks/useCart";
 import usePaymentGateways from "../../../hooks/usePaymentGateways";
 import PaymentGatewayPicker from "../../../components/payment/PaymentGatewayPicker";
+import ManualBkashPayment from "../../../components/payment/ManualBkashPayment";
 import SmartLoader from "../../../components/SmartLoader";
 import { formatOrderNo } from "../../../lib/orderDisplayFormat";
 
@@ -49,14 +50,24 @@ const MyPurchases = () => {
 
   const [renewTag, setRenewTag] = useState(null);
   const [selectedGateway, setSelectedGateway] = useState("bkash");
+  const [manualRenewOrder, setManualRenewOrder] = useState(null);
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState("");
 
   useEffect(() => {
     if (!gateways) return;
-    if (gateways.bkash && !gateways.sslcommerz) setSelectedGateway("bkash");
-    else if (!gateways.bkash && gateways.sslcommerz) setSelectedGateway("sslcommerz");
-    else setSelectedGateway(gateways.defaultGateway || "bkash");
+    setSelectedGateway((prev) => {
+      if (prev === "manual_bkash" && gateways.manualBkash) return prev;
+      if (prev === "bkash" && gateways.bkash) return prev;
+      if (prev === "sslcommerz" && gateways.sslcommerz) return prev;
+      const online = gateways.bkash || gateways.sslcommerz;
+      if (gateways.manualBkash && !online) return "manual_bkash";
+      if (gateways.bkash && !gateways.sslcommerz && !gateways.manualBkash) return "bkash";
+      if (!gateways.bkash && gateways.sslcommerz && !gateways.manualBkash) return "sslcommerz";
+      if (online) return gateways.defaultGateway || "bkash";
+      if (gateways.manualBkash) return "manual_bkash";
+      return prev;
+    });
   }, [gateways]);
 
   const { data, isLoading, isError } = useQuery({
@@ -145,7 +156,12 @@ const MyPurchases = () => {
     if (!renewTag?.qrId) return;
     setPaying(true);
     setPayError("");
+    setManualRenewOrder(null);
     try {
+      if (!gateways?.hasAnyPayment) {
+        throw new Error(t("user.myPurchases.noGateway"));
+      }
+
       const intentRes = await axiosSecure.post("/api/subscription/renew-intent", {
         qrId: renewTag.qrId,
         mode,
@@ -154,6 +170,18 @@ const MyPurchases = () => {
       if (!order?._id) {
         throw new Error(t("user.myPurchases.renewFailed"));
       }
+
+      if (selectedGateway === "manual_bkash") {
+        if (!gateways?.manualBkash) {
+          throw new Error(t("user.myPurchases.noGateway"));
+        }
+        setManualRenewOrder({
+          orderId: order._id,
+          amount: Number(order.totalAmount) || 0,
+        });
+        return;
+      }
+
       if (!gateways?.hasOnlinePayment) {
         throw new Error(t("user.myPurchases.noGateway"));
       }
@@ -443,6 +471,7 @@ const MyPurchases = () => {
                 type="button"
                 onClick={() => {
                   setRenewTag(null);
+                  setManualRenewOrder(null);
                   setPayError("");
                 }}
                 className="rounded-lg p-1 text-slate-500 hover:bg-slate-100"
@@ -459,6 +488,22 @@ const MyPurchases = () => {
                 {payError}
               </p>
             ) : null}
+            {manualRenewOrder ? (
+              <ManualBkashPayment
+                config={gateways?.manualBkashConfig}
+                amount={manualRenewOrder.amount}
+                orderId={manualRenewOrder.orderId}
+                onBack={() => setManualRenewOrder(null)}
+                onSuccess={({ paymentId, transactionId }) => {
+                  setRenewTag(null);
+                  setManualRenewOrder(null);
+                  navigate(
+                    `/payment/pending?orderId=${manualRenewOrder.orderId}&paymentId=${paymentId}&trx=${transactionId}`
+                  );
+                }}
+              />
+            ) : (
+              <>
             {gateways ? (
               <PaymentGatewayPicker
                 gateways={gateways}
@@ -502,6 +547,8 @@ const MyPurchases = () => {
                 {t("user.myPurchases.redirectingBkash")}
               </p>
             ) : null}
+              </>
+            )}
           </div>
         </div>
       ) : null}

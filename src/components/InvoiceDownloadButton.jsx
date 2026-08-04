@@ -11,6 +11,11 @@ export default function InvoiceDownloadButton({
   label = "Download Invoice",
 }) {
   const [busy, setBusy] = useState(false);
+  const isPaid = String(order?.paymentStatus || "").toLowerCase() === "paid";
+
+  if (!isPaid) {
+    return null;
+  }
 
   const handleClick = async () => {
     setBusy(true);

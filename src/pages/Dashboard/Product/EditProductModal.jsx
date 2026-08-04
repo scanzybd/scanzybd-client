@@ -4,26 +4,6 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 import useTagTypes from "../../../hooks/useTagTypes";
 
-async function uploadToImgbbDirect(dataUrl, apiKey) {
-  let base64 = String(dataUrl).trim();
-  if (base64.includes("base64,")) {
-    base64 = base64.split("base64,")[1];
-  }
-  base64 = base64.replace(/\s/g, "");
-  const body = `key=${encodeURIComponent(apiKey)}&image=${encodeURIComponent(base64)}`;
-  const r = await fetch("https://api.imgbb.com/1/upload", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  const j = await r.json();
-  if (!j.success || !j.data?.url) {
-    const em = j?.error?.message || j?.status_txt || "ImgBB rejected the upload";
-    throw new Error(typeof em === "string" ? em : JSON.stringify(em));
-  }
-  return j.data.url;
-}
-
 const emptyForm = () => ({
   title: "",
   description: "",
@@ -136,18 +116,12 @@ const EditProductModal = ({ product, onClose, onSaved }) => {
         reader.readAsDataURL(file);
       });
       try {
-        const res = await axiosSecure.post("/api/upload/imgbb", { image: dataUrl });
+        const res = await axiosSecure.post("/api/upload/image", { image: dataUrl });
         const url = res.data?.url;
         if (!url) throw new Error(res.data?.message || "No URL");
         setForm((prev) => ({ ...prev, image: url }));
       } catch (serverErr) {
-        const viteKey = import.meta.env.VITE_image_host_key?.trim();
-        if (viteKey && dataUrl) {
-          const url = await uploadToImgbbDirect(dataUrl, viteKey);
-          setForm((prev) => ({ ...prev, image: url }));
-        } else {
-          throw serverErr;
-        }
+        throw serverErr;
       }
     } catch (err) {
       setUploadError(

@@ -34,6 +34,7 @@ function paymentMethodLabel(method) {
   const map = {
     cash: "Cash",
     bkash_manual: "Manual bKash",
+    manual_bkash: "Manual bKash",
     bkash_online: "bKash Online",
     sslcommerz_online: "SSL Commerz",
     sslcommerz: "SSL Commerz",
@@ -71,15 +72,6 @@ function collectLineItems(order) {
       total: price * qty,
     });
   }
-  for (const tag of order?.tagAssignments || []) {
-    rows.push({
-      title: tag.productTitle || "QR Tag",
-      qty: 1,
-      unit: 0,
-      total: 0,
-      note: "Linked to vehicle",
-    });
-  }
   return rows;
 }
 
@@ -92,6 +84,11 @@ function collectLineItems(order) {
 export function downloadOrderInvoice(order, payment = null, customer = {}) {
   if (!order) {
     throw new Error("Order is required");
+  }
+
+  const isPaid = String(order.paymentStatus || "").toLowerCase() === "paid";
+  if (!isPaid) {
+    throw new Error("Invoice is available only for paid orders");
   }
 
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -125,7 +122,7 @@ export function downloadOrderInvoice(order, payment = null, customer = {}) {
   doc.text(`Invoice #${order.orderNo || order._id}`, margin, y);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`Date: ${formatDate(payment?.completedAt || payment?.createdAt || order.createdAt)}`, margin, y + 6);
+  doc.text(`Date: ${formatDate(payment?.completedAt || payment?.createdAt || order.completedAt || order.createdAt)}`, margin, y + 6);
   doc.text(`Order status: ${order.status || "—"}`, margin, y + 12);
   doc.text(`Payment: ${order.paymentStatus || "—"}`, pageW - margin, y + 6, { align: "right" });
 
@@ -206,8 +203,10 @@ export function downloadOrderInvoice(order, payment = null, customer = {}) {
   doc.setFontSize(9);
   doc.setTextColor(...muted);
   const method = payment?.paymentMethod || order.paymentMethod;
-  doc.text(`Payment method: ${paymentMethodLabel(method)}`, margin, y);
-  y += 5;
+  if (method) {
+    doc.text(`Payment method: ${paymentMethodLabel(method)}`, margin, y);
+    y += 5;
+  }
   const txn = payment?.transactionId || payment?.paymentID;
   if (txn) {
     doc.text(`Transaction ID: ${txn}`, margin, y);

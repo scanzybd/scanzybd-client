@@ -14,9 +14,7 @@ const Home = () => {
 
   return (
     <div>
-      <div data-aos="fade-up" data-aos-duration="700">
-        <Banner></Banner>
-      </div>
+      <Banner />
       <div data-aos="fade-up" data-aos-delay="80" data-aos-duration="700">
         <ProductShowcase></ProductShowcase>
       </div>

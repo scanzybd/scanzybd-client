@@ -29,6 +29,7 @@ const ResetPassword = lazyPage(chunks.loadResetPassword);
 
 const PaymentRejectLazy = lazyImport(chunks.loadPaymentReject);
 const PaymentSuccessLazy = lazyImport(chunks.loadPaymentSuccess);
+const PaymentPendingLazy = lazyImport(chunks.loadPaymentPending);
 
 // ——— User area ———
 const Payment = lazyPage(chunks.loadPayment);
@@ -159,6 +160,16 @@ const router = createBrowserRouter([
           <PrivateRoute>
             <Suspense fallback={<RouteFallback />}>
               <PaymentSuccessLazy />
+            </Suspense>
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "payment/pending",
+        element: (
+          <PrivateRoute>
+            <Suspense fallback={<RouteFallback />}>
+              <PaymentPendingLazy />
             </Suspense>
           </PrivateRoute>
         ),

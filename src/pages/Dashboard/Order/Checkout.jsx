@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp, Copy, MapPin } from "lucide-react";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
@@ -17,6 +17,7 @@ import {
 import useTagTypes from "../../../hooks/useTagTypes";
 import usePaymentGateways from "../../../hooks/usePaymentGateways";
 import PaymentGatewayPicker from "../../../components/payment/PaymentGatewayPicker";
+import ManualBkashPayment from "../../../components/payment/ManualBkashPayment";
 import { isCycleTagType, isDriverlessTagType } from "../../../lib/tagTypeUtils";
 
 function normalizeBrtaOptions(raw) {
@@ -86,12 +87,16 @@ function regNumberDigits(value) {
 }
 
 const Checkout = () => {
+  const navigate = useNavigate();
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
   const { cartItems } = useCart();
   const { data: tagTypes = [] } = useTagTypes();
   const { data: gateways } = usePaymentGateways();
   const [selectedGateway, setSelectedGateway] = useState("bkash");
+  const [manualPayContext, setManualPayContext] = useState(null);
+  /** Reuse manual checkout order when user goes back from QR screen */
+  const [manualPayOrder, setManualPayOrder] = useState(null);
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -143,14 +148,28 @@ const Checkout = () => {
 
   useEffect(() => {
     if (!gateways) return;
-    if (gateways.bkash && !gateways.sslcommerz) setSelectedGateway("bkash");
-    else if (!gateways.bkash && gateways.sslcommerz) setSelectedGateway("sslcommerz");
-    else setSelectedGateway(gateways.defaultGateway || "bkash");
+    setSelectedGateway((prev) => {
+      if (prev === "manual_bkash" && gateways.manualBkash) return prev;
+      if (prev === "bkash" && gateways.bkash) return prev;
+      if (prev === "sslcommerz" && gateways.sslcommerz) return prev;
+
+      const online = gateways.bkash || gateways.sslcommerz;
+      if (gateways.manualBkash && !online) return "manual_bkash";
+      if (gateways.bkash && !gateways.sslcommerz && !gateways.manualBkash) return "bkash";
+      if (!gateways.bkash && gateways.sslcommerz && !gateways.manualBkash) return "sslcommerz";
+      if (online) return gateways.defaultGateway || "bkash";
+      if (gateways.manualBkash) return "manual_bkash";
+      return prev;
+    });
   }, [gateways]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [manualPayContext]);
 
   const loadBrtaOptions = useCallback(async () => {
     try {
@@ -211,6 +230,10 @@ const Checkout = () => {
       0
     );
   }, [cartItems]);
+
+  useEffect(() => {
+    setManualPayOrder(null);
+  }, [cartItems, total]);
 
   const updateVehicle = useCallback((index, patch) => {
     setVehicles((prev) =>
@@ -396,6 +419,22 @@ const Checkout = () => {
         return;
       }
 
+      if (!gateways?.hasAnyPayment) {
+        throw new Error("No payment method is available");
+      }
+
+      if (
+        selectedGateway === "manual_bkash" &&
+        manualPayOrder?.orderId &&
+        manualPayOrder.amount === total
+      ) {
+        if (!gateways?.manualBkash) {
+          throw new Error("Manual bKash payment is not available");
+        }
+        setManualPayContext({ orderId: manualPayOrder.orderId, amount: total });
+        return;
+      }
+
       const tagAssignments = slots.map((slot, i) => {
         const v = vehicles[i];
         const isCycleTag = isCycleTagType(slot.type, tagTypes);
@@ -462,6 +501,15 @@ const Checkout = () => {
 
       if (!orderId) throw new Error("Order failed");
 
+      if (selectedGateway === "manual_bkash") {
+        if (!gateways?.manualBkash) {
+          throw new Error("Manual bKash payment is not available");
+        }
+        setManualPayOrder({ orderId, amount: total });
+        setManualPayContext({ orderId, amount: total });
+        return;
+      }
+
       if (!gateways?.hasOnlinePayment) {
         throw new Error("No online payment gateway is enabled");
       }
@@ -519,7 +567,9 @@ const Checkout = () => {
           <div className="rounded-2xl bg-white px-8 py-6 text-center shadow-xl dark:bg-slate-800">
             <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-amber-600 border-t-transparent"></div>
             <p className="mt-3 font-semibold text-slate-800 dark:text-slate-100">
-              Connecting to payment gateway...
+              {selectedGateway === "manual_bkash"
+                ? "Creating your order..."
+                : "Connecting to payment gateway..."}
             </p>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               Please don&apos;t close or refresh this page
@@ -810,6 +860,24 @@ const Checkout = () => {
         {/* Step 3: Vehicles + pay */}
         {step === 3 && cartItems.length > 0 && totalTags > 0 && (
           <>
+            {manualPayContext ? (
+              <>
+                {compactSummary}
+                <ManualBkashPayment
+                  config={gateways?.manualBkashConfig}
+                  amount={manualPayContext.amount}
+                  orderId={manualPayContext.orderId}
+                  onBack={() => setManualPayContext(null)}
+                  onSuccess={({ paymentId, transactionId }) => {
+                    setManualPayOrder(null);
+                    navigate(
+                      `/payment/pending?orderId=${manualPayContext.orderId}&paymentId=${paymentId}&trx=${transactionId}`
+                    );
+                  }}
+                />
+              </>
+            ) : (
+              <>
             {compactSummary}
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-2">
@@ -1176,14 +1244,16 @@ const Checkout = () => {
               <button
                 type="button"
                 onClick={handlePayment}
-                disabled={loading || !gateways?.hasOnlinePayment}
+                disabled={loading || !gateways?.hasAnyPayment}
                 className={`${btnPrimary} sm:flex-1 ${loading ? "cursor-not-allowed opacity-60" : ""}`}
               >
                 {loading
                   ? "Processing..."
-                  : selectedGateway === "sslcommerz"
-                    ? "Pay with SSL Commerz"
-                    : "Pay with bKash"}
+                  : selectedGateway === "manual_bkash"
+                    ? "Continue to Payment"
+                    : selectedGateway === "sslcommerz"
+                      ? "Pay with SSL Commerz"
+                      : "Pay with bKash"}
               </button>
               <button
                 type="button"
@@ -1194,6 +1264,8 @@ const Checkout = () => {
                 Back
               </button>
             </div>
+              </>
+            )}
           </>
         )}
       </div>

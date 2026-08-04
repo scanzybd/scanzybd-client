@@ -6,15 +6,21 @@ export default function usePaymentGateways() {
   return useQuery({
     queryKey: ["payment-gateways"],
     queryFn: async () => {
-      const res = await axios.get(`${API_BASE_URL}/api/payment/gateways`);
+      const res = await axios.get(`${API_BASE_URL}/api/payment/gateways`, {
+        params: { _t: Date.now() },
+      });
       return res.data?.gateways ?? {
         bkash: true,
         sslcommerz: false,
+        manualBkash: false,
+        manualBkashConfig: null,
         defaultGateway: "bkash",
         enabled: ["bkash"],
         hasOnlinePayment: true,
+        hasAnyPayment: true,
       };
     },
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 }
