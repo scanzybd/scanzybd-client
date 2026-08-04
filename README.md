@@ -28,7 +28,7 @@ startup-client/src/
 ├── config/
 │   ├── api.js               # API_BASE_URL from VITE_API_BASE_URL
 │   ├── company.js           # Branding from VITE_* env
-│   └── featuredProduct.js   # FEATURED_PRODUCT_ID
+│   └── company.js           # Branding + banner video URL
 ├── contexts/
 │   ├── AuthContext/         # Login, JWT, Google social
 │   ├── CartContext/         # Server-backed cart
@@ -100,7 +100,6 @@ Copy `.env example` to `.env`. Restart dev server after changes.
 | `VITE_LOGO_TEXT_COLOR` | Header wordmark color |
 | `VITE_BRAND_YELLOW` | Banner yellow (`#FFD700`) |
 | `VITE_BANNER_VIDEO_URL` | Homepage banner video (Cloudinary CDN URL) |
-| `VITE_FEATURED_PRODUCT_ID` | Home spotlight product (`featuredProduct.js`) |
 
 **Vite rule:** use static `import.meta.env.VITE_*` references — dynamic lookup is not replaced at build time.
 

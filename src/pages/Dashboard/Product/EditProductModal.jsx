@@ -3,13 +3,18 @@ import { X } from "lucide-react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 import useTagTypes from "../../../hooks/useTagTypes";
+import ProductImageSlots from "../../../components/product/ProductImageSlots";
+import {
+  buildImagesPayload,
+  imagesToFormSlots,
+} from "../../../lib/productImages";
 
 const emptyForm = () => ({
   title: "",
   description: "",
   price: "",
   originalPrice: "",
-  image: "",
+  images: imagesToFormSlots(null),
   type: "",
   packInfo: "",
   validityDays: "365",
@@ -17,6 +22,7 @@ const emptyForm = () => ({
   reviews: "",
   inStock: true,
   isActive: true,
+  isFeatured: false,
   features: [""],
   specifications: {
     material: "",
@@ -35,7 +41,7 @@ function productToForm(p) {
     description: p.description ?? "",
     price: p.price != null ? String(p.price) : "",
     originalPrice: p.originalPrice != null ? String(p.originalPrice) : "",
-    image: p.image ?? "",
+    images: imagesToFormSlots(p),
     type: p.type ?? "",
     packInfo: p.packInfo ?? "",
     validityDays: String(p.validityDays ?? 365),
@@ -43,6 +49,7 @@ function productToForm(p) {
     reviews: p.reviews != null ? String(p.reviews) : "",
     inStock: Boolean(p.inStock),
     isActive: p.isActive !== false,
+    isFeatured: Boolean(p.isFeatured),
     features:
       Array.isArray(p.features) && p.features.length > 0 ? p.features : [""],
     specifications: {
@@ -61,13 +68,10 @@ const EditProductModal = ({ product, onClose, onSaved }) => {
   const { data: tagTypes = [], isLoading: tagTypesLoading } = useTagTypes();
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
 
   useEffect(() => {
     if (product) {
       setForm(productToForm(product));
-      setUploadError(null);
     }
   }, [product]);
 
@@ -99,51 +103,24 @@ const EditProductModal = ({ product, onClose, onSaved }) => {
     });
   };
 
-  const handleImageFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith("image/")) {
-      setUploadError("Choose an image file.");
-      return;
-    }
-    setUploadError(null);
-    setUploadingImage(true);
-    let dataUrl;
-    try {
-      dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("Could not read file"));
-        reader.readAsDataURL(file);
-      });
-      try {
-        const res = await axiosSecure.post("/api/upload/image", { image: dataUrl });
-        const url = res.data?.url;
-        if (!url) throw new Error(res.data?.message || "No URL");
-        setForm((prev) => ({ ...prev, image: url }));
-      } catch (serverErr) {
-        throw serverErr;
-      }
-    } catch (err) {
-      setUploadError(
-        err.response?.data?.message || err.message || "Image upload failed"
-      );
-    } finally {
-      setUploadingImage(false);
-      e.target.value = "";
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
+      const media = buildImagesPayload(form.images);
+      if (!media.image) {
+        alert("Add at least one product image (cover).");
+        setSaving(false);
+        return;
+      }
+
       const features = form.features.map((f) => f.trim()).filter(Boolean);
       const payload = {
         title: form.title.trim(),
         description: form.description.trim(),
         price: Number(form.price),
         originalPrice: Number(form.originalPrice) || 0,
-        image: form.image.trim(),
+        ...media,
         type: form.type,
         packInfo: form.packInfo.trim(),
         validityDays: Math.max(1, Number(form.validityDays) || 365),
@@ -151,6 +128,7 @@ const EditProductModal = ({ product, onClose, onSaved }) => {
         reviews: Number(form.reviews) || 0,
         inStock: form.inStock,
         isActive: form.isActive,
+        isFeatured: form.isFeatured,
         features,
         specifications: {
           material: form.specifications.material?.trim() || "",
@@ -225,28 +203,12 @@ const EditProductModal = ({ product, onClose, onSaved }) => {
             />
           </div>
 
-          <div className="rounded-lg border border-dashed border-slate-200 p-3">
-            <label className="mb-1 block text-sm font-medium">Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageFile}
-              disabled={uploadingImage}
-              className="file:mr-2 file:rounded file:bg-blue-600 file:px-2 file:py-1 file:text-sm file:text-white"
-            />
-            {uploadingImage && (
-              <p className="mt-1 text-sm text-blue-600">Uploading…</p>
-            )}
-            {uploadError && <p className="mt-1 text-sm text-red-600">{uploadError}</p>}
-            <input
-              name="image"
-              value={form.image}
-              onChange={handleChange}
-              placeholder="Image URL"
-              className="input input-bordered mt-2 w-full text-sm"
-              required
-            />
-          </div>
+          <ProductImageSlots
+            images={form.images}
+            onChange={(images) => setForm((prev) => ({ ...prev, images }))}
+            axiosSecure={axiosSecure}
+            disabled={saving}
+          />
 
           <select
             name="type"
@@ -321,7 +283,22 @@ const EditProductModal = ({ product, onClose, onSaved }) => {
               />
               <span className="text-sm">In stock</span>
             </label>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                name="isFeatured"
+                type="checkbox"
+                checked={form.isFeatured}
+                onChange={handleChange}
+                className="checkbox checkbox-sm checkbox-warning"
+              />
+              <span className="text-sm font-medium">Featured on homepage</span>
+            </label>
           </div>
+          {form.isFeatured ? (
+            <p className="text-xs text-amber-700">
+              This product will appear in “Choose Your Smart QR Tag Package”. Any previous featured product is cleared.
+            </p>
+          ) : null}
 
           <textarea
             name="description"

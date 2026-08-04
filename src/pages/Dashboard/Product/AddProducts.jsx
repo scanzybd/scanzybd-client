@@ -2,41 +2,42 @@ import React, { useState } from "react";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useTagTypes from "../../../hooks/useTagTypes";
+import ProductImageSlots from "../../../components/product/ProductImageSlots";
+import {
+  buildImagesPayload,
+  imagesToFormSlots,
+} from "../../../lib/productImages";
+
+const emptyAddForm = () => ({
+  title: "",
+  description: "",
+  price: "",
+  originalPrice: "",
+  images: imagesToFormSlots(null),
+  type: "",
+  packInfo: "",
+  validityDays: "365",
+  rating: "",
+  reviews: "",
+  inStock: true,
+  isActive: true,
+  isFeatured: false,
+  features: [""],
+  specifications: {
+    material: "",
+    dimensions: "",
+    weight: "",
+    battery: "",
+    waterproof: "",
+  },
+});
 
 const AddProducts = () => {
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
   const { data: tagTypes = [], isLoading: tagTypesLoading } = useTagTypes();
 
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
-
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    price: "",
-    originalPrice: "",
-    image: "",
-    type: "",
-    packInfo: "",
-    /** Days of access/service validity after each successful payment (per unit). */
-    validityDays: "365",
-
-    rating: "",
-    reviews: "",
-    inStock: true,
-    isActive: true,
-
-    features: [""],
-
-    specifications: {
-      material: "",
-      dimensions: "",
-      weight: "",
-      battery: "",
-      waterproof: "",
-    },
-  });
+  const [form, setForm] = useState(emptyAddForm);
 
   // ======================
   // BASIC CHANGE HANDLER
@@ -71,69 +72,6 @@ const AddProducts = () => {
     });
   };
 
-  const handleImageFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith("image/")) {
-      setUploadError("Please choose an image file.");
-      return;
-    }
-
-    setUploadError(null);
-    setUploadingImage(true);
-
-    let dataUrl;
-    try {
-      dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("Could not read file"));
-        reader.readAsDataURL(file);
-      });
-
-      try {
-        const res = await axiosSecure.post("/api/upload/image", {
-          image: dataUrl,
-        });
-
-        const url = res.data?.url;
-        if (!url) {
-          throw new Error(res.data?.message || "No URL returned");
-        }
-
-        setForm((prev) => ({ ...prev, image: url }));
-      } catch (serverErr) {
-        throw serverErr;
-      }
-    } catch (err) {
-      console.error(err);
-      const status = err.response?.status;
-      const data = err.response?.data;
-      let msg =
-        data?.message ||
-        (typeof data?.error === "string" ? data.error : null) ||
-        err.message;
-
-      if (status === 401) {
-        msg = "Not logged in or session expired — sign in again and retry.";
-      } else if (status === 404 && String(data?.message || "").includes("User")) {
-        msg =
-          "Your user account is not in the database — ask an admin to add your account.";
-      } else if (status === 502 || status === 500) {
-        msg =
-          msg ||
-          "Server or Cloudinary error — check CLOUDINARY_* keys in server .env and restart.";
-      }
-
-      setUploadError(
-        msg ||
-          "Upload failed — check Cloudinary keys on server (.env CLOUDINARY_API_KEY / SECRET)"
-      );
-    } finally {
-      setUploadingImage(false);
-      e.target.value = "";
-    }
-  };
-
   // ======================
   // SUBMIT
   // ======================
@@ -141,8 +79,16 @@ const AddProducts = () => {
     e.preventDefault();
 
     try {
+      const media = buildImagesPayload(form.images);
+      if (!media.image) {
+        alert("Add at least one product image (cover).");
+        return;
+      }
+
+      const { images: _imageSlots, ...restForm } = form;
       const productData = {
-        ...form,
+        ...restForm,
+        ...media,
         price: Number(form.price),
         originalPrice: Number(form.originalPrice),
         validityDays: Math.max(1, Number(form.validityDays) || 365),
@@ -161,31 +107,7 @@ const AddProducts = () => {
       await axiosSecure.post("/api/products", productData);
 
       alert("Product Added Successfully 🔥");
-      setUploadError(null);
-
-      // reset
-      setForm({
-        title: "",
-        description: "",
-        price: "",
-        originalPrice: "",
-        image: "",
-        type: "",
-        packInfo: "",
-        validityDays: "365",
-        rating: "",
-        reviews: "",
-        inStock: true,
-        isActive: true,
-        features: [""],
-        specifications: {
-          material: "",
-          dimensions: "",
-          weight: "",
-          battery: "",
-          waterproof: "",
-        },
-      });
+      setForm(emptyAddForm());
     } catch {
       alert("Failed to add product");
     }
@@ -231,36 +153,33 @@ const AddProducts = () => {
             className="w-full p-3 border rounded mb-3"
           />
 
-          {/* IMAGE — Cloudinary via server */}
-          <div className="mb-3 rounded-lg border border-dashed border-gray-300 bg-gray-50/80 p-3">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Product image
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageFile}
-              disabled={uploadingImage}
-              className="w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-white hover:file:bg-blue-700"
-            />
-            {uploadingImage && (
-              <p className="mt-2 text-sm text-blue-600">Uploading to Cloudinary…</p>
-            )}
-            {uploadError && (
-              <p className="mt-2 text-sm text-red-600">{uploadError}</p>
-            )}
-            <p className="mt-2 text-xs text-gray-500">
-              File is sent to your server, uploaded to Cloudinary, then the returned URL is saved with
-              the product.
-            </p>
-          </div>
-          <input
-            name="image"
-            value={form.image}
-            onChange={handleChange}
-            placeholder="Image URL (set automatically after upload, or paste manually)"
-            className="w-full p-3 border rounded mb-3"
+          <ProductImageSlots
+            images={form.images}
+            onChange={(images) => setForm((prev) => ({ ...prev, images }))}
+            axiosSecure={axiosSecure}
           />
+
+          <div className="mb-3 flex flex-wrap gap-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                name="isFeatured"
+                type="checkbox"
+                checked={form.isFeatured}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, isFeatured: e.target.checked }))
+                }
+                className="checkbox checkbox-sm checkbox-warning"
+              />
+              <span className="text-sm font-medium text-slate-800">
+                Featured on homepage
+              </span>
+            </label>
+            {form.isFeatured ? (
+              <p className="w-full text-xs text-amber-700">
+                Shows under “Choose Your Smart QR Tag Package”. Only one product can be featured.
+              </p>
+            ) : null}
+          </div>
 
           {/* TYPE */}
           <select
@@ -419,13 +338,25 @@ const AddProducts = () => {
         <div className="bg-white shadow-lg rounded-2xl p-6">
           <h2 className="text-xl font-bold mb-4">Live Preview</h2>
 
-          {form.image && (
+          {form.images?.[0] && (
             <img
-              src={form.image}
+              src={form.images[0]}
               alt={form.title || "Product Image"}
               className="w-full h-44 object-cover rounded"
             />
           )}
+          {form.images?.filter(Boolean).length > 1 ? (
+            <div className="mt-2 grid grid-cols-4 gap-1">
+              {form.images.filter(Boolean).map((url, i) => (
+                <img
+                  key={`${url}-${i}`}
+                  src={url}
+                  alt=""
+                  className="aspect-square rounded object-cover"
+                />
+              ))}
+            </div>
+          ) : null}
 
           <p className="text-gray-500 text-sm mt-2">
             {form.type || "Type"}

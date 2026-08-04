@@ -239,6 +239,11 @@ const AllProducts = () => {
                   >
                     {active ? "Active" : "Inactive"}
                   </span>
+                  {product.isFeatured ? (
+                    <span className="absolute left-3 bottom-3 rounded-full bg-amber-400 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-900 shadow-sm">
+                      Featured
+                    </span>
+                  ) : null}
                 </div>
 
                 <div className="flex flex-1 flex-col p-5">

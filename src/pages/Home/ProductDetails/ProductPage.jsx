@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -16,6 +16,10 @@ import useAuth from "../../../hooks/useAuth";
 import useCart from "../../../hooks/useCart";
 import productFallback from "../../../assets/product/product01.png";
 import { API_BASE_URL } from "../../../config/api";
+import {
+  normalizeProductImages,
+  productCoverImage,
+} from "../../../lib/productImages";
 
 function normalizeProductList(raw) {
   if (Array.isArray(raw)) return raw;
@@ -27,6 +31,11 @@ function normalizeProductList(raw) {
 const HIDDEN_DETAIL_KEYS = new Set([
   "_id",
   "id",
+  "image",
+  "images",
+  "isfeatured",
+  "isactive",
+  "instock",
   "originalprice",
   "createdby",
   "createdat",
@@ -150,6 +159,7 @@ const ProductPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPrice, setFilterPrice] = useState("all");
   const [notification, setNotification] = useState(null);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   const {
     data: products = [],
@@ -177,6 +187,15 @@ const ProductPage = () => {
     enabled: Boolean(id),
     retry: 1,
   });
+
+  const galleryImages = useMemo(() => {
+    const imgs = normalizeProductImages(selectedProduct);
+    return imgs.length > 0 ? imgs : [productFallback];
+  }, [selectedProduct]);
+
+  useEffect(() => {
+    setGalleryIndex(0);
+  }, [selectedProduct?._id]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -302,12 +321,37 @@ const ProductPage = () => {
             Back to products
           </button>
           <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">            <div className="grid gap-0 md:grid-cols-2">
-              {/* Main Info & Image */}
-              <div className="aspect-4/3 bg-slate-100 dark:bg-slate-800 md:aspect-auto">                <img
-                  src={selectedProduct.image || productFallback}
-                  alt={selectedProduct.title || "Product"}
-                  className="h-full w-full object-cover"
-                />
+              {/* Main Info & Image gallery */}
+              <div className="bg-slate-100 p-3 dark:bg-slate-800 sm:p-4">
+                <div className="aspect-4/3 overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-900">
+                  <img
+                    src={galleryImages[galleryIndex] || productFallback}
+                    alt={selectedProduct.title || "Product"}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                {galleryImages.length > 1 ? (
+                  <div className="mt-3 grid grid-cols-4 gap-2">
+                    {galleryImages.map((url, index) => (
+                      <button
+                        key={`${url}-${index}`}
+                        type="button"
+                        onClick={() => setGalleryIndex(index)}
+                        className={`aspect-square overflow-hidden rounded-lg border-2 transition ${
+                          galleryIndex === index
+                            ? "border-amber-400 ring-2 ring-amber-400/40"
+                            : "border-transparent opacity-80 hover:opacity-100"
+                        }`}
+                      >
+                        <img
+                          src={url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
               <div className="p-4 sm:p-6 lg:p-8">
               <h1 className="text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">{selectedProduct.title}</h1>
@@ -467,7 +511,7 @@ const ProductPage = () => {
                     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-white shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-amber-500/40">
                       <div className="relative aspect-4/3 overflow-hidden bg-slate-200 dark:bg-slate-800">
                         <img
-                          src={product.image || productFallback}
+                          src={productCoverImage(product, productFallback)}
                           alt=""
                           className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                           loading="lazy"
@@ -532,7 +576,7 @@ const ProductPage = () => {
                       >
                         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-slate-200 dark:bg-slate-700 dark:ring-slate-600">
                           <img
-                            src={item.image || productFallback}
+                            src={productCoverImage(item, productFallback)}
                             alt=""
                             className="h-full w-full object-cover"
                           />

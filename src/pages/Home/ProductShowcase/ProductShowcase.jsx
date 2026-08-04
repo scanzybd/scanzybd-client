@@ -20,7 +20,6 @@ import productFallback from "../../../assets/product/product01.png";
 import useCart from "../../../hooks/useCart";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
-import { FEATURED_PRODUCT_ID } from "../../../config/featuredProduct";
 import { API_BASE_URL } from "../../../config/api";
 import useAuth from "../../../hooks/useAuth";
 
@@ -63,9 +62,9 @@ const ProductShowcase = () => {
     data: spotlightProduct,
     isLoading: spotlightLoading,
   } = useQuery({
-    queryKey: ["product", "hero-spotlight", FEATURED_PRODUCT_ID],
+    queryKey: ["product", "hero-spotlight"],
     queryFn: async () => {
-      const res = await axiosSecure.get(`/api/products/${FEATURED_PRODUCT_ID}`);
+      const res = await axiosSecure.get("/api/products/featured");
       return res.data?.data ?? null;
     },
     retry: 1,
@@ -91,10 +90,9 @@ const ProductShowcase = () => {
 
   /** Hero already shows spotlight — skip duplicate in the grid when loaded */
   const catalogProducts = useMemo(() => {
-    if (!spotlightProduct) return filteredProducts;
-    return filteredProducts.filter(
-      (p) => String(p._id) !== FEATURED_PRODUCT_ID
-    );
+    if (!spotlightProduct?._id) return filteredProducts;
+    const featuredId = String(spotlightProduct._id);
+    return filteredProducts.filter((p) => String(p._id) !== featuredId);
   }, [filteredProducts, spotlightProduct]);
 
   const visibleCatalogProducts = useMemo(() => {
@@ -246,8 +244,8 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                 <div className="flex min-h-[200px] w-full max-w-md flex-col items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5 dark:bg-slate-900 dark:border-slate-700  px-6 py-10 text-center">
                   <Package className="mb-2 h-10 w-10 text-slate-500" />
                   <p className="text-sm text-slate-400">
-                    Set <code className="rounded bg-black/30 px-1.5 py-0.5 text-xs">FEATURED_PRODUCT_ID</code> in
-                    the database to show the product here.
+                    No spotlight product yet. In the dashboard, edit a product and turn on{" "}
+                    <span className="font-semibold text-slate-300">Featured on homepage</span>.
                   </p>
                 </div>
               )}
