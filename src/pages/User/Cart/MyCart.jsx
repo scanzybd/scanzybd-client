@@ -8,6 +8,8 @@ import {
   textHeading,
   textMuted,
 } from "../../../lib/uiClasses";
+import productFallback from "../../../assets/product/product01.png";
+import { productImageUrl } from "../../../lib/productImages";
 
 const MyCart = () => {
   const {
@@ -64,9 +66,11 @@ const MyCart = () => {
               >
                 <div className="flex items-center gap-4">
                   <img
-                    src={item.image}
+                    src={productImageUrl(item.image || productFallback, "cart", productFallback)}
                     alt={item.title || item.name}
                     className="h-16 w-16 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-600"
+                    loading="lazy"
+                    decoding="async"
                   />
 
                   <div>

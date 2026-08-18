@@ -6,6 +6,7 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 import SmartLoader from "../../../components/SmartLoader";
 import EditProductModal from "./EditProductModal";
+import { productImageUrl } from "../../../lib/productImages";
 
 function normalizeList(raw) {
   if (Array.isArray(raw)) return raw;
@@ -223,11 +224,13 @@ const AllProducts = () => {
                     #{serial}
                   </span>
                   <img
-                    src={product.image}
+                    src={productImageUrl(product.image, "admin")}
                     alt=""
                     className={`h-full w-full object-cover transition duration-300 group-hover:scale-[1.02] ${
                       active ? "" : "grayscale-[0.35]"
                     }`}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <span className="absolute left-3 top-12 rounded-full bg-slate-900/85 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
                     {product.type}

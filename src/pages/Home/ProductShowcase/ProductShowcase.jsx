@@ -16,6 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 import productFallback from "../../../assets/product/product01.png";
+import { productImageUrl } from "../../../lib/productImages";
 
 import useCart from "../../../hooks/useCart";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
@@ -204,9 +205,10 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                 <article className="w-full max-w-md overflow-hidden rounded-2xl border border-amber-400/30 bg-white/10 shadow-2xl shadow-black/20 ring-1 ring-white/10 backdrop-blur-md">
                   <div className="relative aspect-4/3 bg-slate-800/40">
                     <img
-                      src={spotlightProduct.image || productFallback}
+                      src={productImageUrl(spotlightProduct.image || productFallback, "spotlight", productFallback)}
                       alt=""
                       className="h-full w-full object-cover"
+                      decoding="async"
                     />
                     <span className="absolute left-3 top-3 rounded-full bg-amber-400 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-900 shadow-sm">
                       Spotlight
@@ -351,7 +353,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                       <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-white shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-amber-500/40">
                         <div className="relative aspect-4/3 overflow-hidden bg-slate-200 dark:bg-slate-800">
                           <img
-                            src={product.image || productFallback}
+                            src={productImageUrl(product.image || productFallback, "card", productFallback)}
                             alt=""
                             className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                             loading="lazy"
@@ -467,7 +469,7 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                       >
                         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-slate-200 dark:bg-slate-700 dark:ring-slate-600">
                           <img
-                            src={item.image || productFallback}
+                            src={productImageUrl(item.image || productFallback, "cart", productFallback)}
                             alt=""
                             className="h-full w-full object-cover"
                           />

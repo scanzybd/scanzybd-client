@@ -6,6 +6,7 @@ import {
   formatShippingLine1Details,
 } from "../lib/shippingAddressUtils";
 import OrderFulfillmentTags from "./order/OrderFulfillmentTags";
+import { productImageUrl } from "../lib/productImages";
 
 const statusStyles = {
   pending: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900/50",
@@ -250,7 +251,7 @@ const OrderTable = ({
                       >
                         {item.image ? (
                           <img
-                            src={item.image}
+                            src={productImageUrl(item.image, "cart")}
                             alt=""
                             className="h-10 w-10 shrink-0 rounded-lg border border-slate-200 object-cover dark:border-slate-600"
                           />

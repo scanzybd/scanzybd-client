@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
-import { PRODUCT_IMAGE_SLOTS } from "../../lib/productImages";
+import { PRODUCT_IMAGE_SLOTS, productImageUrl } from "../../lib/productImages";
 import { compressImageFileForUpload } from "../../lib/compressImageForUpload";
 
 /**
@@ -82,7 +82,7 @@ export default function ProductImageSlots({
               {url ? (
                 <>
                   <img
-                    src={url}
+                    src={productImageUrl(url, "admin")}
                     alt={`Product ${index + 1}`}
                     className="h-full w-full object-cover"
                   />

@@ -19,6 +19,8 @@ import { API_BASE_URL } from "../../../config/api";
 import {
   normalizeProductImages,
   productCoverImage,
+  productCoverImageUrl,
+  productImageUrl,
 } from "../../../lib/productImages";
 import SeoHead from "../../../components/SEO/SeoHead";
 import { BRAND_FULL } from "../../../config/company";
@@ -306,7 +308,9 @@ const ProductPage = () => {
   if (id && selectedProduct) {
     const productPath = `/Products/${id}`;
     const cover = productCoverImage(selectedProduct);
-    const productImage = cover && /^https?:\/\//i.test(cover) ? cover : absoluteUrl("/preview.png");
+    const productImage = cover && /^https?:\/\//i.test(cover)
+      ? productImageUrl(cover, "detail")
+      : absoluteUrl("/preview.png");
     const productDescription =
       selectedProduct.description ||
       `Buy ${selectedProduct.title} from ${BRAND_FULL}. Smart QR vehicle tags for safety in Bangladesh.`;
@@ -367,9 +371,10 @@ const ProductPage = () => {
               <div className="bg-slate-100 p-3 dark:bg-slate-800 sm:p-4">
                 <div className="aspect-4/3 overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-900">
                   <img
-                    src={galleryImages[galleryIndex] || productFallback}
+                    src={productImageUrl(galleryImages[galleryIndex] || productFallback, "detail", productFallback)}
                     alt={selectedProduct.title || "Product"}
                     className="h-full w-full object-cover"
+                    decoding="async"
                   />
                 </div>
                 {galleryImages.length > 1 ? (
@@ -386,9 +391,11 @@ const ProductPage = () => {
                         }`}
                       >
                         <img
-                          src={url}
+                          src={productImageUrl(url, "thumb", productFallback)}
                           alt=""
                           className="h-full w-full object-cover"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </button>
                     ))}
@@ -553,7 +560,7 @@ const ProductPage = () => {
                     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300/90 bg-white shadow-sm transition duration-200 hover:border-amber-300/70 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-amber-500/40">
                       <div className="relative aspect-4/3 overflow-hidden bg-slate-200 dark:bg-slate-800">
                         <img
-                          src={productCoverImage(product, productFallback)}
+                          src={productCoverImageUrl(product, "card", productFallback)}
                           alt=""
                           className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                           loading="lazy"
@@ -618,7 +625,7 @@ const ProductPage = () => {
                       >
                         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-slate-200 dark:bg-slate-700 dark:ring-slate-600">
                           <img
-                            src={productCoverImage(item, productFallback)}
+                            src={productCoverImageUrl(item, "cart", productFallback)}
                             alt=""
                             className="h-full w-full object-cover"
                           />

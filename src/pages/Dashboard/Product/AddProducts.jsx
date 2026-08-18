@@ -6,6 +6,7 @@ import ProductImageSlots from "../../../components/product/ProductImageSlots";
 import {
   buildImagesPayload,
   imagesToFormSlots,
+  productImageUrl,
 } from "../../../lib/productImages";
 
 const emptyAddForm = () => ({
@@ -340,7 +341,7 @@ const AddProducts = () => {
 
           {form.images?.[0] && (
             <img
-              src={form.images[0]}
+              src={productImageUrl(form.images[0], "admin")}
               alt={form.title || "Product Image"}
               className="w-full h-44 object-cover rounded"
             />
@@ -350,7 +351,7 @@ const AddProducts = () => {
               {form.images.filter(Boolean).map((url, i) => (
                 <img
                   key={`${url}-${i}`}
-                  src={url}
+                  src={productImageUrl(url, "thumb")}
                   alt=""
                   className="aspect-square rounded object-cover"
                 />

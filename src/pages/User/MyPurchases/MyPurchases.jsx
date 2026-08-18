@@ -22,6 +22,7 @@ import PaymentGatewayPicker from "../../../components/payment/PaymentGatewayPick
 import ManualBkashPayment from "../../../components/payment/ManualBkashPayment";
 import SmartLoader from "../../../components/SmartLoader";
 import { formatOrderNo } from "../../../lib/orderDisplayFormat";
+import { productImageUrl } from "../../../lib/productImages";
 
 function formatLocalizedDate(iso, lng) {
   if (!iso) return "—";
@@ -366,7 +367,7 @@ const MyPurchases = () => {
                     <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
                       {item.image ? (
                         <img
-                          src={item.image}
+                          src={productImageUrl(item.image, "cart")}
                           alt=""
                           className="h-full w-full object-cover"
                         />

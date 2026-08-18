@@ -4,8 +4,8 @@
  * Returns a JPEG data URL suitable for POST /api/upload/image.
  */
 
-const MAX_EDGE = 1280;
-const JPEG_QUALITY = 0.82;
+const MAX_EDGE = 1600;
+const JPEG_QUALITY = 0.88;
 /** Soft cap on data-URL length (~1.4MB binary → safe under 4.5MB with JSON overhead). */
 const MAX_DATA_URL_CHARS = 1_800_000;
 

@@ -23,6 +23,7 @@ import {
 } from "../../../lib/orderDisplayFormat";
 import { formatShippingAddr } from "../../../lib/shippingAddressUtils";
 import { cardSurface } from "../../../lib/uiClasses";
+import { productImageUrl } from "../../../lib/productImages";
 
 function hasShipping(ship = {}) {
   return Boolean(
@@ -125,9 +126,11 @@ function OrderDetailsPanel({ order, customer }) {
                         <div className="flex items-center gap-3">
                           {item.image ? (
                             <img
-                              src={item.image}
+                              src={productImageUrl(item.image, "cart")}
                               alt=""
                               className="h-10 w-10 shrink-0 rounded-lg border border-slate-200 object-cover dark:border-slate-600"
+                              loading="lazy"
+                              decoding="async"
                             />
                           ) : (
                             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400 dark:bg-slate-800">
