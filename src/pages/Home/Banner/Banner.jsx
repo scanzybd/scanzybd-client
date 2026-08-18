@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import bannerImage from '../../../assets/banner/Banner.png';
-import { BANNER_VIDEO_URL, BRAND_YELLOW } from '../../../config/company';
+import { BANNER_VIDEO_URL, BRAND_YELLOW, BRAND_FULL, COMPANY_TAGLINE } from '../../../config/company';
 
 const Banner = () => {
   const videoRef = useRef(null);
@@ -24,10 +24,14 @@ const Banner = () => {
   }, []);
 
   return (
-    <div
+    <section
       className="relative w-full overflow-hidden sm:h-[calc(100vh-70px)]"
       style={{ backgroundColor: BRAND_YELLOW }}
+      aria-label={`${BRAND_FULL} hero banner`}
     >
+      <h1 className="sr-only">
+        {BRAND_FULL} — {COMPANY_TAGLINE}
+      </h1>
       <video
         ref={videoRef}
         src={BANNER_VIDEO_URL}
@@ -40,7 +44,7 @@ const Banner = () => {
         poster={bannerImage}
         className="h-full w-full object-contain"
       />
-    </div>
+    </section>
   );
 };
 

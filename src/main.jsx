@@ -1,9 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { HelmetProvider } from 'react-helmet-async'
 import './i18n/config'
 import './index.css'
 import './styles/dashboard-dark.css'
-import { SITE_TITLE } from './config/company'
 import { RouterProvider } from "react-router/dom";
 import router from './router/router';
 import AOS from 'aos';
@@ -18,7 +18,6 @@ import GlobalFetchingBar from './components/GlobalFetchingBar';
 import { ThemeProvider } from './contexts/ThemeContext/ThemeContext';
 
 AOS.init();
-document.title = SITE_TITLE;
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -34,6 +33,7 @@ const persister = createAppPersister();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
+    <HelmetProvider>
     <ThemeProvider>
       <PersistQueryClientProvider
         client={queryClient}
@@ -55,5 +55,6 @@ createRoot(document.getElementById('root')).render(
         </CartProvider>
       </PersistQueryClientProvider>
     </ThemeProvider>
+    </HelmetProvider>
   </StrictMode>
 );

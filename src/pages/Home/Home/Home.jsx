@@ -22,10 +22,10 @@ const Home = () => {
         <OfferShowcase />
       </div>
       <div data-aos="fade-up" data-aos-delay="120" data-aos-duration="700">
-        <About></About>
+        <About headingLevel="h2"></About>
       </div>
       <div data-aos="fade-up" data-aos-delay="160" data-aos-duration="700">
-        <Reviews></Reviews>
+        <Reviews headingLevel="h2"></Reviews>
       </div>
     </div>
   );

@@ -13,7 +13,8 @@ const iconByStatLabel = {
 
 const statIconFallback = [Users, TrendingUp, Heart];
 
-const Reviews = () => {
+const Reviews = ({ headingLevel = "h1" }) => {
+  const Heading = headingLevel;
   const { data } = useQuery({
     queryKey: ["public-reviews"],
     queryFn: async () => {
@@ -33,9 +34,9 @@ const Reviews = () => {
       {/* HERO */}
       <section className="bg-linear-to-r from-yellow-400 to-amber-500 px-4 py-12 sm:py-16">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="mb-4 text-2xl font-bold text-gray-900 sm:text-4xl lg:text-5xl dark:text-gray-900">
+          <Heading className="mb-4 text-2xl font-bold text-gray-900 sm:text-4xl lg:text-5xl dark:text-gray-900">
             Trusted by Thousands
-          </h1>
+          </Heading>
           <p className="text-base text-gray-800 sm:text-lg dark:text-gray-900">
             See what our customers say about {BRAND_FULL}
           </p>

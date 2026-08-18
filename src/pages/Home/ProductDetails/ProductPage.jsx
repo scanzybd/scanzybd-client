@@ -20,6 +20,9 @@ import {
   normalizeProductImages,
   productCoverImage,
 } from "../../../lib/productImages";
+import SeoHead from "../../../components/SEO/SeoHead";
+import { BRAND_FULL } from "../../../config/company";
+import { absoluteUrl, buildCanonical } from "../../../config/seo";
 
 function normalizeProductList(raw) {
   if (Array.isArray(raw)) return raw;
@@ -301,8 +304,47 @@ const ProductPage = () => {
   }
 
   if (id && selectedProduct) {
+    const productPath = `/Products/${id}`;
+    const cover = productCoverImage(selectedProduct);
+    const productImage = cover && /^https?:\/\//i.test(cover) ? cover : absoluteUrl("/preview.png");
+    const productDescription =
+      selectedProduct.description ||
+      `Buy ${selectedProduct.title} from ${BRAND_FULL}. Smart QR vehicle tags for safety in Bangladesh.`;
+    const productJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: selectedProduct.title,
+      description: productDescription,
+      image: productImage,
+      url: buildCanonical(productPath),
+      brand: {
+        "@type": "Brand",
+        name: BRAND_FULL,
+      },
+      offers: {
+        "@type": "Offer",
+        url: buildCanonical(productPath),
+        priceCurrency: "BDT",
+        price: Number(selectedProduct.price) || 0,
+        availability:
+          selectedProduct.inStock === false || selectedProduct.isActive === false
+            ? "https://schema.org/OutOfStock"
+            : "https://schema.org/InStock",
+      },
+    };
+
     return (
-<div className="min-h-screen w-full bg-linear-to-b from-slate-100 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">        {notification && (
+<div className="min-h-screen w-full bg-linear-to-b from-slate-100 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <SeoHead
+          title={`${selectedProduct.title} | ${BRAND_FULL}`}
+          description={productDescription}
+          pathname={productPath}
+          image={productImage}
+          imageAlt={selectedProduct.title}
+          type="product"
+          jsonLd={productJsonLd}
+        />
+        {notification && (
           <div className="fixed inset-x-0 top-0 z-100 flex justify-center px-3 pt-4 sm:left-auto sm:right-4 sm:top-4 sm:justify-end sm:px-0">
             <div
               role="status"

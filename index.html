@@ -1,29 +1,21 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Basic Meta -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- SEO -->
+    <!-- SEO defaults (overridden per route by react-helmet-async) -->
     <title>ScanzyBD | Smart QR Code Tags for Vehicle Safety</title>
-
     <meta
       name="description"
       content="ScanzyBD provides smart QR code tags for vehicles in Bangladesh. Ensure safety, quick identification, and emergency contact with innovative QR solutions."
     />
-
-    <meta
-      name="keywords"
-      content="QR code tag Bangladesh, vehicle QR tag, smart QR sticker BD, emergency contact QR, car safety Bangladesh"
-    />
-
-    <meta name="author" content="ScanzyBD" />
     <meta name="robots" content="index, follow" />
-
     <link rel="canonical" href="https://scanzybd.com/" />
 
     <meta name="application-name" content="ScanzyBD" />
+    <meta name="theme-color" content="#13758c" />
+    <link rel="manifest" href="/manifest.webmanifest" />
 
     <script type="application/ld+json">
       {
@@ -47,53 +39,32 @@
       }
     </script>
 
-    <!-- Favicon: Use both .ico and .png for full compatibility -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-    <link rel="icon" type="image/x-icon" sizes="32x32" href="/favicon.ico" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
-    <!-- .ico fallback for older Apple devices -->
-    <link rel="apple-touch-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-    <!-- Open Graph -->
-    <meta
-      property="og:title"
-      content="ScanzyBD | Smart QR Code Tags"
-    />
-
+    <meta property="og:title" content="ScanzyBD | Smart QR Code Tags" />
     <meta
       property="og:description"
       content="Enhance vehicle safety in Bangladesh with ScanzyBD smart QR tags for instant identification and emergency contact."
     />
-
-    <meta
-      property="og:image"
-      content="https://scanzybd.com/preview.png"
-    />
-
+    <meta property="og:image" content="https://scanzybd.com/preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:url" content="https://scanzybd.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ScanzyBD" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="bn_BD" />
 
-    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-
-    <meta
-      name="twitter:title"
-      content="ScanzyBD | Smart QR Code Tags"
-    />
-
+    <meta name="twitter:title" content="ScanzyBD | Smart QR Code Tags" />
     <meta
       name="twitter:description"
       content="Smart QR tags for vehicle safety and emergency contact in Bangladesh."
     />
+    <meta name="twitter:image" content="https://scanzybd.com/preview.png" />
 
-    <meta
-      name="twitter:image"
-      content="https://scanzybd.com/preview.png"
-    />
-
-    <!-- Theme Script -->
     <script>
       (function () {
         try {
@@ -115,7 +86,6 @@
 
   <body>
     <div id="root"></div>
-
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

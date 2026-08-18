@@ -3,10 +3,12 @@ import { Outlet } from 'react-router';
 import Navbar from '../pages/Home/Shared/Navbar/Navbar';
 import Footer from '../pages/Home/Shared/Footer/Footer';
 import ScrollToTop from "../components/ScrollToTop";
+import RouteSeo from "../components/SEO/RouteSeo";
 
 const RootLayout = () => {
     return (
         <div className='min-h-dvh bg-slate-50 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100'>
+            <RouteSeo />
             <ScrollToTop />
             <Navbar></Navbar>
             <main className="min-h-[calc(100dvh-64px)]">

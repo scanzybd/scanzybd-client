@@ -11,7 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
@@ -34,6 +34,9 @@ const CATALOG_PAGE_SIZE = 4;
 
 const ProductShowcase = () => {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const isHomeSection = pathname === "/";
+  const SectionHeading = isHomeSection ? "h2" : "h1";
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPrice, setFilterPrice] = useState("all");
   const [notification, setNotification] = useState(null);
@@ -174,9 +177,9 @@ dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
           <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
             <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
              
-              <h1 className="max-w-2xl text-2xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+              <SectionHeading className="max-w-2xl text-2xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
                 {t("store.featured")}
-              </h1>
+              </SectionHeading>
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
                 {t("store.featuredSubtitle")}
               </p>

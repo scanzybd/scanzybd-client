@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#13758c"/>
+      <stop offset="100%" stop-color="#0f5f72"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="72" y="72" width="96" height="96" rx="16" fill="#fdd403"/>
+  <path fill="#13758c" d="M96 108h24v24H96zm48 48v-24h48v24zm-24-48V84h48v24zm48 24H108v-24h48zm0 24v-24h24v24z"/>
+  <text x="200" y="150" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="700">ScanzyBD</text>
+  <text x="200" y="220" fill="#fdd403" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="600">Smart QR Code Tags for Vehicle Safety</text>
+  <text x="200" y="290" fill="#d1eef5" font-family="Arial, Helvetica, sans-serif" font-size="28">Instant contact and emergency help in Bangladesh</text>
+  <text x="200" y="540" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="24" opacity="0.85">scanzybd.com</text>
+</svg>

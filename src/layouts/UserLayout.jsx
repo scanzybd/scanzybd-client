@@ -3,11 +3,13 @@ import Navbar from '../pages/Home/Shared/Navbar/Navbar';
 import { Outlet } from 'react-router';
 import Footer from '../pages/Home/Shared/Footer/Footer';
 import ScrollToTop from "../components/ScrollToTop";
+import RouteSeo from "../components/SEO/RouteSeo";
 
 
 const UserLayout = () => {
     return (
         <div className="min-h-dvh bg-slate-50 transition-colors dark:bg-slate-950">
+            <RouteSeo />
             <ScrollToTop />
              <Navbar></Navbar>
             <Outlet></Outlet>

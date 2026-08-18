@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { Award, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-const About = () => {
+const About = ({ headingLevel = "h1" }) => {
     const { t } = useTranslation();
     const points = t("aboutPage.points", { returnObjects: true });
+    const Heading = headingLevel;
 
     return (
         <div className="w-full bg-linear-to-b from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
@@ -18,9 +19,9 @@ const About = () => {
                         <span className="text-sm font-semibold">{t("aboutPage.badge")}</span>
                     </div> */}
 
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl lg:text-5xl">
+                    <Heading className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl lg:text-5xl">
                         {t("aboutPage.title")}
-                    </h1>
+                    </Heading>
                     <p className="mx-auto mt-4 max-w-3xl text-base text-slate-600 dark:text-slate-300 sm:text-lg">
                         {t("aboutPage.intro")}
                     </p>
