@@ -8,7 +8,11 @@ import useAuth from "../../../hooks/useAuth";
 import SmartLoader from "../../../components/SmartLoader";
 import { cardSurface, textHeading, textMuted } from "../../../lib/uiClasses";
 import { STAFF_ORDER_STATUS_OPTIONS, statusLabel } from "../../../lib/orderStatuses";
-import { formatPaymentMethod, sanitizeManualTransactionInput } from "../../../lib/orderDisplayFormat";
+import {
+  formatPaymentMethod,
+  MANUAL_TRX_MAX_LENGTH,
+  sanitizeManualTransactionInput,
+} from "../../../lib/orderDisplayFormat";
 
 const fmt = (n) => `৳ ${Number(n || 0).toLocaleString()}`;
 
@@ -284,7 +288,7 @@ const OrderDetailPage = () => {
             </div>
             <div className="flex justify-between gap-3">
               <span className={textMuted}>
-                {isManualBkash ? "Trx ID (last 8 characters)" : "Trx ID"}
+                {isManualBkash ? "Transaction ID" : "Trx ID"}
               </span>
               <span
                 className={`font-mono text-xs ${
@@ -354,17 +358,17 @@ const OrderDetailPage = () => {
             {payStatus === "paid" ? (
               <label className="block">
                 <span className={`mb-1 block text-sm font-medium ${textHeading}`}>
-                  {isManualBkash ? "Transaction ID (last 8 characters)" : "Transaction ID"}
+                  {isManualBkash ? "Transaction ID" : "Transaction ID"}
                   {isManualBkash ? (
                     <span className="text-rose-600 dark:text-rose-400"> *</span>
                   ) : null}
                 </span>
                 <input
                   type="text"
-                  maxLength={isManualBkash ? 8 : 40}
+                  maxLength={isManualBkash ? MANUAL_TRX_MAX_LENGTH : 40}
                   value={trx}
                   onChange={handleTrxChange}
-                  placeholder={isManualBkash ? "e.g. AB12CD34" : "Transaction ID"}
+                  placeholder={isManualBkash ? "e.g. DEC60OP75K" : "Transaction ID"}
                   className="input input-bordered w-full rounded-xl font-mono uppercase"
                 />
               </label>

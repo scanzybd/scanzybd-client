@@ -86,7 +86,7 @@ const Payment = () => {
             const isPaid = String(payment.status || "").toLowerCase() === "success";
             const trxLabel =
               String(payment.paymentMethod || "").toLowerCase() === "manual_bkash"
-                ? "Transaction ID (last 8 characters)"
+                ? "Transaction ID"
                 : "Transaction ID";
             const dateLabel = isPaid ? "Paid on" : "Submitted on";
 

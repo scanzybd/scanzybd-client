@@ -29,7 +29,8 @@ const PaymentPending = () => {
 
         {trxSuffix ? (
           <p className="font-mono text-sm text-slate-500">
-            Trx (last 8 chars): <span className="font-semibold text-slate-800 dark:text-slate-200">{trxSuffix}</span>
+            Transaction ID:{" "}
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{trxSuffix}</span>
           </p>
         ) : null}
 

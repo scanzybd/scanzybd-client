@@ -84,12 +84,21 @@ export function formatDateTime(value) {
   });
 }
 
-/** Manual bKash trx input — last 8 letters or numbers. */
+export const MANUAL_TRX_MIN_LENGTH = 4;
+export const MANUAL_TRX_MAX_LENGTH = 30;
+
+/** Manual payment trx input — letters/numbers only, max 30 chars. */
 export function sanitizeManualTransactionInput(raw) {
   return String(raw || "")
+    .trim()
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 8);
+    .slice(0, MANUAL_TRX_MAX_LENGTH);
+}
+
+export function isManualTransactionIdValid(value) {
+  const len = String(value || "").length;
+  return len >= MANUAL_TRX_MIN_LENGTH && len <= MANUAL_TRX_MAX_LENGTH;
 }
 
 /** Prefer final bKash trx; fall back to payment ID */

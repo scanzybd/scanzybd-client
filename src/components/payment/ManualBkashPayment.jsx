@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import { QrCode } from "lucide-react";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
-import { sanitizeManualTransactionInput } from "../../lib/orderDisplayFormat";
+import {
+  isManualTransactionIdValid,
+  MANUAL_TRX_MAX_LENGTH,
+  MANUAL_TRX_MIN_LENGTH,
+  sanitizeManualTransactionInput,
+} from "../../lib/orderDisplayFormat";
 import { btnPrimary, btnSecondary, fieldInput, textHeading, textMuted } from "../../lib/uiClasses";
 
 /**
@@ -34,8 +39,10 @@ export default function ManualBkashPayment({
     e.preventDefault();
     if (submitting) return;
 
-    if (trx.length !== 8) {
-      setError("Enter the last 8 characters of your bKash transaction ID");
+    if (!isManualTransactionIdValid(trx)) {
+      setError(
+        `Enter your transaction ID (${MANUAL_TRX_MIN_LENGTH}–${MANUAL_TRX_MAX_LENGTH} characters)`
+      );
       return;
     }
 
@@ -71,8 +78,8 @@ export default function ManualBkashPayment({
         </div>
         <h2 className={`text-lg font-bold ${textHeading}`}>Pay with bKash (Manual)</h2>
         <p className={`mt-1 text-sm ${textMuted}`}>
-          Scan the QR code, send the exact amount, then enter the last 8 characters of your
-          Trx ID (letters or numbers).
+          Scan the QR code, send the exact amount, then enter your transaction ID
+          ({MANUAL_TRX_MIN_LENGTH}–{MANUAL_TRX_MAX_LENGTH} characters, letters or numbers).
         </p>
       </div>
 
@@ -112,13 +119,13 @@ export default function ManualBkashPayment({
       <form onSubmit={handleSubmit} className="space-y-3">
         <label className="block">
           <span className={`mb-1 block text-sm font-medium ${textHeading}`}>
-            Transaction ID (last 8 characters)
+            Transaction ID
           </span>
           <input
             type="text"
             autoComplete="off"
-            maxLength={8}
-            placeholder="e.g. AB12CD34"
+            maxLength={MANUAL_TRX_MAX_LENGTH}
+            placeholder="e.g. DEC60OP75K"
             value={trx}
             onChange={handleTrxChange}
             className={`${fieldInput} font-mono uppercase tracking-widest`}
@@ -134,7 +141,7 @@ export default function ManualBkashPayment({
         <div className="flex flex-col gap-3 sm:flex-row-reverse">
           <button
             type="submit"
-            disabled={submitting || trx.length !== 8}
+            disabled={submitting || !isManualTransactionIdValid(trx)}
             className={`${btnPrimary} sm:flex-1 disabled:cursor-not-allowed disabled:opacity-60`}
           >
             {submitting ? "Submitting…" : "Submit payment"}

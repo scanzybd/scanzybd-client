@@ -228,8 +228,8 @@ const PaymentGatewaySettings = () => {
         </div>
 
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Upload your bKash payment QR. Customers scan it at checkout and enter the
-          last 8 characters of the transaction ID (letters or numbers).
+          Upload your bKash payment QR. Customers scan it at checkout and enter their
+          transaction ID ({4}–{30} characters, letters or numbers).
         </p>
 
         <div className="flex flex-col items-start gap-4 sm:flex-row">
@@ -283,7 +283,7 @@ const PaymentGatewaySettings = () => {
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
             rows={3}
-            placeholder="Send exact amount via bKash, then enter last 8 characters of Trx ID"
+            placeholder="Send exact amount via bKash, then enter your transaction ID"
             className="textarea textarea-bordered w-full rounded-xl"
           />
         </label>
