@@ -1,30 +1,50 @@
 /** Shared auth error handling for axios instances. */
-let sessionRevokedHandler = null;
+let authRevokedHandler = null;
 
 export const SESSION_REVOKED_CODE = "SESSION_REVOKED";
+export const TOKEN_REVOKED_CODE = "TOKEN_REVOKED";
 
-export function registerSessionRevokedHandler(handler) {
-  sessionRevokedHandler = typeof handler === "function" ? handler : null;
+export function registerAuthRevokedHandler(handler) {
+  authRevokedHandler = typeof handler === "function" ? handler : null;
 }
 
-export function isSessionRevokedResponse(error) {
+/** @deprecated Use registerAuthRevokedHandler */
+export function registerSessionRevokedHandler(handler) {
+  registerAuthRevokedHandler(handler);
+}
+
+export function isAuthRevokedResponse(error) {
+  const code = error?.response?.data?.code;
   return (
     error?.response?.status === 401 &&
-    error?.response?.data?.code === SESSION_REVOKED_CODE
+    (code === SESSION_REVOKED_CODE || code === TOKEN_REVOKED_CODE)
   );
 }
 
-export function notifySessionRevoked(error) {
-  if (!isSessionRevokedResponse(error)) return false;
-  sessionRevokedHandler?.(error?.response?.data?.message);
+/** @deprecated Use isAuthRevokedResponse */
+export function isSessionRevokedResponse(error) {
+  return isAuthRevokedResponse(error);
+}
+
+export function notifyAuthRevoked(error) {
+  if (!isAuthRevokedResponse(error)) return false;
+  authRevokedHandler?.(
+    error?.response?.data?.message,
+    error?.response?.data?.code
+  );
   return true;
+}
+
+/** @deprecated Use notifyAuthRevoked */
+export function notifySessionRevoked(error) {
+  return notifyAuthRevoked(error);
 }
 
 export function attachAuthResponseInterceptor(axiosInstance) {
   axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
-      notifySessionRevoked(error);
+      notifyAuthRevoked(error);
       return Promise.reject(error);
     }
   );

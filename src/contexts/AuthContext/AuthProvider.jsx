@@ -13,6 +13,7 @@ import useCart from '../../hooks/useCart';
 import {
     notifySessionRevoked,
     registerSessionRevokedHandler,
+    TOKEN_REVOKED_CODE,
 } from '../../lib/authSessionHandler';
 
 const googleProvider = new GoogleAuthProvider();
@@ -145,14 +146,16 @@ const AuthProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        registerSessionRevokedHandler(async (message) => {
+        registerSessionRevokedHandler(async (message, code) => {
             await logOut({ remote: true });
             Swal.fire({
                 icon: "info",
                 title: "Signed out",
                 text:
                     message ||
-                    "Your session ended because you signed in on another device or revoked this session.",
+                    (code === TOKEN_REVOKED_CODE
+                        ? "Your session ended because your password was changed. Please sign in again."
+                        : "Your session ended because you signed in on another device or revoked this session."),
             });
         });
         return () => registerSessionRevokedHandler(null);

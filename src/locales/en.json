@@ -54,7 +54,7 @@
     },
     "reset": {
       "successTitle": "Password updated",
-      "successText": "Sign in with your new password.",
+      "successText": "All devices have been signed out. Sign in with your new password.",
       "login": "Login",
       "failed": "Failed",
       "errReset": "Reset failed. Request a new link.",
