@@ -8,6 +8,7 @@ import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SmartLoader from "../../../components/SmartLoader";
 import AccountPreferencesPanel from "../../../components/settings/AccountPreferencesPanel";
+import ActiveSessionsPanel from "../../../components/settings/ActiveSessionsPanel";
 import SocialMediaControlPanel from "../../../components/settings/SocialMediaControlPanel";
 import ContactInfoControlPanel from "../../../components/settings/ContactInfoControlPanel";
 
@@ -111,6 +112,8 @@ export default function DashboardSettings() {
       </div>
 
       <AccountPreferencesPanel translationPrefix="dashboard.settings" />
+
+      {isAdmin || isProvider ? <ActiveSessionsPanel /> : null}
 
       {isProvider ? (
         <section className="space-y-4 rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm dark:border-emerald-900/40 dark:bg-slate-900/90">

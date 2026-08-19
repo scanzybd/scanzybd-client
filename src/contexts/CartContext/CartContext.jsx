@@ -8,10 +8,12 @@ import React, {
 import axios from "axios";
 import { API_BASE_URL } from "../../config/api";
 import { getAppJwtIfValid } from "../../utils/appJwtStorage";
+import { attachAuthResponseInterceptor } from "../../lib/authSessionHandler";
 
 const CartContext = createContext();
 
 const cartApi = axios.create({ baseURL: API_BASE_URL });
+attachAuthResponseInterceptor(cartApi);
 
 function authConfig() {
     const token = getAppJwtIfValid();

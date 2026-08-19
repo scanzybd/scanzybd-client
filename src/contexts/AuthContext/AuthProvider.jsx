@@ -1,14 +1,19 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AuthContext } from './AuthContext';
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import axios from 'axios';
+import Swal from 'sweetalert2';
 import { setAppJwt, clearAppJwt, getAppJwtIfValid } from '../../utils/appJwtStorage';
 import { QUERY_CACHE_STORAGE_KEY } from '../../lib/queryPersister';
 import { API_BASE_URL } from '../../config/api';
 import { auth } from '../../firebase/firebase.init';
 import useCart from '../../hooks/useCart';
+import {
+    notifySessionRevoked,
+    registerSessionRevokedHandler,
+} from '../../lib/authSessionHandler';
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -24,6 +29,45 @@ const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [userRole, setUserRole] = useState(null);
     const [loading, setLoading] = useState(true);
+    const loggingOutRef = useRef(false);
+
+    const logOut = useCallback(async (options = {}) => {
+        if (loggingOutRef.current) return;
+        loggingOutRef.current = true;
+        setLoading(true);
+
+        const token = getAppJwtIfValid();
+        if (token && !options.remote) {
+            try {
+                await axios.post(
+                    `${API_BASE_URL}/api/auth/logout`,
+                    {},
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+            } catch {
+                /* ignore server logout failures */
+            }
+        }
+
+        clearAppJwt();
+        setUser(null);
+        setUserRole(null);
+        resetCartView();
+        queryClient.clear();
+        try {
+            localStorage.removeItem(QUERY_CACHE_STORAGE_KEY);
+        } catch {
+            /* ignore */
+        }
+        try {
+            await signOut(auth);
+        } catch {
+            /* ignore social session signout failures */
+        }
+
+        loggingOutRef.current = false;
+        setLoading(false);
+    }, [queryClient, resetCartView]);
 
     const registerUser = async (name, email, password) => {
         setLoading(true);
@@ -78,25 +122,95 @@ const AuthProvider = ({ children }) => {
         }
     };
 
-    const logOut = async () => {
-        setLoading(true);
-        clearAppJwt();
-        setUser(null);
-        setUserRole(null);
-        resetCartView();
-        queryClient.clear();
+    const fetchUserRole = async (token) => {
         try {
-            localStorage.removeItem(QUERY_CACHE_STORAGE_KEY);
-        } catch {
-            /* ignore */
+            const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const raw = response.data?.role;
+            const role = normalizeRole(raw);
+            const payload = response.data ?? null;
+            setUser(payload ? { ...payload, role } : null);
+            setUserRole(role);
+            await reloadCart();
+        } catch (err) {
+            if (notifySessionRevoked(err)) {
+                return;
+            }
+            setUser(null);
+            setUserRole(null);
+            clearAppJwt();
+            resetCartView();
         }
-        try {
-            await signOut(auth);
-        } catch {
-            /* ignore social session signout failures */
-        }
-        setLoading(false);
     };
+
+    useEffect(() => {
+        registerSessionRevokedHandler(async (message) => {
+            await logOut({ remote: true });
+            Swal.fire({
+                icon: "info",
+                title: "Signed out",
+                text:
+                    message ||
+                    "Your session ended because you signed in on another device or revoked this session.",
+            });
+        });
+        return () => registerSessionRevokedHandler(null);
+    }, [logOut]);
+
+    useEffect(() => {
+        const role = normalizeRole(userRole);
+        if (!user || (role !== "admin" && role !== "provider")) {
+            return undefined;
+        }
+
+        const checkSession = async () => {
+            const token = getAppJwtIfValid();
+            if (!token) return;
+            try {
+                await axios.get(`${API_BASE_URL}/api/auth/session-check`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+            } catch (err) {
+                notifySessionRevoked(err);
+            }
+        };
+
+        const onVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                void checkSession();
+            }
+        };
+
+        document.addEventListener("visibilitychange", onVisibilityChange);
+        const timer = window.setInterval(() => {
+            if (document.visibilityState === "visible") {
+                void checkSession();
+            }
+        }, 60_000);
+
+        return () => {
+            document.removeEventListener("visibilitychange", onVisibilityChange);
+            window.clearInterval(timer);
+        };
+    }, [user?._id, userRole, logOut]);
+
+    // Restore session from backend JWT.
+    useEffect(() => {
+        let cancelled = false;
+        const init = async () => {
+            await Promise.resolve();
+            const token = getAppJwtIfValid();
+            if (token) {
+                await fetchUserRole(token);
+            }
+            if (!cancelled) setLoading(false);
+        };
+        init();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const updateUserProfile = async (profile) => {
         const token = getAppJwtIfValid();
@@ -146,42 +260,6 @@ const AuthProvider = ({ children }) => {
         });
         return res.data;
     };
-
-    const fetchUserRole = async (token) => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const raw = response.data?.role;
-            const role = normalizeRole(raw);
-            const payload = response.data ?? null;
-            setUser(payload ? { ...payload, role } : null);
-            setUserRole(role);
-            await reloadCart();
-        } catch {
-            setUser(null);
-            setUserRole(null);
-            clearAppJwt();
-            resetCartView();
-        }
-    };
-
-    // Restore session from backend JWT.
-    useEffect(() => {
-        let cancelled = false;
-        const init = async () => {
-            await Promise.resolve();
-            const token = getAppJwtIfValid();
-            if (token) {
-                await fetchUserRole(token);
-            }
-            if (!cancelled) setLoading(false);
-        };
-        init();
-        return () => {
-            cancelled = true;
-        };
-    }, []);
 
     const authInfo = {
         user,

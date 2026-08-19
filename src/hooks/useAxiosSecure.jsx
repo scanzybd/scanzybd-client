@@ -2,10 +2,13 @@ import axios from "axios";
 import { useEffect } from "react";
 import { getAppJwtIfValid } from "../utils/appJwtStorage";
 import { API_BASE_URL } from "../config/api";
+import { attachAuthResponseInterceptor } from "../lib/authSessionHandler";
 
 const axiosSecure = axios.create({
   baseURL: API_BASE_URL,
 });
+
+attachAuthResponseInterceptor(axiosSecure);
 
 const useAxiosSecure = () => {
   useEffect(() => {
