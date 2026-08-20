@@ -145,19 +145,19 @@ const QrLandingPage = () => {
       message:
         "This QR code is not linked to a vehicle. The owner or an administrator must assign it first.",
       tone: "warning",
-      footer: (
-        <p className="text-xs text-slate-500">
-          Staff can{" "}
-          <Link
-            to="/login"
-            state={{ from: { pathname: `/dashboard/assign-vehicle/${code}` } }}
-            className="font-semibold text-amber-700 underline decoration-amber-400 underline-offset-2"
-          >
-            sign in
-          </Link>{" "}
-          to assign this QR from the dashboard.
-        </p>
-      ),
+      // footer: (
+      //   <p className="text-xs text-slate-500">
+      //     Staff can{" "}
+      //     <Link
+      //       to="/login"
+      //       state={{ from: { pathname: `/dashboard/assign-vehicle/${code}` } }}
+      //       className="font-semibold text-amber-700 underline decoration-amber-400 underline-offset-2"
+      //     >
+      //       sign in
+      //     </Link>{" "}
+      //     to assign this QR from the dashboard.
+      //   </p>
+      // ),
     });
   }
 
